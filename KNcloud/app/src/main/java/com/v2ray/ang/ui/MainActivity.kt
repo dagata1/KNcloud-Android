@@ -721,7 +721,6 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
 
             R.id.logcat -> startActivity(Intent(this, LogcatActivity::class.java))
             R.id.check_for_update -> startActivity(Intent(this, CheckUpdateActivity::class.java))
-            R.id.about -> startActivity(Intent(this, AboutActivity::class.java))
             R.id.logout -> {
                 AlertDialog.Builder(this)
                     .setTitle(R.string.dialog_logout_title)
