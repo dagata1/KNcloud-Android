@@ -199,6 +199,7 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
             } else {
                 adapter.notifyDataSetChanged()
             }
+            updateEmptyState()
         }
         mainViewModel.updateTestResultAction.observe(this) { setTestState(it) }
         mainViewModel.isRunning.observe(this) { isRunning ->
@@ -263,7 +264,44 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
         }
         mainViewModel.reloadServerList()
         updateSubscriptionInfo()
+        updateEmptyState()
         updateDrawerHeader()
+    }
+
+    private fun updateEmptyState() {
+        val isEmpty = mainViewModel.serversCache.isEmpty()
+        binding.layoutEmptyNodes.isVisible = isEmpty
+        binding.recyclerView.isVisible = !isEmpty
+    }
+
+    private fun setupEmptyStateView() {
+        val planUrl = "${MmkvManager.getApiDomain()}/#/plan"
+        val fullText = getString(R.string.empty_no_nodes_full_text)
+        val keyword = getString(R.string.empty_subscribe_keyword)
+        val spannable = SpannableString(fullText)
+        val startIndex = fullText.indexOf(keyword)
+        if (startIndex >= 0) {
+            val clickableSpan = object : ClickableSpan() {
+                override fun onClick(widget: View) {
+                    Utils.openUri(this@MainActivity, planUrl)
+                }
+
+                override fun updateDrawState(ds: TextPaint) {
+                    super.updateDrawState(ds)
+                    ds.color = ContextCompat.getColor(this@MainActivity, R.color.color_fab_active)
+                    ds.isUnderlineText = true
+                }
+            }
+            spannable.setSpan(clickableSpan, startIndex, startIndex + keyword.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            binding.tvEmptyPrompt.text = spannable
+            binding.tvEmptyPrompt.movementMethod = LinkMovementMethod.getInstance()
+        } else {
+            binding.tvEmptyPrompt.text = fullText
+        }
+
+        binding.btnGoSubscribe.setOnClickListener {
+            Utils.openUri(this, planUrl)
+        }
     }
 
     private fun updateSubscriptionInfo() {
