@@ -9,9 +9,6 @@ A V2Ray client for Android, support [Xray core](https://github.com/XTLS/Xray-cor
 [![GitHub Releases](https://img.shields.io/github/downloads/2dust/v2rayNG/latest/total?logo=github)](https://github.com/2dust/v2rayNG/releases)
 [![Chat on Telegram](https://img.shields.io/badge/Chat%20on-Telegram-brightgreen.svg)](https://t.me/v2rayn)
 
-### Telegram Channel
-[github_2dust](https://t.me/github_2dust)
-
 ### Usage
 
 #### Geoip and Geosite
