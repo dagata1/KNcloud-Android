@@ -154,7 +154,7 @@ object V2RayServiceManager {
         currentConfig = config
 
         try {
-            coreController.startLoop(result.content)
+            coreController.startLoop(result.content, 0)
         } catch (e: Exception) {
             Log.e(AppConfig.TAG, "Failed to start Core loop", e)
             return false
@@ -211,13 +211,23 @@ object V2RayServiceManager {
     }
 
     /**
-     * Queries the statistics for a given tag and link.
-     * @param tag The tag to query.
-     * @param link The link to query.
-     * @return The statistics value.
+     * Queries all outbound traffic statistics.
+     * @return A map of Pair(tag, direction) to byte count.
      */
-    fun queryStats(tag: String, link: String): Long {
-        return coreController.queryStats(tag, link)
+    fun queryAllOutboundTrafficStats(): Map<Pair<String, String>, Long> {
+        val statsStr = coreController.queryAllOutboundTrafficStats()
+        if (statsStr.isNullOrEmpty()) return emptyMap()
+        val result = mutableMapOf<Pair<String, String>, Long>()
+        statsStr.split(";").forEach { item ->
+            val parts = item.split(",")
+            if (parts.size == 3) {
+                val tag = parts[0]
+                val direction = parts[1]
+                val value = parts[2].toLongOrNull() ?: 0L
+                result[Pair(tag, direction)] = value
+            }
+        }
+        return result
     }
 
     /**
