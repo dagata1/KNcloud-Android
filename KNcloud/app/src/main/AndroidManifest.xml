@@ -71,10 +71,6 @@
             <intent-filter>
                 <action android:name="android.service.quicksettings.action.QS_TILE_PREFERENCES" />
             </intent-filter>
-
-            <meta-data
-                android:name="android.app.shortcuts"
-                android:resource="@xml/shortcuts" />
         </activity>
         <activity
             android:name=".ui.LoginActivity"
@@ -112,15 +108,6 @@
         <activity
             android:name=".ui.UserAssetUrlActivity"
             android:exported="false" />
-        <activity
-            android:name=".ui.ScScannerActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ui.ScSwitchActivity"
-            android:excludeFromRecents="true"
-            android:exported="false"
-            android:process=":RunSoLibV2RayDaemon"
-            android:theme="@style/AppThemeDayNight.NoActionBar.Translucent" />
 
         <activity
             android:name=".ui.UrlSchemeActivity"
