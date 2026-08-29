@@ -2,20 +2,20 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:icon="@drawable/ic_add_24dp"
-        android:title="@string/menu_item_add_config"
-        app:showAsAction="ifRoom">
-        <menu>
-            <item
-                android:id="@+id/import_qrcode"
-                android:title="@string/menu_item_import_config_qrcode"
-                app:showAsAction="never" />
-            <item
-                android:id="@+id/import_clipboard"
-                android:title="@string/menu_item_import_config_clipboard"
-                app:showAsAction="never" />
-        </menu>
-    </item>
+        android:id="@+id/sub_update"
+        android:icon="@drawable/ic_refresh_24dp"
+        android:title="@string/title_sub_update"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/import_qrcode"
+        android:icon="@drawable/ic_scan_24dp"
+        android:title="@string/menu_item_import_config_qrcode"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/import_clipboard"
+        android:icon="@drawable/ic_copy"
+        android:title="@string/menu_item_import_config_clipboard"
+        app:showAsAction="never" />
     <item
         android:id="@+id/service_restart"
         android:title="@string/title_service_restart"

@@ -161,7 +161,7 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
         toggle.syncState()
         binding.navView.setNavigationItemSelectedListener(this)
 
-        initGroupTab()
+        updateSubscriptionInfo()
         setupViewModel()
         migrateLegacy()
 
@@ -260,18 +260,81 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
             return
         }
         mainViewModel.reloadServerList()
+        updateSubscriptionInfo()
         updateDrawerHeader()
     }
 
+    private fun updateSubscriptionInfo() {
+        val info = MmkvManager.getSubscriptionInfo()
+        if (info != null && info.hasData()) {
+            binding.cardSubInfo.isVisible = true
+
+            if (info.traffic.isNotBlank()) {
+                binding.tvSubTraffic.text = info.traffic
+                binding.tvSubTraffic.isVisible = true
+            } else {
+                binding.tvSubTraffic.isVisible = false
+            }
+
+            if (info.resetDay.isNotBlank()) {
+                binding.tvSubReset.text = info.resetDay
+                binding.tvSubReset.isVisible = true
+            } else {
+                binding.tvSubReset.isVisible = false
+            }
+
+            val percent = info.calculateUsagePercent()
+            if (percent >= 0) {
+                binding.pbSubTraffic.isVisible = true
+                binding.pbSubTraffic.progress = percent
+            } else {
+                binding.pbSubTraffic.isVisible = false
+            }
+
+            if (info.expireDate.isNotBlank()) {
+                binding.tvSubExpire.text = info.expireDate
+                binding.tvSubExpire.isVisible = true
+            } else {
+                binding.tvSubExpire.isVisible = false
+            }
+        } else {
+            binding.cardSubInfo.isVisible = false
+        }
+    }
+
     private fun updateDrawerHeader() {
-        val headerView = binding.navView.getHeaderView(0)
-        val tvUserEmail = headerView?.findViewById<android.widget.TextView>(R.id.tv_user_email)
+        val headerView = binding.navView.getHeaderView(0) ?: return
+        val tvUserEmail = headerView.findViewById<android.widget.TextView>(R.id.tv_user_email)
+        val tvHeaderTraffic = headerView.findViewById<android.widget.TextView>(R.id.tv_header_traffic)
+        val tvHeaderExpire = headerView.findViewById<android.widget.TextView>(R.id.tv_header_expire)
+
         val email = MmkvManager.getUserEmail()
         if (!email.isNullOrBlank()) {
             tvUserEmail?.text = email
-            tvUserEmail?.visibility = android.view.View.VISIBLE
+            tvUserEmail?.isVisible = true
         } else {
-            tvUserEmail?.visibility = android.view.View.GONE
+            tvUserEmail?.isVisible = false
+        }
+
+        val info = MmkvManager.getSubscriptionInfo()
+        if (info != null && info.hasData()) {
+            if (info.traffic.isNotBlank()) {
+                tvHeaderTraffic?.text = info.traffic
+                tvHeaderTraffic?.isVisible = true
+            } else {
+                tvHeaderTraffic?.isVisible = false
+            }
+
+            val expireParts = listOf(info.expireDate, info.resetDay).filter { it.isNotBlank() }
+            if (expireParts.isNotEmpty()) {
+                tvHeaderExpire?.text = expireParts.joinToString(" · ")
+                tvHeaderExpire?.isVisible = true
+            } else {
+                tvHeaderExpire?.isVisible = false
+            }
+        } else {
+            tvHeaderTraffic?.isVisible = false
+            tvHeaderExpire?.isVisible = false
         }
     }
 
@@ -285,6 +348,11 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
     }
 
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
+        R.id.sub_update -> {
+            importConfigViaSub()
+            true
+        }
+
         R.id.import_qrcode -> {
             importQRcode()
             true
@@ -370,9 +438,14 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
                         count > 0 -> {
                             toast(getString(R.string.title_import_config_count, count))
                             mainViewModel.reloadServerList()
+                            updateSubscriptionInfo()
+                            updateDrawerHeader()
                         }
 
-                        countSub > 0 -> initGroupTab()
+                        countSub > 0 -> {
+                            updateSubscriptionInfo()
+                            updateDrawerHeader()
+                        }
                         else -> toastError(R.string.toast_failure)
                     }
                     binding.pbWaiting.hide()
@@ -414,6 +487,8 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
                 if (count > 0) {
                     toast(getString(R.string.title_update_config_count, count))
                     mainViewModel.reloadServerList()
+                    updateSubscriptionInfo()
+                    updateDrawerHeader()
                 } else {
                     toastError(R.string.toast_failure)
                 }

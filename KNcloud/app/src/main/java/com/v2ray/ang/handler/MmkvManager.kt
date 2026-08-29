@@ -8,6 +8,7 @@ import com.v2ray.ang.dto.AssetUrlItem
 import com.v2ray.ang.dto.ProfileItem
 import com.v2ray.ang.dto.RulesetItem
 import com.v2ray.ang.dto.ServerAffiliationInfo
+import com.v2ray.ang.dto.SubscriptionInfo
 import com.v2ray.ang.dto.SubscriptionItem
 import com.v2ray.ang.util.JsonUtil
 import com.v2ray.ang.util.Utils
@@ -658,6 +659,29 @@ object MmkvManager {
      */
     fun clearUserLogin() {
         encodeSettings(com.v2ray.ang.AppConfig.PREF_USER_TOKEN, "")
+        clearSubscriptionInfo()
+    }
+
+    /**
+     * Saves subscription information (traffic, expireDate, resetDay).
+     */
+    fun saveSubscriptionInfo(info: SubscriptionInfo) {
+        mainStorage.encode("KEY_SUBSCRIPTION_INFO", JsonUtil.toJson(info))
+    }
+
+    /**
+     * Gets subscription information.
+     */
+    fun getSubscriptionInfo(): SubscriptionInfo? {
+        val json = mainStorage.decodeString("KEY_SUBSCRIPTION_INFO") ?: return null
+        return JsonUtil.fromJson(json, SubscriptionInfo::class.java)
+    }
+
+    /**
+     * Clears subscription information.
+     */
+    fun clearSubscriptionInfo() {
+        mainStorage.remove("KEY_SUBSCRIPTION_INFO")
     }
 
     //endregion

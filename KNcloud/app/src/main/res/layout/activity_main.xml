@@ -44,14 +44,69 @@
                         android:visibility="invisible"
                         app:indicatorColor="@color/color_fab_active" />
 
-                    <com.google.android.material.tabs.TabLayout
-                        android:id="@+id/tab_group"
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/card_sub_info"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:padding="@dimen/padding_spacing_dp8"
-                        app:tabIndicatorFullWidth="false"
-                        app:tabMode="scrollable"
-                        app:tabTextAppearance="@style/TabLayoutTextStyle" />
+                        android:layout_marginStart="@dimen/margin_spacing_dp16"
+                        android:layout_marginEnd="@dimen/margin_spacing_dp16"
+                        android:layout_marginTop="@dimen/margin_spacing_dp8"
+                        android:layout_marginBottom="@dimen/margin_spacing_dp8"
+                        android:visibility="gone"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="0dp"
+                        app:strokeColor="@color/divider_color_light"
+                        app:strokeWidth="1dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="@dimen/padding_spacing_dp12">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                                <TextView
+                                    android:id="@+id/tv_sub_traffic"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
+                                    android:textColor="@color/md_theme_onSurface"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:id="@+id/tv_sub_reset"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:textAppearance="@style/TextAppearance.AppCompat.Caption"
+                                    android:textColor="@color/color_fab_active" />
+                            </LinearLayout>
+
+                            <com.google.android.material.progressindicator.LinearProgressIndicator
+                                android:id="@+id/pb_sub_traffic"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="@dimen/margin_spacing_dp8"
+                                android:layout_marginBottom="@dimen/margin_spacing_dp4"
+                                app:indicatorColor="@color/color_fab_active"
+                                app:trackColor="@color/divider_color_light"
+                                app:trackCornerRadius="4dp"
+                                app:trackThickness="6dp" />
+
+                            <TextView
+                                android:id="@+id/tv_sub_expire"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="@dimen/margin_spacing_dp4"
+                                android:textAppearance="@style/TextAppearance.AppCompat.Caption"
+                                android:textColor="@color/md_theme_onSurfaceVariant" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
 
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/recycler_view"

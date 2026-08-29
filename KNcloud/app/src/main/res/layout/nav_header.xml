@@ -27,5 +27,25 @@
         android:textAppearance="@style/TextAppearance.AppCompat.Body1"
         android:textColor="@color/md_theme_onSurfaceVariant" />
 
+    <TextView
+        android:id="@+id/tv_header_traffic"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:paddingTop="@dimen/padding_spacing_dp4"
+        android:textAppearance="@style/TextAppearance.AppCompat.Caption"
+        android:textColor="@color/color_fab_active"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/tv_header_expire"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:paddingTop="@dimen/padding_spacing_dp2"
+        android:textAppearance="@style/TextAppearance.AppCompat.Caption"
+        android:textColor="@color/md_theme_onSurfaceVariant"
+        android:visibility="gone" />
+
 
 </LinearLayout>

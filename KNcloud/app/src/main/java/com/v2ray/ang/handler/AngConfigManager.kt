@@ -9,6 +9,7 @@ import com.v2ray.ang.AppConfig.HY2
 import com.v2ray.ang.R
 import com.v2ray.ang.dto.EConfigType
 import com.v2ray.ang.dto.ProfileItem
+import com.v2ray.ang.dto.SubscriptionInfo
 import com.v2ray.ang.dto.SubscriptionItem
 import com.v2ray.ang.fmt.CustomFmt
 import com.v2ray.ang.fmt.Hysteria2Fmt
@@ -225,16 +226,23 @@ object AngConfigManager {
             }
 
             val subItem = MmkvManager.decodeSubscription(subid)
+            val subInfo = MmkvManager.getSubscriptionInfo() ?: SubscriptionInfo()
+            var infoUpdated = false
             var count = 0
             servers.lines()
                 .distinct()
                 .reversed()
                 .forEach {
-                    val resId = parseConfig(it, subid, subItem, removedSelectedServer)
+                    val resId = parseConfig(it, subid, subItem, removedSelectedServer, subInfo)
                     if (resId == 0) {
                         count++
+                    } else if (resId == -2) {
+                        infoUpdated = true
                     }
                 }
+            if (infoUpdated && subInfo.hasData()) {
+                MmkvManager.saveSubscriptionInfo(subInfo)
+            }
             return count
         } catch (e: Exception) {
             Log.e(AppConfig.TAG, "Failed to parse batch config", e)
@@ -303,19 +311,37 @@ object AngConfigManager {
     }
 
     /**
+     * Checks whether a node remark indicates an account/subscription information pseudo-node.
+     */
+    fun isSubscriptionInfoNode(remarks: String): Boolean {
+        val trimmed = remarks.trim()
+        return trimmed.startsWith("流量信息") ||
+                trimmed.startsWith("剩余流量") ||
+                trimmed.startsWith("已用流量") ||
+                trimmed.startsWith("下次重置") ||
+                trimmed.startsWith("下次充值") ||
+                trimmed.startsWith("套餐到期") ||
+                trimmed.startsWith("到期时间") ||
+                trimmed.startsWith("过期时间") ||
+                trimmed.startsWith("账户信息")
+    }
+
+    /**
      * Parses the configuration from a QR code or string.
      *
      * @param str The configuration string.
      * @param subid The subscription ID.
      * @param subItem The subscription item.
      * @param removedSelectedServer The removed selected server.
-     * @return The result code.
+     * @param subInfo Optional accumulator for subscription metadata info nodes.
+     * @return The result code (0: success, -2: info node intercepted, others: error code).
      */
     private fun parseConfig(
         str: String?,
         subid: String,
         subItem: SubscriptionItem?,
-        removedSelectedServer: ProfileItem?
+        removedSelectedServer: ProfileItem?,
+        subInfo: SubscriptionInfo? = null
     ): Int {
         try {
             if (str == null || TextUtils.isEmpty(str)) {
@@ -343,6 +369,26 @@ object AngConfigManager {
             if (config == null) {
                 return R.string.toast_incorrect_protocol
             }
+
+            // Intercept subscription info pseudo-nodes
+            val remarks = config.remarks.trim()
+            if (isSubscriptionInfoNode(remarks)) {
+                if (subInfo != null) {
+                    when {
+                        remarks.startsWith("流量信息") || remarks.startsWith("剩余流量") || remarks.startsWith("已用流量") -> {
+                            subInfo.traffic = remarks
+                        }
+                        remarks.startsWith("下次重置") || remarks.startsWith("下次充值") -> {
+                            subInfo.resetDay = remarks
+                        }
+                        remarks.startsWith("套餐到期") || remarks.startsWith("到期时间") || remarks.startsWith("过期时间") -> {
+                            subInfo.expireDate = remarks
+                        }
+                    }
+                }
+                return -2 // Intercepted: Do not add as a proxy server node
+            }
+
             //filter
             if (subItem?.filter != null && subItem.filter?.isNotEmpty() == true && config.remarks.isNotEmpty()) {
                 val matched = Regex(pattern = subItem.filter ?: "")
