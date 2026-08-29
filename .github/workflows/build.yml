@@ -117,7 +117,7 @@ jobs:
         cd ${{ github.workspace }}/KNcloud
         echo "sdk.dir=${ANDROID_HOME}" > local.properties
         chmod 755 gradlew
-        ./gradlew licenseFdroidReleaseReport
+        ./gradlew licenseReleaseReport
         ./gradlew assembleRelease \
           -Pandroid.injected.signing.store.file=${{ env.KEYSTORE_FILE }} \
           -Pandroid.injected.signing.store.password=${{ env.KEYSTORE_PASSWORD }} \
@@ -129,35 +129,35 @@ jobs:
       if: ${{ success() }}
       with:
         name: arm64-v8a
-        path: ${{ github.workspace }}/KNcloud/app/build/outputs/apk/*/release/*arm64-v8a*.apk
+        path: ${{ github.workspace }}/KNcloud/app/build/outputs/apk/**/release/*arm64-v8a*.apk
 
     - name: Upload armeabi-v7a APK
       uses: actions/upload-artifact@v4
       if: ${{ success() }}
       with:
         name: armeabi-v7a
-        path: ${{ github.workspace }}/KNcloud/app/build/outputs/apk/*/release/*armeabi-v7a*.apk
+        path: ${{ github.workspace }}/KNcloud/app/build/outputs/apk/**/release/*armeabi-v7a*.apk
 
     - name: Upload x86 APK
       uses: actions/upload-artifact@v4
       if: ${{ success() }}
       with:
         name: x86-apk
-        path: ${{ github.workspace }}/KNcloud/app/build/outputs/apk/*/release/*x86*.apk
+        path: ${{ github.workspace }}/KNcloud/app/build/outputs/apk/**/release/*x86*.apk
 
     - name: Upload x86_64 APK
       uses: actions/upload-artifact@v4
       if: ${{ success() }}
       with:
         name: x86_64-apk
-        path: ${{ github.workspace }}/KNcloud/app/build/outputs/apk/*/release/*x86_64*.apk
+        path: ${{ github.workspace }}/KNcloud/app/build/outputs/apk/**/release/*x86_64*.apk
 
     - name: Upload universal APK
       uses: actions/upload-artifact@v4
       if: ${{ success() }}
       with:
         name: universal-apk
-        path: ${{ github.workspace }}/KNcloud/app/build/outputs/apk/*/release/*universal*.apk
+        path: ${{ github.workspace }}/KNcloud/app/build/outputs/apk/**/release/*universal*.apk
 
     - name: Determine Release Tag
       id: release_info
@@ -177,7 +177,7 @@ jobs:
       uses: svenstaro/upload-release-action@v2
       if: steps.release_info.outputs.should_release == 'true'
       with:
-        file: ${{ github.workspace }}/KNcloud/app/build/outputs/apk/*/release/*.apk
+        file: ${{ github.workspace }}/KNcloud/app/build/outputs/apk/**/release/*.apk
         tag: ${{ steps.release_info.outputs.tag }}
         file_glob: true
         overwrite: true
