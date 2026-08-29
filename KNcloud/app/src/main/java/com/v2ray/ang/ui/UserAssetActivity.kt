@@ -20,10 +20,12 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.v2ray.ang.AppConfig
+import com.v2ray.ang.BuildConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.databinding.ActivityUserAssetBinding
 import com.v2ray.ang.databinding.ItemRecyclerUserAssetBinding
 import com.v2ray.ang.dto.AssetUrlItem
+import com.v2ray.ang.dto.CheckUpdateResult
 import com.v2ray.ang.extension.concatUrl
 import com.v2ray.ang.extension.toTrafficString
 import com.v2ray.ang.extension.toast
@@ -31,6 +33,8 @@ import com.v2ray.ang.extension.toastError
 import com.v2ray.ang.extension.toastSuccess
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.SettingsManager
+import com.v2ray.ang.handler.SpeedtestManager
+import com.v2ray.ang.handler.UpdateCheckerManager
 import com.v2ray.ang.util.HttpUtil
 import com.v2ray.ang.util.Utils
 import kotlinx.coroutines.Dispatchers
@@ -84,7 +88,20 @@ class UserAssetActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
-        title = getString(R.string.title_user_asset_setting)
+        title = getString(R.string.title_user_asset_and_update)
+
+        binding.layoutCheckUpdate.setOnClickListener {
+            checkForUpdates(binding.checkPreRelease.isChecked)
+        }
+
+        binding.checkPreRelease.setOnCheckedChangeListener { _, isChecked ->
+            MmkvManager.encodeSettings(AppConfig.PREF_CHECK_UPDATE_PRE_RELEASE, isChecked)
+        }
+        binding.checkPreRelease.isChecked = MmkvManager.decodeSettingsBool(AppConfig.PREF_CHECK_UPDATE_PRE_RELEASE, false)
+
+        "v${BuildConfig.VERSION_NAME} (${SpeedtestManager.getLibVersion()})".also {
+            binding.tvVersion.text = it
+        }
 
         binding.recyclerView.setHasFixedSize(true)
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
@@ -114,6 +131,40 @@ class UserAssetActivity : BaseActivity() {
         R.id.add_qrcode -> importAssetFromQRcode().let { true }
         R.id.download_file -> downloadGeoFiles().let { true }
         else -> super.onOptionsItemSelected(item)
+    }
+
+    private fun checkForUpdates(includePreRelease: Boolean) {
+        toast(R.string.update_checking_for_update)
+        binding.pbWaiting.show()
+
+        lifecycleScope.launch {
+            try {
+                val result = UpdateCheckerManager.checkForUpdate(includePreRelease)
+                binding.pbWaiting.hide()
+                if (result.hasUpdate) {
+                    showUpdateDialog(result)
+                } else {
+                    toastSuccess(R.string.update_already_latest_version)
+                }
+            } catch (e: Exception) {
+                binding.pbWaiting.hide()
+                Log.e(AppConfig.TAG, "Failed to check for updates: ${e.message}")
+                toastError(e.message ?: getString(R.string.toast_failure))
+            }
+        }
+    }
+
+    private fun showUpdateDialog(result: CheckUpdateResult) {
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle(getString(R.string.update_new_version_found, result.latestVersion))
+            .setMessage(result.releaseNotes)
+            .setPositiveButton(R.string.update_now) { _, _ ->
+                result.downloadUrl?.let {
+                    Utils.openUri(this, it)
+                }
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
     }
 
     private fun getGeoFilesSources(): String {

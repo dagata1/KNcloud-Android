@@ -105,8 +105,11 @@ object UpdateCheckerManager {
         }
 
         val asset = assetsByAbi.firstOrNull()
+            ?: release.assets.firstOrNull { it.name.contains("universal", true) }
+            ?: release.assets.firstOrNull { it.name.endsWith(".apk", true) }
 
         return asset?.browserDownloadUrl
-            ?: throw IllegalStateException("No compatible APK found")
+            ?: release.htmlUrl
+            ?: AppConfig.APP_URL
     }
 }

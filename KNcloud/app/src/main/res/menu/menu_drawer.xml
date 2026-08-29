@@ -15,7 +15,7 @@
         <item
             android:id="@+id/user_asset_setting"
             android:icon="@drawable/ic_file_24dp"
-            android:title="@string/title_user_asset_setting" />
+            android:title="@string/title_user_asset_and_update" />
         <item
             android:id="@+id/settings"
             android:icon="@drawable/ic_settings_24dp"
@@ -27,10 +27,6 @@
             android:id="@+id/logcat"
             android:icon="@drawable/ic_logcat_24dp"
             android:title="@string/title_logcat" />
-        <item
-            android:id="@+id/check_for_update"
-            android:icon="@drawable/ic_check_update_24dp"
-            android:title="@string/update_check_for_update" />
         <item
             android:id="@+id/logout"
             android:icon="@drawable/ic_logout_24dp"

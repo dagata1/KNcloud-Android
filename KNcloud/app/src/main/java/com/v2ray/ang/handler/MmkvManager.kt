@@ -1,6 +1,7 @@
 package com.v2ray.ang.handler
 
 import com.tencent.mmkv.MMKV
+import com.v2ray.ang.AppConfig
 import com.v2ray.ang.AppConfig.PREF_IS_BOOTED
 import com.v2ray.ang.AppConfig.PREF_ROUTING_RULESET
 import com.v2ray.ang.dto.AssetUrlItem
