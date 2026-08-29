@@ -31,13 +31,14 @@ jobs:
 
     - name: Install NDK
       run: |
-        echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
-          --channel=0 \
-          --install "ndk;28.2.13676358"
-        echo "NDK_HOME=$ANDROID_HOME/ndk/28.2.13676358" >> $GITHUB_ENV
-        sed -i '10i\
-        \
-            ndkVersion = "28.2.13676358"' ${{ github.workspace }}/KNcloud/app/build.gradle.kts
+        # setup-android 导出的是 ANDROID_SDK_ROOT，显式同步到 ANDROID_HOME
+        export ANDROID_HOME="$ANDROID_SDK_ROOT"
+        echo "ANDROID_HOME=$ANDROID_HOME" >> "$GITHUB_ENV"
+        # sdkmanager 已在 PATH 中（cmdline-tools/16.0/bin），不要再写 latest 路径
+        yes | sdkmanager --install "ndk;28.2.13676358"
+        echo "NDK_HOME=$ANDROID_HOME/ndk/28.2.13676358" >> "$GITHUB_ENV"
+        # 用正则插入，避免依赖固定行号
+        sed -i '/compileSdk = 35/a\        ndkVersion = "28.2.13676358"' "${{ github.workspace }}/KNcloud/app/build.gradle.kts"
 
     - name: Restore cached libtun2socks
       id: cache-libtun2socks-restore
@@ -61,14 +62,16 @@ jobs:
     - name: Copy libtun2socks
       run: |
         mkdir -p ${{ github.workspace }}/KNcloud/app/libs
-        cp -r ${{ github.workspace }}/libs ${{ github.workspace }}/KNcloud/app/
+        cp -r ${{ github.workspace }}/libs/. ${{ github.workspace }}/KNcloud/app/libs/
 
     - name: Fetch AndroidLibXrayLite tag
       run: |
         pushd AndroidLibXrayLite
+        # 子模块默认不 fetch tag，必须显式拉取，否则 git describe 取不到
+        git fetch --tags --force
         CURRENT_TAG=$(git describe --tags --abbrev=0)
         echo "Current tag in this repo: $CURRENT_TAG"
-        echo "CURRENT_TAG=$CURRENT_TAG" >> $GITHUB_ENV
+        echo "CURRENT_TAG=$CURRENT_TAG" >> "$GITHUB_ENV"
         popd
 
     - name: Download libv2ray
@@ -94,16 +97,16 @@ jobs:
           keytool -genkey -v -keystore ${{ github.workspace }}/android_keystore.jks \
             -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 \
             -storepass android -keypass android -dname "CN=Android Debug,O=Android,C=US"
-          echo "KEYSTORE_FILE=${{ github.workspace }}/android_keystore.jks" >> $GITHUB_ENV
-          echo "KEYSTORE_PASSWORD=android" >> $GITHUB_ENV
-          echo "KEY_ALIAS=androiddebugkey" >> $GITHUB_ENV
-          echo "KEY_PASSWORD=android" >> $GITHUB_ENV
+          echo "KEYSTORE_FILE=${{ github.workspace }}/android_keystore.jks" >> "$GITHUB_ENV"
+          echo "KEYSTORE_PASSWORD=android" >> "$GITHUB_ENV"
+          echo "KEY_ALIAS=androiddebugkey" >> "$GITHUB_ENV"
+          echo "KEY_PASSWORD=android" >> "$GITHUB_ENV"
         else
           echo "$APP_KEYSTORE_BASE64" | base64 -d > ${{ github.workspace }}/android_keystore.jks
-          echo "KEYSTORE_FILE=${{ github.workspace }}/android_keystore.jks" >> $GITHUB_ENV
-          echo "KEYSTORE_PASSWORD=${{ secrets.APP_KEYSTORE_PASSWORD }}" >> $GITHUB_ENV
-          echo "KEY_ALIAS=${{ secrets.APP_KEYSTORE_ALIAS }}" >> $GITHUB_ENV
-          echo "KEY_PASSWORD=${{ secrets.APP_KEY_PASSWORD }}" >> $GITHUB_ENV
+          echo "KEYSTORE_FILE=${{ github.workspace }}/android_keystore.jks" >> "$GITHUB_ENV"
+          echo "KEYSTORE_PASSWORD=${{ secrets.APP_KEYSTORE_PASSWORD }}" >> "$GITHUB_ENV"
+          echo "KEY_ALIAS=${{ secrets.APP_KEYSTORE_ALIAS }}" >> "$GITHUB_ENV"
+          echo "KEY_PASSWORD=${{ secrets.APP_KEY_PASSWORD }}" >> "$GITHUB_ENV"
         fi
 
     - name: Build APK
