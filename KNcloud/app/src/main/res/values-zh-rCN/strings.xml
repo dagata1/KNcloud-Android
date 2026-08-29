@@ -139,6 +139,7 @@
 
     <!-- Preferences -->
     <string name="title_settings">设置</string>
+    <string name="title_feature_settings">功能设置</string>
     <string name="title_advanced">进阶设置</string>
     <string name="title_core_settings">核心设置</string>
     <string name="title_vpn_settings">VPN 设置</string>
@@ -404,5 +405,8 @@
     <string name="menu_logout">退出登录</string>
     <string name="dialog_logout_title">退出登录</string>
     <string name="dialog_logout_message">确定要退出登录吗？退出后将清除当前账号与节点数据。</string>
+    <string name="empty_no_nodes_full_text">没有可用节点，如果您未订阅或已过期请 订阅。</string>
+    <string name="empty_subscribe_keyword">订阅</string>
+    <string name="empty_subscribe_btn">立即订阅</string>
 
 </resources>

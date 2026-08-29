@@ -103,18 +103,6 @@ class UserAssetActivity : BaseActivity() {
             binding.tvVersion.text = it
         }
 
-        binding.layoutPerAppProxy.setOnClickListener {
-            startActivity(Intent(this, PerAppProxyActivity::class.java))
-        }
-
-        binding.layoutRouting.setOnClickListener {
-            startActivity(Intent(this, RoutingSettingActivity::class.java))
-        }
-
-        binding.layoutLogcat.setOnClickListener {
-            startActivity(Intent(this, LogcatActivity::class.java))
-        }
-
         binding.recyclerView.setHasFixedSize(true)
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
         addCustomDividerToRecyclerView(binding.recyclerView, this, R.drawable.custom_divider)

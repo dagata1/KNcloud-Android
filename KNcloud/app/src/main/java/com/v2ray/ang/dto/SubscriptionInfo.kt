@@ -1,11 +1,12 @@
 package com.v2ray.ang.dto
 
 data class SubscriptionInfo(
-    var traffic: String = "",       // e.g. "流量信息：23041.3G/99999G"
+    var subName: String = "",       // e.g. "KNcloud 专属套餐" or extracted from "订阅名称：已用/总量"
+    var traffic: String = "",       // e.g. "23041.3G/99999G" or "流量信息：23041.3G/99999G"
     var resetDay: String = "",      // e.g. "下次重置：15 天"
     var expireDate: String = ""     // e.g. "套餐到期：长期有效" or "套餐到期：2026-12-31"
 ) {
-    fun hasData(): Boolean = traffic.isNotBlank() || resetDay.isNotBlank() || expireDate.isNotBlank()
+    fun hasData(): Boolean = subName.isNotBlank() || traffic.isNotBlank() || resetDay.isNotBlank() || expireDate.isNotBlank()
 
     /**
      * Returns a cleanly formatted string for used/total traffic, e.g. "22.5 TB / 97.6 TB" or "23.0 GB / 100.0 GB"
@@ -13,12 +14,16 @@ data class SubscriptionInfo(
     fun getFormattedTraffic(): String {
         if (traffic.isBlank()) return ""
         try {
-            val clean = traffic.replace("流量信息：", "")
-                .replace("流量信息:", "")
-                .replace("已用流量：", "")
-                .replace("已用流量:", "")
-                .trim()
-            val parts = clean.split("/")
+            // Strip any prefix before colon if present
+            val raw = if (traffic.contains("：")) {
+                traffic.substringAfter("：")
+            } else if (traffic.contains(":")) {
+                traffic.substringAfter(":")
+            } else {
+                traffic
+            }.trim()
+
+            val parts = raw.split("/")
             if (parts.size == 2) {
                 val usedBytes = parseToBytes(parts[0].trim())
                 val totalBytes = parseToBytes(parts[1].trim())
@@ -26,7 +31,7 @@ data class SubscriptionInfo(
                     return "${formatBytes(usedBytes)} / ${formatBytes(totalBytes)}"
                 }
             }
-            return clean
+            return raw
         } catch (_: Exception) {
             return traffic
         }
@@ -37,6 +42,7 @@ data class SubscriptionInfo(
             .replace("套餐到期:", "")
             .replace("到期时间：", "")
             .replace("到期时间:", "")
+            .replace("⏳", "")
             .trim()
     }
 
@@ -54,12 +60,15 @@ data class SubscriptionInfo(
     fun calculateUsagePercent(): Int {
         if (traffic.isBlank()) return -1
         try {
-            val clean = traffic.replace("流量信息：", "")
-                .replace("流量信息:", "")
-                .replace("已用流量：", "")
-                .replace("已用流量:", "")
-                .trim()
-            val parts = clean.split("/")
+            val raw = if (traffic.contains("：")) {
+                traffic.substringAfter("：")
+            } else if (traffic.contains(":")) {
+                traffic.substringAfter(":")
+            } else {
+                traffic
+            }.trim()
+
+            val parts = raw.split("/")
             if (parts.size == 2) {
                 val usedBytes = parseToBytes(parts[0].trim())
                 val totalBytes = parseToBytes(parts[1].trim())

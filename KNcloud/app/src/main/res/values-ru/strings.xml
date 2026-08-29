@@ -140,6 +140,7 @@
 
     <!-- Preferences -->
     <string name="title_settings">Настройки</string>
+    <string name="title_feature_settings">Настройки функций</string>
     <string name="title_advanced">Расширенные настройки</string>
     <string name="title_core_settings">Настройки ядра</string>
     <string name="title_vpn_settings">Настройки VPN</string>
@@ -392,5 +393,8 @@
         <item>Наименьшая нагрузка</item>
     </string-array>
     <string name="pre_resolving_domain">Предварительное определение домена…</string>
+    <string name="empty_no_nodes_full_text">Нет доступных узлов. Если вы не подписаны или срок действия истек, пожалуйста, оформите Подписку.</string>
+    <string name="empty_subscribe_keyword">Подписку</string>
+    <string name="empty_subscribe_btn">Оформить подписку</string>
 
 </resources>

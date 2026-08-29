@@ -8,6 +8,7 @@ import androidx.activity.viewModels
 import androidx.preference.CheckBoxPreference
 import androidx.preference.EditTextPreference
 import androidx.preference.ListPreference
+import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequest
@@ -37,7 +38,11 @@ class SettingsActivity : BaseActivity() {
 
     class SettingsFragment : PreferenceFragmentCompat() {
 
-//        private val perAppProxy by lazy { findPreference<CheckBoxPreference>(AppConfig.PREF_PER_APP_PROXY) }
+        private val perAppProxy by lazy { findPreference<Preference>("pref_per_app_proxy") }
+        private val routingSetting by lazy { findPreference<Preference>("pref_routing_setting") }
+        private val userAssetAndUpdate by lazy { findPreference<Preference>("pref_user_asset_and_update") }
+        private val logcat by lazy { findPreference<Preference>("pref_logcat") }
+
         private val localDns by lazy { findPreference<CheckBoxPreference>(AppConfig.PREF_LOCAL_DNS_ENABLED) }
         private val fakeDns by lazy { findPreference<CheckBoxPreference>(AppConfig.PREF_FAKE_DNS_ENABLED) }
         private val appendHttpProxy by lazy { findPreference<CheckBoxPreference>(AppConfig.PREF_APPEND_HTTP_PROXY) }
@@ -74,11 +79,22 @@ class SettingsActivity : BaseActivity() {
         override fun onCreatePreferences(bundle: Bundle?, s: String?) {
             addPreferencesFromResource(R.xml.pref_settings)
 
-//            perAppProxy?.setOnPreferenceClickListener {
-//                startActivity(Intent(activity, PerAppProxyActivity::class.java))
-//                perAppProxy?.isChecked = true
-//                false
-//            }
+            perAppProxy?.setOnPreferenceClickListener {
+                startActivity(Intent(activity, PerAppProxyActivity::class.java))
+                true
+            }
+            routingSetting?.setOnPreferenceClickListener {
+                startActivity(Intent(activity, RoutingSettingActivity::class.java))
+                true
+            }
+            userAssetAndUpdate?.setOnPreferenceClickListener {
+                startActivity(Intent(activity, UserAssetActivity::class.java))
+                true
+            }
+            logcat?.setOnPreferenceClickListener {
+                startActivity(Intent(activity, LogcatActivity::class.java))
+                true
+            }
             localDns?.setOnPreferenceChangeListener { _, any ->
                 updateLocalDns(any as Boolean)
                 true

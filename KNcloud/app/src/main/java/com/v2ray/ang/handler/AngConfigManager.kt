@@ -315,7 +315,18 @@ object AngConfigManager {
      */
     fun isSubscriptionInfoNode(remarks: String): Boolean {
         val trimmed = remarks.trim()
-        return trimmed.startsWith("流量信息") ||
+        val hasColon = trimmed.contains("：") || trimmed.contains(":")
+        val hasSlash = trimmed.contains("/")
+        val looksLikeTraffic = hasColon && hasSlash && (
+                trimmed.contains("G", ignoreCase = true) ||
+                trimmed.contains("M", ignoreCase = true) ||
+                trimmed.contains("T", ignoreCase = true) ||
+                trimmed.contains("K", ignoreCase = true) ||
+                trimmed.contains("B", ignoreCase = true)
+        )
+
+        return looksLikeTraffic ||
+                trimmed.startsWith("流量信息") ||
                 trimmed.startsWith("剩余流量") ||
                 trimmed.startsWith("已用流量") ||
                 trimmed.startsWith("下次重置") ||
@@ -375,14 +386,31 @@ object AngConfigManager {
             if (isSubscriptionInfoNode(remarks)) {
                 if (subInfo != null) {
                     when {
-                        remarks.startsWith("流量信息") || remarks.startsWith("剩余流量") || remarks.startsWith("已用流量") -> {
-                            subInfo.traffic = remarks
-                        }
                         remarks.startsWith("下次重置") || remarks.startsWith("下次充值") -> {
                             subInfo.resetDay = remarks
                         }
                         remarks.startsWith("套餐到期") || remarks.startsWith("到期时间") || remarks.startsWith("过期时间") -> {
                             subInfo.expireDate = remarks
+                        }
+                        else -> {
+                            // Traffic node: "订阅名称：已用/总量" or "流量信息：已用/总量"
+                            if (remarks.contains("：")) {
+                                val namePart = remarks.substringBefore("：").trim()
+                                val trafficPart = remarks.substringAfter("：").trim()
+                                if (namePart != "流量信息" && namePart != "已用流量" && namePart != "剩余流量") {
+                                    subInfo.subName = namePart
+                                }
+                                subInfo.traffic = trafficPart
+                            } else if (remarks.contains(":")) {
+                                val namePart = remarks.substringBefore(":").trim()
+                                val trafficPart = remarks.substringAfter(":").trim()
+                                if (namePart != "流量信息" && namePart != "已用流量" && namePart != "剩余流量") {
+                                    subInfo.subName = namePart
+                                }
+                                subInfo.traffic = trafficPart
+                            } else {
+                                subInfo.traffic = remarks
+                            }
                         }
                     }
                 }

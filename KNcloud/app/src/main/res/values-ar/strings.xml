@@ -142,6 +142,7 @@
 
     <!-- Preferences -->
     <string name="title_settings">الإعدادات</string>
+    <string name="title_feature_settings">إعدادات الميزات</string>
     <string name="title_advanced">إعدادات متقدمة</string>
     <string name="title_core_settings">إعدادات النواة</string>
     <string name="title_vpn_settings">إعدادات VPN</string>
@@ -378,5 +379,8 @@
         <item>Least Load</item>
     </string-array>
     <string name="pre_resolving_domain">Pre-resolving domain…</string>
+    <string name="empty_no_nodes_full_text">لا توجد عقد متاحة، إذا لم تكن مشتركًا أو انتهت صلاحية اشتراكك، يُرجى الاشتراك.</string>
+    <string name="empty_subscribe_keyword">الاشتراك</string>
+    <string name="empty_subscribe_btn">اشترك الآن</string>
 
 </resources>

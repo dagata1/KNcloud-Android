@@ -142,6 +142,7 @@
 
     <!-- Preferences -->
     <string name="title_settings">Settings</string>
+    <string name="title_feature_settings">Features</string>
     <string name="title_advanced">Advanced Settings</string>
     <string name="title_core_settings">Core Settings</string>
     <string name="title_vpn_settings">VPN Settings</string>
@@ -416,5 +417,8 @@
     <string name="menu_logout">Sign Out</string>
     <string name="dialog_logout_title">Sign Out</string>
     <string name="dialog_logout_message">Are you sure you want to sign out? This will clear your account session and servers.</string>
+    <string name="empty_no_nodes_full_text">No available nodes. If you haven\'t subscribed or your plan has expired, please Subscribe.</string>
+    <string name="empty_subscribe_keyword">Subscribe</string>
+    <string name="empty_subscribe_btn">Subscribe</string>
 
 </resources>

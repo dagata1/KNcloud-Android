@@ -39,6 +39,12 @@ import com.v2ray.ang.helper.SimpleItemTouchHelperCallback
 import com.v2ray.ang.handler.V2RayServiceManager
 import com.v2ray.ang.util.Utils
 import com.v2ray.ang.viewmodel.MainViewModel
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.TextPaint
+import android.text.method.LinkMovementMethod
+import android.text.style.ClickableSpan
+import android.view.View
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -148,7 +154,6 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
         } else {
             binding.recyclerView.layoutManager = GridLayoutManager(this, 1)
         }
-        addCustomDividerToRecyclerView(binding.recyclerView, this, R.drawable.custom_divider)
         binding.recyclerView.adapter = adapter
 
         mItemTouchHelper = ItemTouchHelper(SimpleItemTouchHelperCallback(adapter))
@@ -161,6 +166,7 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
         toggle.syncState()
         binding.navView.setNavigationItemSelectedListener(this)
 
+        setupEmptyStateView()
         updateSubscriptionInfo()
         setupViewModel()
         migrateLegacy()
@@ -265,6 +271,8 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
         if (info != null && info.hasData()) {
             binding.cardSubInfo.isVisible = true
 
+            binding.tvSubTitle.text = if (info.subName.isNotBlank()) info.subName else getString(R.string.app_name)
+
             val formattedTraffic = info.getFormattedTraffic()
             if (formattedTraffic.isNotBlank()) {
                 binding.tvSubTraffic.text = formattedTraffic
@@ -294,7 +302,7 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
 
             val cleanExpireDate = info.getCleanExpireDate()
             if (cleanExpireDate.isNotBlank()) {
-                binding.tvSubExpire.text = "⏳ 套餐到期：$cleanExpireDate"
+                binding.tvSubExpire.text = "套餐到期：$cleanExpireDate"
                 binding.tvSubExpire.isVisible = true
             } else {
                 binding.tvSubExpire.isVisible = false
@@ -360,39 +368,23 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
             true
         }
 
-        R.id.import_qrcode -> {
-            importQRcode()
-            true
-        }
-
-        R.id.import_clipboard -> {
-            importClipboard()
-            true
-        }
-
-        R.id.service_restart -> {
-            restartV2Ray()
-            true
-        }
-
-        R.id.export_all -> {
-            exportAll()
-            true
-        }
-
-        R.id.ping_all -> {
-            toast(getString(R.string.connection_test_testing_count, mainViewModel.serversCache.count()))
-            mainViewModel.testAllTcping()
-            true
-        }
-
-        R.id.real_ping_all -> {
-            toast(getString(R.string.connection_test_testing_count, mainViewModel.serversCache.count()))
-            mainViewModel.testAllRealPing()
-            true
-        }
-
         else -> super.onOptionsItemSelected(item)
+    }
+
+    /**
+     * Test TCP ping for all servers
+     */
+    fun pingAll() {
+        toast(getString(R.string.connection_test_testing_count, mainViewModel.serversCache.count()))
+        mainViewModel.testAllTcping()
+    }
+
+    /**
+     * Test Real ping for all servers
+     */
+    fun realPingAll() {
+        toast(getString(R.string.connection_test_testing_count, mainViewModel.serversCache.count()))
+        mainViewModel.testAllRealPing()
     }
 
     private fun importManually(createConfigType: Int) {
@@ -657,7 +649,6 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         // Handle navigation view item clicks here.
         when (item.itemId) {
-            R.id.user_asset_setting -> startActivity(Intent(this, UserAssetActivity::class.java))
             R.id.settings -> startActivity(
                 Intent(this, SettingsActivity::class.java)
                     .putExtra("isRunning", mainViewModel.isRunning.value == true)

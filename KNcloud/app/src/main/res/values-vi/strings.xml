@@ -139,6 +139,7 @@
 
     <!-- Preferences -->
     <string name="title_settings">Cài đặt</string>
+    <string name="title_feature_settings">Cài đặt tính năng</string>
     <string name="title_advanced">Cài đặt nâng cao</string>
     <string name="title_core_settings">Cài đặt lõi</string>
     <string name="title_vpn_settings">Cài đặt VPN</string>
@@ -381,5 +382,8 @@
         <item>Least Load</item>
     </string-array>
     <string name="pre_resolving_domain">Pre-resolving domain…</string>
+    <string name="empty_no_nodes_full_text">Không có máy chủ khả dụng, nếu bạn chưa đăng ký hoặc gói đã hết hạn, vui lòng Đăng ký.</string>
+    <string name="empty_subscribe_keyword">Đăng ký</string>
+    <string name="empty_subscribe_btn">Đăng ký ngay</string>
 
 </resources>

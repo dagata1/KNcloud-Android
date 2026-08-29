@@ -2,6 +2,28 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <PreferenceCategory android:title="@string/title_feature_settings">
+        <Preference
+            android:key="pref_per_app_proxy"
+            android:icon="@drawable/ic_per_apps_24dp"
+            android:title="@string/per_app_proxy_settings" />
+
+        <Preference
+            android:key="pref_routing_setting"
+            android:icon="@drawable/ic_routing_24dp"
+            android:title="@string/routing_settings_title" />
+
+        <Preference
+            android:key="pref_user_asset_and_update"
+            android:icon="@drawable/ic_cloud_download_24dp"
+            android:title="@string/title_user_asset_and_update" />
+
+        <Preference
+            android:key="pref_logcat"
+            android:icon="@drawable/ic_logcat_24dp"
+            android:title="@string/title_logcat" />
+    </PreferenceCategory>
+
     <CheckBoxPreference
         android:defaultValue="true"
         android:key="pref_sniffing_enabled"
@@ -24,11 +46,6 @@
             android:key="pref_prefer_ipv6"
             android:summary="@string/summary_pref_prefer_ipv6"
             android:title="@string/title_pref_prefer_ipv6" />
-
-<!--        <CheckBoxPreference-->
-<!--            android:key="pref_per_app_proxy"-->
-<!--            android:summary="@string/summary_pref_per_app_proxy"-->
-<!--            android:title="@string/title_pref_per_app_proxy" />-->
 
         <CheckBoxPreference
             android:key="pref_local_dns_enabled"

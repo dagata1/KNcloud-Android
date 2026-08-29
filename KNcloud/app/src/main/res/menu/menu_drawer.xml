@@ -5,10 +5,6 @@
 
     <group android:id="@+id/group_main">
         <item
-            android:id="@+id/user_asset_setting"
-            android:icon="@drawable/ic_cloud_download_24dp"
-            android:title="@string/title_user_asset_and_update" />
-        <item
             android:id="@+id/settings"
             android:icon="@drawable/ic_settings_24dp"
             android:title="@string/title_settings" />
