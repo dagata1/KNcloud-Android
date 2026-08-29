@@ -3,6 +3,10 @@
     <color name="color_fab_active">#f97910</color>
     <color name="color_fab_inactive">#646464</color>
     <color name="divider_color_light">#424242</color>
+    <color name="colorAccent">@color/md_theme_secondary</color>
+    <color name="colorPrimary">@color/md_theme_primary</color>
+    <color name="color_secondary">@color/md_theme_secondary</color>
+    <color name="color_primary">@color/md_theme_primary</color>
 
     <!-- Primary colors - main tone: gray -->
     <color name="md_theme_primary">#C0C0C0</color>
