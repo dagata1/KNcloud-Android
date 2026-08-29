@@ -12,7 +12,7 @@
 
     <uses-sdk
         android:minSdkVersion="21"
-        tools:overrideLibrary="com.blacksquircle.ui.editorkit" />
+        tools:overrideLibrary="com.blacksquircle.ui.editorkit,go.libv2ray.gojni" />
 
     <uses-feature
         android:name="android.hardware.camera"
@@ -77,6 +77,10 @@
                 android:name="android.app.shortcuts"
                 android:resource="@xml/shortcuts" />
         </activity>
+        <activity
+            android:name=".ui.LoginActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".ui.ServerActivity"
             android:exported="false"

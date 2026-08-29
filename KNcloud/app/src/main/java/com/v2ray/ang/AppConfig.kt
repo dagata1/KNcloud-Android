@@ -66,6 +66,12 @@ object AppConfig {
     const val PREF_USE_HEV_TUNNEL = "pref_use_hev_tunnel"
     const val PREF_HEV_TUNNEL_LOGLEVEL = "pref_hev_tunnel_loglevel"
     const val PREF_HEV_TUNNEL_RW_TIMEOUT = "pref_hev_tunnel_rw_timeout_v2"
+    const val PREF_USER_TOKEN = "pref_user_token"
+    const val PREF_USER_EMAIL = "pref_user_email"
+    const val PREF_API_DOMAIN = "pref_api_domain"
+    const val API_DOMAIN_QUERY_URL = "https://aws.kncloud.top/api/domain/cloud"
+    const val DEFAULT_WEB_DOMAIN = "https://www.kncloud.top"
+    const val DEFAULT_SUB_REMARKS = "KNcloud"
 
     /** Cache keys. */
     const val CACHE_SUBSCRIPTION_ID = "cache_subscription_id"

@@ -126,6 +126,14 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Check if user is logged in; if not, show login page only
+        if (!MmkvManager.isUserLoggedIn()) {
+            startActivity(Intent(this, LoginActivity::class.java))
+            finish()
+            return
+        }
+
         setContentView(binding.root)
         title = getString(R.string.title_server)
         setSupportActionBar(binding.toolbar)
@@ -284,7 +292,25 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
 
     public override fun onResume() {
         super.onResume()
+        if (!MmkvManager.isUserLoggedIn()) {
+            startActivity(Intent(this, LoginActivity::class.java))
+            finish()
+            return
+        }
         mainViewModel.reloadServerList()
+        updateDrawerHeader()
+    }
+
+    private fun updateDrawerHeader() {
+        val headerView = binding.navView.getHeaderView(0)
+        val tvUserEmail = headerView?.findViewById<android.widget.TextView>(R.id.tv_user_email)
+        val email = MmkvManager.getUserEmail()
+        if (!email.isNullOrBlank()) {
+            tvUserEmail?.text = email
+            tvUserEmail?.visibility = android.view.View.VISIBLE
+        } else {
+            tvUserEmail?.visibility = android.view.View.GONE
+        }
     }
 
     public override fun onPause() {
@@ -696,6 +722,25 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
             R.id.logcat -> startActivity(Intent(this, LogcatActivity::class.java))
             R.id.check_for_update -> startActivity(Intent(this, CheckUpdateActivity::class.java))
             R.id.about -> startActivity(Intent(this, AboutActivity::class.java))
+            R.id.logout -> {
+                AlertDialog.Builder(this)
+                    .setTitle(R.string.dialog_logout_title)
+                    .setMessage(R.string.dialog_logout_message)
+                    .setPositiveButton(android.R.string.ok) { _, _ ->
+                        if (mainViewModel.isRunning.value == true) {
+                            V2RayServiceManager.stopVService(this)
+                        }
+                        MmkvManager.clearUserLogin()
+                        MmkvManager.removeAllServer()
+                        val intent = Intent(this, LoginActivity::class.java).apply {
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        }
+                        startActivity(intent)
+                        finish()
+                    }
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .show()
+            }
         }
 
         binding.drawerLayout.closeDrawer(GravityCompat.START)

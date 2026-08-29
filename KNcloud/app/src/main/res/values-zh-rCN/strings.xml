@@ -385,4 +385,23 @@
     </string-array>
     <string name="pre_resolving_domain">预解析域名中…</string>
 
+    <!-- User Login & Register -->
+    <string name="title_login">登录</string>
+    <string name="login_welcome">欢迎使用 KNcloud</string>
+    <string name="login_subtitle">登录您的账号以获取专属订阅与节点</string>
+    <string name="login_email_hint">邮箱 / 账号</string>
+    <string name="login_password_hint">登录密码</string>
+    <string name="login_btn">登 录</string>
+    <string name="login_no_account">还没有账号？</string>
+    <string name="login_btn_register">立即注册</string>
+    <string name="login_empty_email">请输入邮箱账号</string>
+    <string name="login_empty_password">请输入密码</string>
+    <string name="login_logging_in">正在登录…</string>
+    <string name="login_fetching_sub">正在获取并导入订阅节点…</string>
+    <string name="login_success">登录成功</string>
+    <string name="login_failed">登录失败</string>
+    <string name="menu_logout">退出登录</string>
+    <string name="dialog_logout_title">退出登录</string>
+    <string name="dialog_logout_message">确定要退出登录吗？退出后将清除当前账号与节点数据。</string>
+
 </resources>

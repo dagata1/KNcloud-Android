@@ -396,4 +396,23 @@
     </string-array>
     <string name="pre_resolving_domain">Pre-resolving domain…</string>
 
+    <!-- User Login & Register -->
+    <string name="title_login">Login</string>
+    <string name="login_welcome">Welcome to KNcloud</string>
+    <string name="login_subtitle">Sign in to sync your subscription &amp; servers</string>
+    <string name="login_email_hint">Email / Username</string>
+    <string name="login_password_hint">Password</string>
+    <string name="login_btn">Sign In</string>
+    <string name="login_no_account">Don\'t have an account?</string>
+    <string name="login_btn_register">Register Now</string>
+    <string name="login_empty_email">Please enter your email</string>
+    <string name="login_empty_password">Please enter your password</string>
+    <string name="login_logging_in">Signing in…</string>
+    <string name="login_fetching_sub">Fetching &amp; importing subscription…</string>
+    <string name="login_success">Login successful</string>
+    <string name="login_failed">Login failed</string>
+    <string name="menu_logout">Sign Out</string>
+    <string name="dialog_logout_title">Sign Out</string>
+    <string name="dialog_logout_message">Are you sure you want to sign out? This will clear your account session and servers.</string>
+
 </resources>

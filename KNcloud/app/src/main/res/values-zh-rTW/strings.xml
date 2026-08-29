@@ -384,4 +384,23 @@
     </string-array>
     <string name="pre_resolving_domain">預解析域名…</string>
 
+    <!-- User Login & Register -->
+    <string name="title_login">登入</string>
+    <string name="login_welcome">歡迎使用 KNcloud</string>
+    <string name="login_subtitle">登入您的帳號以獲取專屬訂閱與節點</string>
+    <string name="login_email_hint">電子郵件 / 帳號</string>
+    <string name="login_password_hint">登入密碼</string>
+    <string name="login_btn">登 入</string>
+    <string name="login_no_account">還沒有帳號？</string>
+    <string name="login_btn_register">立即註冊</string>
+    <string name="login_empty_email">請輸入電子郵件帳號</string>
+    <string name="login_empty_password">請輸入密碼</string>
+    <string name="login_logging_in">正在登入…</string>
+    <string name="login_fetching_sub">正在獲取並匯入訂閱節點…</string>
+    <string name="login_success">登入成功</string>
+    <string name="login_failed">登入失敗</string>
+    <string name="menu_logout">登出帳號</string>
+    <string name="dialog_logout_title">登出帳號</string>
+    <string name="dialog_logout_message">確定要登出嗎？登出後將清除當前帳號與節點資料。</string>
+
 </resources>

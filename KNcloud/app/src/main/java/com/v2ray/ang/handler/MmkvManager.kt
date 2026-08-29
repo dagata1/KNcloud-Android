@@ -585,4 +585,53 @@ object MmkvManager {
 
     //endregion
 
+    //region User Auth
+
+    /**
+     * Checks if user is logged in.
+     */
+    fun isUserLoggedIn(): Boolean {
+        return !decodeSettingsString(com.v2ray.ang.AppConfig.PREF_USER_TOKEN).isNullOrBlank()
+    }
+
+    /**
+     * Gets the user token.
+     */
+    fun getUserToken(): String? {
+        return decodeSettingsString(com.v2ray.ang.AppConfig.PREF_USER_TOKEN)
+    }
+
+    /**
+     * Gets the user email.
+     */
+    fun getUserEmail(): String? {
+        return decodeSettingsString(com.v2ray.ang.AppConfig.PREF_USER_EMAIL)
+    }
+
+    /**
+     * Gets the resolved API domain.
+     */
+    fun getApiDomain(): String {
+        val domain = decodeSettingsString(com.v2ray.ang.AppConfig.PREF_API_DOMAIN)
+        return if (domain.isNullOrBlank()) com.v2ray.ang.AppConfig.DEFAULT_WEB_DOMAIN else domain
+    }
+
+    /**
+     * Saves user login state.
+     */
+    fun saveUserLogin(email: String, token: String, domain: String) {
+        encodeSettings(com.v2ray.ang.AppConfig.PREF_USER_EMAIL, email)
+        encodeSettings(com.v2ray.ang.AppConfig.PREF_USER_TOKEN, token)
+        encodeSettings(com.v2ray.ang.AppConfig.PREF_API_DOMAIN, domain)
+    }
+
+    /**
+     * Clears user login state.
+     */
+    fun clearUserLogin() {
+        encodeSettings(com.v2ray.ang.AppConfig.PREF_USER_TOKEN, "")
+    }
+
+    //endregion
+
 }
