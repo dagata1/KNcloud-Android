@@ -4,12 +4,15 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
+        description: 'Release Tag (e.g. 1.01, v1.10.32)'
         required: false
         type: string
   push:
     branches:
       - master
       - main
+    tags:
+      - '*'
 
 jobs:
   build:
@@ -156,11 +159,26 @@ jobs:
         name: universal-apk
         path: ${{ github.workspace }}/KNcloud/app/build/outputs/apk/*/release/*universal*.apk
 
+    - name: Determine Release Tag
+      id: release_info
+      run: |
+        if [ -n "${{ github.event.inputs.release_tag }}" ]; then
+          echo "tag=${{ github.event.inputs.release_tag }}" >> "$GITHUB_OUTPUT"
+          echo "should_release=true" >> "$GITHUB_OUTPUT"
+        elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
+          TAG_NAME="${GITHUB_REF#refs/tags/}"
+          echo "tag=$TAG_NAME" >> "$GITHUB_OUTPUT"
+          echo "should_release=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "should_release=false" >> "$GITHUB_OUTPUT"
+        fi
+
     - name: Upload to release
       uses: svenstaro/upload-release-action@v2
-      if: github.event.inputs.release_tag != ''
+      if: steps.release_info.outputs.should_release == 'true'
       with:
         file: ${{ github.workspace }}/KNcloud/app/build/outputs/apk/*/release/*.apk
-        tag: ${{ github.event.inputs.release_tag }}
+        tag: ${{ steps.release_info.outputs.tag }}
         file_glob: true
-        prerelease: true
+        overwrite: true
+        prerelease: false
