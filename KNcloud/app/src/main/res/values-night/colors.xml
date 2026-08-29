@@ -53,4 +53,15 @@
     <color name="md_theme_shadow">#000000</color>
     <color name="md_theme_surfaceTint">#C0C0C0</color>
     <color name="md_theme_scrim">#000000</color>
+    <!-- Card & Component Styling Colors -->
+    <color name="card_sub_bg">#23222A</color>
+    <color name="card_sub_stroke">#34323E</color>
+    <color name="card_node_bg">#1D1C22</color>
+    <color name="card_node_bg_selected">#292019</color>
+    <color name="card_node_stroke">#31303B</color>
+    <color name="card_node_stroke_selected">#f97910</color>
+    <color name="pill_badge_bg">#2D2C37</color>
+    <color name="pill_badge_text">#B6B2C2</color>
+    <color name="bottom_bar_bg">#23222A</color>
+    <color name="bottom_bar_stroke">#34323E</color>
 </resources>

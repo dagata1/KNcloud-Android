@@ -116,7 +116,7 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
         }
 
         setContentView(binding.root)
-        title = getString(R.string.title_server)
+        title = getString(R.string.app_name)
         setSupportActionBar(binding.toolbar)
 
         binding.fab.setOnClickListener {
@@ -265,30 +265,36 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
         if (info != null && info.hasData()) {
             binding.cardSubInfo.isVisible = true
 
-            if (info.traffic.isNotBlank()) {
-                binding.tvSubTraffic.text = info.traffic
+            val formattedTraffic = info.getFormattedTraffic()
+            if (formattedTraffic.isNotBlank()) {
+                binding.tvSubTraffic.text = formattedTraffic
                 binding.tvSubTraffic.isVisible = true
             } else {
                 binding.tvSubTraffic.isVisible = false
             }
 
-            if (info.resetDay.isNotBlank()) {
-                binding.tvSubReset.text = info.resetDay
+            val percent = info.calculateUsagePercent()
+            if (percent >= 0) {
+                binding.tvSubPercent.text = "${percent}%"
+                binding.tvSubPercent.isVisible = true
+                binding.pbSubTraffic.isVisible = true
+                binding.pbSubTraffic.progress = percent
+            } else {
+                binding.tvSubPercent.isVisible = false
+                binding.pbSubTraffic.isVisible = false
+            }
+
+            val cleanResetDay = info.getCleanResetDay()
+            if (cleanResetDay.isNotBlank()) {
+                binding.tvSubReset.text = "下次重置：$cleanResetDay"
                 binding.tvSubReset.isVisible = true
             } else {
                 binding.tvSubReset.isVisible = false
             }
 
-            val percent = info.calculateUsagePercent()
-            if (percent >= 0) {
-                binding.pbSubTraffic.isVisible = true
-                binding.pbSubTraffic.progress = percent
-            } else {
-                binding.pbSubTraffic.isVisible = false
-            }
-
-            if (info.expireDate.isNotBlank()) {
-                binding.tvSubExpire.text = info.expireDate
+            val cleanExpireDate = info.getCleanExpireDate()
+            if (cleanExpireDate.isNotBlank()) {
+                binding.tvSubExpire.text = "⏳ 套餐到期：$cleanExpireDate"
                 binding.tvSubExpire.isVisible = true
             } else {
                 binding.tvSubExpire.isVisible = false
@@ -314,14 +320,19 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
 
         val info = MmkvManager.getSubscriptionInfo()
         if (info != null && info.hasData()) {
-            if (info.traffic.isNotBlank()) {
-                tvHeaderTraffic?.text = info.traffic
+            val traffic = info.getFormattedTraffic()
+            if (traffic.isNotBlank()) {
+                tvHeaderTraffic?.text = "流量：$traffic"
                 tvHeaderTraffic?.isVisible = true
             } else {
                 tvHeaderTraffic?.isVisible = false
             }
 
-            val expireParts = listOf(info.expireDate, info.resetDay).filter { it.isNotBlank() }
+            val expireParts = listOf(
+                info.getCleanExpireDate().takeIf { it.isNotBlank() }?.let { "到期：$it" },
+                info.getCleanResetDay().takeIf { it.isNotBlank() }?.let { "重置：$it" }
+            ).filterNotNull()
+
             if (expireParts.isNotEmpty()) {
                 tvHeaderExpire?.text = expireParts.joinToString(" · ")
                 tvHeaderExpire?.isVisible = true
@@ -646,15 +657,12 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         // Handle navigation view item clicks here.
         when (item.itemId) {
-            R.id.per_app_proxy_settings -> startActivity(Intent(this, PerAppProxyActivity::class.java))
-            R.id.routing_setting -> startActivity(Intent(this, RoutingSettingActivity::class.java))
             R.id.user_asset_setting -> startActivity(Intent(this, UserAssetActivity::class.java))
             R.id.settings -> startActivity(
                 Intent(this, SettingsActivity::class.java)
                     .putExtra("isRunning", mainViewModel.isRunning.value == true)
             )
 
-            R.id.logcat -> startActivity(Intent(this, LogcatActivity::class.java))
             R.id.logout -> {
                 AlertDialog.Builder(this)
                     .setTitle(R.string.dialog_logout_title)

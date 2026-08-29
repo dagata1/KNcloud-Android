@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.drawerlayout.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -13,7 +14,8 @@
 
         <com.google.android.material.appbar.AppBarLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            app:elevation="0dp">
 
             <androidx.appcompat.widget.Toolbar
                 android:id="@+id/toolbar"
@@ -44,6 +46,7 @@
                         android:visibility="invisible"
                         app:indicatorColor="@color/color_fab_active" />
 
+                    <!-- Polished Subscription Info Dashboard Card -->
                     <com.google.android.material.card.MaterialCardView
                         android:id="@+id/card_sub_info"
                         android:layout_width="match_parent"
@@ -53,20 +56,55 @@
                         android:layout_marginTop="@dimen/margin_spacing_dp8"
                         android:layout_marginBottom="@dimen/margin_spacing_dp8"
                         android:visibility="gone"
-                        app:cardCornerRadius="12dp"
+                        app:cardBackgroundColor="@color/card_sub_bg"
+                        app:cardCornerRadius="16dp"
                         app:cardElevation="0dp"
-                        app:strokeColor="@color/divider_color_light"
-                        app:strokeWidth="1dp">
+                        app:strokeColor="@color/card_sub_stroke"
+                        app:strokeWidth="1dp"
+                        tools:visibility="visible">
 
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
-                            android:padding="@dimen/padding_spacing_dp12">
+                            android:padding="@dimen/padding_spacing_dp16">
 
+                            <!-- Top Header: Title & Usage Percentage Badge -->
                             <LinearLayout
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                                <TextView
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:text="⚡ KNcloud 会员订阅"
+                                    android:textAppearance="@style/TextAppearance.AppCompat.Caption"
+                                    android:textColor="@color/md_theme_onSurfaceVariant"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:id="@+id/tv_sub_percent"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:background="@drawable/bg_badge_pill"
+                                    android:paddingStart="@dimen/padding_spacing_dp8"
+                                    android:paddingTop="2dp"
+                                    android:paddingEnd="@dimen/padding_spacing_dp8"
+                                    android:paddingBottom="2dp"
+                                    android:textColor="@color/color_fab_active"
+                                    android:textSize="11sp"
+                                    android:textStyle="bold"
+                                    tools:text="23%" />
+                            </LinearLayout>
+
+                            <!-- Middle Row: Traffic Volume & Reset Days -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="@dimen/margin_spacing_dp8"
                                 android:gravity="center_vertical"
                                 android:orientation="horizontal">
 
@@ -75,94 +113,119 @@
                                     android:layout_width="0dp"
                                     android:layout_height="wrap_content"
                                     android:layout_weight="1"
-                                    android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
+                                    android:textAppearance="@style/TextAppearance.AppCompat.Headline"
                                     android:textColor="@color/md_theme_onSurface"
-                                    android:textStyle="bold" />
+                                    android:textSize="18sp"
+                                    android:textStyle="bold"
+                                    tools:text="23.04 TB / 99.99 TB" />
 
                                 <TextView
                                     android:id="@+id/tv_sub_reset"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:textAppearance="@style/TextAppearance.AppCompat.Caption"
-                                    android:textColor="@color/color_fab_active" />
+                                    android:textColor="@color/color_fab_active"
+                                    tools:text="下次重置：15 天" />
                             </LinearLayout>
 
+                            <!-- Clean Progress Bar (trackStopIndicatorSize=0dp removes the end dot) -->
                             <com.google.android.material.progressindicator.LinearProgressIndicator
                                 android:id="@+id/pb_sub_traffic"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="@dimen/margin_spacing_dp8"
-                                android:layout_marginBottom="@dimen/margin_spacing_dp4"
+                                android:layout_marginBottom="@dimen/margin_spacing_dp8"
                                 app:indicatorColor="@color/color_fab_active"
-                                app:trackColor="@color/divider_color_light"
+                                app:trackColor="@color/card_node_stroke"
                                 app:trackCornerRadius="4dp"
-                                app:trackThickness="6dp" />
+                                app:trackStopIndicatorSize="0dp"
+                                app:trackThickness="6dp"
+                                tools:progress="23" />
 
+                            <!-- Bottom Row: Expire Date -->
                             <TextView
                                 android:id="@+id/tv_sub_expire"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="@dimen/margin_spacing_dp4"
                                 android:textAppearance="@style/TextAppearance.AppCompat.Caption"
-                                android:textColor="@color/md_theme_onSurfaceVariant" />
+                                android:textColor="@color/md_theme_onSurfaceVariant"
+                                tools:text="⏳ 套餐到期：长期有效" />
                         </LinearLayout>
                     </com.google.android.material.card.MaterialCardView>
 
+                    <!-- Node List RecyclerView -->
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/recycler_view"
                         android:layout_width="match_parent"
                         android:layout_height="0dp"
                         android:layout_weight="1"
+                        android:clipToPadding="false"
+                        android:paddingBottom="@dimen/padding_spacing_dp8"
                         android:nextFocusRight="@+id/fab"
                         android:scrollbars="vertical" />
 
-                    <LinearLayout
-                        android:id="@+id/layout_test"
+                    <!-- Bottom Connection & Test Bar -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/card_bottom_bar"
                         android:layout_width="match_parent"
-                        android:layout_height="@dimen/view_height_dp64"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:nextFocusLeft="@+id/recycler_view"
-                        android:nextFocusRight="@+id/fab"
-                        android:orientation="vertical">
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/margin_spacing_dp16"
+                        android:layout_marginEnd="@dimen/margin_spacing_dp16"
+                        android:layout_marginBottom="@dimen/margin_spacing_dp12"
+                        app:cardBackgroundColor="@color/bottom_bar_bg"
+                        app:cardCornerRadius="16dp"
+                        app:cardElevation="3dp"
+                        app:strokeColor="@color/bottom_bar_stroke"
+                        app:strokeWidth="1dp">
 
-                        <View
-                            android:layout_width="wrap_content"
-                            android:layout_height="1dp"
-                            android:background="@color/divider_color_light" />
-
-                        <TextView
-                            android:id="@+id/tv_test_state"
-                            android:layout_width="wrap_content"
-                            android:layout_height="match_parent"
-                            android:gravity="start|center"
-                            android:maxLines="2"
-                            android:minLines="1"
+                        <LinearLayout
+                            android:id="@+id/layout_test"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/view_height_dp64"
+                            android:background="?attr/selectableItemBackground"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
                             android:paddingStart="@dimen/padding_spacing_dp16"
-                            android:text="@string/connection_test_pending"
-                            android:textAppearance="@style/TextAppearance.AppCompat.Small" />
+                            android:paddingEnd="72dp">
 
-                    </LinearLayout>
+                            <TextView
+                                android:id="@+id/tv_test_state"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:ellipsize="end"
+                                android:maxLines="2"
+                                android:text="@string/connection_test_pending"
+                                android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                                android:textColor="@color/md_theme_onSurface" />
+
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
                 </LinearLayout>
 
+                <!-- Floating Action Button -->
                 <FrameLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="bottom|end"
-                    android:layout_marginEnd="@dimen/padding_spacing_dp16">
+                    android:layout_marginEnd="24dp"
+                    android:layout_marginBottom="16dp">
 
                     <com.google.android.material.floatingactionbutton.FloatingActionButton
                         android:id="@+id/fab"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="bottom|end"
-                        android:layout_marginBottom="@dimen/view_height_dp36"
                         android:clickable="true"
                         android:contentDescription="@string/tasker_start_service"
                         android:focusable="true"
-                        android:nextFocusLeft="@+id/layout_test"
                         android:src="@drawable/ic_play_24dp"
-                        app:layout_anchorGravity="bottom|right|end" />
+                        app:backgroundTint="@color/color_fab_active"
+                        app:elevation="6dp"
+                        app:fabCustomSize="56dp"
+                        app:maxImageSize="28dp"
+                        app:tint="@color/colorWhite" />
 
                 </FrameLayout>
             </androidx.coordinatorlayout.widget.CoordinatorLayout>
@@ -176,8 +239,6 @@
         android:layout_gravity="start"
         app:headerLayout="@layout/nav_header"
         app:itemIconTint="@color/colorAccent"
-        app:menu="@menu/menu_drawer">
-
-    </com.google.android.material.navigation.NavigationView>
+        app:menu="@menu/menu_drawer" />
 
 </androidx.drawerlayout.widget.DrawerLayout>

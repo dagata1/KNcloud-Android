@@ -75,11 +75,19 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
                 holder.itemMainBinding.tvTestResult.setTextColor(ContextCompat.getColor(mActivity, R.color.colorPing))
             }
 
-            //layoutIndicator
-            if (guid == MmkvManager.getSelectServer()) {
-                holder.itemMainBinding.layoutIndicator.setBackgroundResource(R.color.colorAccent)
+            // Active / Selected Node State Highlight
+            val isSelected = (guid == MmkvManager.getSelectServer())
+            val density = mActivity.resources.displayMetrics.density
+            if (isSelected) {
+                holder.itemMainBinding.cardNode.setCardBackgroundColor(ContextCompat.getColor(mActivity, R.color.card_node_bg_selected))
+                holder.itemMainBinding.cardNode.strokeColor = ContextCompat.getColor(mActivity, R.color.card_node_stroke_selected)
+                holder.itemMainBinding.cardNode.strokeWidth = (1.5f * density).toInt()
+                holder.itemMainBinding.ivActiveIndicator.visibility = View.VISIBLE
             } else {
-                holder.itemMainBinding.layoutIndicator.setBackgroundResource(0)
+                holder.itemMainBinding.cardNode.setCardBackgroundColor(ContextCompat.getColor(mActivity, R.color.card_node_bg))
+                holder.itemMainBinding.cardNode.strokeColor = ContextCompat.getColor(mActivity, R.color.card_node_stroke)
+                holder.itemMainBinding.cardNode.strokeWidth = (1f * density).toInt()
+                holder.itemMainBinding.ivActiveIndicator.visibility = View.GONE
             }
 
             //subscription remarks
