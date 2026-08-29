@@ -275,7 +275,7 @@
     <string name="title_real_ping_all_server">URL-тест профилей группы</string>
     <string name="title_create_intelligent_selection_all_server">Создать конфигурацию умного выбора</string>
     <string name="title_user_asset_setting">Файлы ресурсов</string>
-    <string name="title_user_asset_and_update">Файлы ресурсов и обновление</string>
+    <string name="title_user_asset_and_update">Обновление</string>
     <string name="title_sort_by_test_results">Сортировать по результатам теста</string>
     <string name="title_filter_config">Фильтр профилей</string>
     <string name="filter_config_all">Все группы</string>

@@ -274,7 +274,7 @@
     <string name="title_real_ping_all_server">偵測目前群組設定真延遲</string>
     <string name="title_create_intelligent_selection_all_server">創建目前群組智慧選擇</string>
     <string name="title_user_asset_setting">資源檔案</string>
-    <string name="title_user_asset_and_update">資源檔案與更新</string>
+    <string name="title_user_asset_and_update">更新</string>
     <string name="title_sort_by_test_results">依偵測結果排序</string>
     <string name="title_filter_config">過濾設定</string>
     <string name="filter_config_all">所有分組</string>

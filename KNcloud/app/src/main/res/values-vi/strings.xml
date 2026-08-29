@@ -277,7 +277,7 @@
     <string name="title_real_ping_all_server">Kiểm tra HTTP tất cả máy chủ</string>
     <string name="title_create_intelligent_selection_all_server">Creating Intelligent Selection Current Group Configuration</string>
     <string name="title_user_asset_setting">Asset files</string>
-    <string name="title_user_asset_and_update">Tài nguyên &amp; Cập nhật</string>
+    <string name="title_user_asset_and_update">Cập nhật</string>
     <string name="title_sort_by_test_results">Sắp xếp lại theo lần kiểm tra cuối cùng</string>
     <string name="title_filter_config">Lọc cấu hình theo các gói đăng ký</string>
     <string name="filter_config_all">Hiển thị tất cả các gói đăng ký</string>

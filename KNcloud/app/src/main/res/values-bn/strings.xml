@@ -276,7 +276,7 @@
     <string name="title_real_ping_all_server">সব কনফিগারেশন প্রকৃত বিলম্ব</string>
     <string name="title_create_intelligent_selection_all_server">Creating Intelligent Selection Current Group Configuration</string>
     <string name="title_user_asset_setting">Asset files</string>
-    <string name="title_user_asset_and_update">রিসোর্স ফাইল এবং আপডেট</string>
+    <string name="title_user_asset_and_update">আপডেট</string>
     <string name="title_sort_by_test_results">টেস্ট ফলাফল দ্বারা সাজানো</string>
     <string name="title_filter_config">কনফিগারেশন ফাইল ফিল্টার করুন</string>
     <string name="filter_config_all">সব সাবস্ক্রিপশন গ্রুপ</string>
