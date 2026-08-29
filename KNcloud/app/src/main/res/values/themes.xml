@@ -74,6 +74,8 @@
         <item name="android:windowIsTranslucent">true</item>
     </style>
 
+    <style name="AppTheme.NoActionBar.Translucent" parent="AppThemeDayNight.NoActionBar.Translucent" />
+
     <style name="BrandedSwitch" parent="AppThemeDayNight">
         <item name="colorPrimary">@color/color_fab_active</item>
     </style>

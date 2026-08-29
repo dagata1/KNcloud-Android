@@ -128,7 +128,7 @@
             android:excludeFromRecents="true"
             android:exported="false"
             android:process=":RunSoLibV2RayDaemon"
-            android:theme="@style/AppTheme.NoActionBar.Translucent" />
+            android:theme="@style/AppThemeDayNight.NoActionBar.Translucent" />
 
         <activity
             android:name=".ui.UrlSchemeActivity"
