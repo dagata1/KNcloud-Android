@@ -274,6 +274,7 @@
     <string name="title_real_ping_all_server">تاخیر واقعی کانفیگ های گروه فعلی</string>
     <string name="title_create_intelligent_selection_all_server">ایجاد کانفیگ انتخاب هوشمند برای گروه فعلی</string>
     <string name="title_user_asset_setting">فایل های منبع جغرافیایی</string>
+    <string name="title_user_asset_and_update">فایل های منبع و به روز رسانی</string>
     <string name="title_sort_by_test_results">مرتب‌ سازی بر اساس نتایج آزمایش</string>
     <string name="title_filter_config">فیلتر کردن کانفیگ‌ها</string>
     <string name="filter_config_all">همه گروه‌های اشتراک</string>

@@ -311,13 +311,30 @@ object MmkvManager {
         initSubsList()
 
         val subscriptions = mutableListOf<Pair<String, SubscriptionItem>>()
-        decodeSubsList().forEach { key ->
+        val subsList = decodeSubsList()
+        if (subsList.isNotEmpty()) {
+            val key = subsList.first()
             val json = subStorage.decodeString(key)
             if (!json.isNullOrBlank()) {
-                subscriptions.add(Pair(key, JsonUtil.fromJson(json, SubscriptionItem::class.java)))
+                val subItem = JsonUtil.fromJson(json, SubscriptionItem::class.java)
+                if (subItem != null) {
+                    subscriptions.add(Pair(key, subItem))
+                }
             }
         }
         return subscriptions
+    }
+
+    /**
+     * Removes all subscriptions.
+     */
+    fun removeAllSubscriptions() {
+        val subsList = decodeSubsList()
+        for (subid in subsList) {
+            subStorage.remove(subid)
+            removeServerViaSubid(subid)
+        }
+        encodeSubsList(mutableListOf())
     }
 
     /**
@@ -335,21 +352,29 @@ object MmkvManager {
     }
 
     /**
-     * Encodes the subscription.
+     * Encodes the subscription, enforcing a single subscription globally.
      *
      * @param guid The subscription GUID.
      * @param subItem The subscription item.
      * @return The subscription key/ID.
      */
     fun encodeSubscription(guid: String, subItem: SubscriptionItem): String {
-        val key = guid.ifBlank { Utils.getUuid() }
+        val subsList = decodeSubsList()
+        val key = when {
+            guid.isNotBlank() -> guid
+            subsList.isNotEmpty() -> subsList.first()
+            else -> AppConfig.DEFAULT_SUB_REMARKS.lowercase()
+        }
         subStorage.encode(key, JsonUtil.toJson(subItem))
 
-        val subsList = decodeSubsList()
-        if (!subsList.contains(key)) {
-            subsList.add(key)
-            encodeSubsList(subsList)
+        // Ensure only this key is in the subscription list (single subscription constraint)
+        for (otherKey in subsList) {
+            if (otherKey != key) {
+                subStorage.remove(otherKey)
+                removeServerViaSubid(otherKey)
+            }
         }
+        encodeSubsList(mutableListOf(key))
         return key
     }
 

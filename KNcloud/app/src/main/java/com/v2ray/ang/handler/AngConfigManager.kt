@@ -185,28 +185,12 @@ object AngConfigManager {
 
     /**
      * Parses a batch of subscriptions.
+     * In KNcloud, subscription is uniquely managed via login account and cannot be added or modified via batch import.
      *
      * @param servers The servers string.
      * @return The number of subscriptions parsed.
      */
     private fun parseBatchSubscription(servers: String?): Int {
-        try {
-            if (servers == null) {
-                return 0
-            }
-
-            var count = 0
-            servers.lines()
-                .distinct()
-                .forEach { str ->
-                    if (Utils.isValidSubUrl(str)) {
-                        count += importUrlAsSubscription(str)
-                    }
-                }
-            return count
-        } catch (e: Exception) {
-            Log.e(AppConfig.TAG, "Failed to parse batch subscription", e)
-        }
         return 0
     }
 
@@ -478,18 +462,7 @@ object AngConfigManager {
      * @return The number of subscriptions imported.
      */
     private fun importUrlAsSubscription(url: String): Int {
-        val subscriptions = MmkvManager.decodeSubscriptions()
-        subscriptions.forEach {
-            if (it.second.url == url) {
-                return 0
-            }
-        }
-        val uri = URI(Utils.fixIllegalUrl(url))
-        val subItem = SubscriptionItem()
-        subItem.remarks = uri.fragment ?: "import sub"
-        subItem.url = url
-        MmkvManager.encodeSubscription("", subItem)
-        return 1
+        return 0
     }
 
     /**

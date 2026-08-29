@@ -40,9 +40,8 @@ class UrlSchemeActivity : BaseActivity() {
                         }
 
                         "install-sub" -> {
-                            val uri: Uri? = intent.data
-                            val shareUrl = uri?.getQueryParameter("url").orEmpty()
-                            parseUri(shareUrl, uri?.fragment)
+                            // Subscriptions are strictly bound to KNcloud login account. External sub imports are disabled.
+                            toastError(R.string.toast_failure)
                         }
 
                         else -> {

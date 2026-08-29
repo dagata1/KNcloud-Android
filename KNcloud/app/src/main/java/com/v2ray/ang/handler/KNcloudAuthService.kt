@@ -185,45 +185,24 @@ object KNcloudAuthService {
      */
     fun importAndSyncSubscription(subscribeUrl: String): Boolean {
         return try {
-            val subscriptions = MmkvManager.decodeSubscriptions()
-            var subId = ""
+            val subItem = SubscriptionItem().apply {
+                remarks = AppConfig.DEFAULT_SUB_REMARKS
+                url = subscribeUrl
+                autoUpdate = true
+            }
+            val subId = MmkvManager.encodeSubscription(AppConfig.DEFAULT_SUB_REMARKS.lowercase(), subItem)
 
-            for (sub in subscriptions) {
-                if (sub.second.remarks == AppConfig.DEFAULT_SUB_REMARKS || sub.second.url == subscribeUrl) {
-                    subId = sub.first
-                    sub.second.url = subscribeUrl
-                    sub.second.remarks = AppConfig.DEFAULT_SUB_REMARKS
-                    sub.second.autoUpdate = true
-                    MmkvManager.encodeSubscription(subId, sub.second)
-                    break
+            val count = AngConfigManager.updateConfigViaSub(Pair(subId, subItem))
+            Log.i(AppConfig.TAG, "Imported and synced $count servers from KNcloud subscription")
+
+            // If no server selected, select the first server
+            if (MmkvManager.getSelectServer().isNullOrEmpty()) {
+                val servers = MmkvManager.decodeServerList()
+                if (servers.isNotEmpty()) {
+                    MmkvManager.setSelectServer(servers[0])
                 }
             }
-
-            if (subId.isEmpty()) {
-                val subItem = SubscriptionItem().apply {
-                    remarks = AppConfig.DEFAULT_SUB_REMARKS
-                    url = subscribeUrl
-                    autoUpdate = true
-                }
-                subId = MmkvManager.encodeSubscription("", subItem)
-            }
-
-            val subItem = MmkvManager.decodeSubscription(subId)
-            if (subItem != null) {
-                val count = AngConfigManager.updateConfigViaSub(Pair(subId, subItem))
-                Log.i(AppConfig.TAG, "Imported and synced $count servers from KNcloud subscription")
-
-                // If no server selected, select the first server
-                if (MmkvManager.getSelectServer().isNullOrEmpty()) {
-                    val servers = MmkvManager.decodeServerList()
-                    if (servers.isNotEmpty()) {
-                        MmkvManager.setSelectServer(servers[0])
-                    }
-                }
-                true
-            } else {
-                false
-            }
+            true
         } catch (e: Exception) {
             Log.e(AppConfig.TAG, "Failed to import subscription", e)
             false

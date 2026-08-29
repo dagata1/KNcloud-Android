@@ -57,23 +57,6 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
             startV2Ray()
         }
     }
-    private val requestSubSettingActivity = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-        initGroupTab()
-    }
-    private val tabGroupListener = object : TabLayout.OnTabSelectedListener {
-        override fun onTabSelected(tab: TabLayout.Tab?) {
-            val selectId = tab?.tag.toString()
-            if (selectId != mainViewModel.subscriptionId) {
-                mainViewModel.subscriptionIdChanged(selectId)
-            }
-        }
-
-        override fun onTabUnselected(tab: TabLayout.Tab?) {
-        }
-
-        override fun onTabReselected(tab: TabLayout.Tab?) {
-        }
-    }
     private var mItemTouchHelper: ItemTouchHelper? = null
     val mainViewModel: MainViewModel by viewModels()
 
@@ -250,26 +233,7 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
     }
 
     private fun initGroupTab() {
-        binding.tabGroup.removeOnTabSelectedListener(tabGroupListener)
-        binding.tabGroup.removeAllTabs()
         binding.tabGroup.isVisible = false
-
-        val (listId, listRemarks) = mainViewModel.getSubscriptions(this)
-        if (listId == null || listRemarks == null) {
-            return
-        }
-
-        for (it in listRemarks.indices) {
-            val tab = binding.tabGroup.newTab()
-            tab.text = listRemarks[it]
-            tab.tag = listId[it]
-            binding.tabGroup.addTab(tab)
-        }
-        val selectIndex =
-            listId.indexOf(mainViewModel.subscriptionId).takeIf { it >= 0 } ?: (listId.count() - 1)
-        binding.tabGroup.selectTab(binding.tabGroup.getTabAt(selectIndex))
-        binding.tabGroup.addOnTabSelectedListener(tabGroupListener)
-        binding.tabGroup.isVisible = true
     }
 
     private fun startV2Ray() {
@@ -710,9 +674,8 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         // Handle navigation view item clicks here.
         when (item.itemId) {
-            R.id.sub_setting -> requestSubSettingActivity.launch(Intent(this, SubSettingActivity::class.java))
             R.id.per_app_proxy_settings -> startActivity(Intent(this, PerAppProxyActivity::class.java))
-            R.id.routing_setting -> requestSubSettingActivity.launch(Intent(this, RoutingSettingActivity::class.java))
+            R.id.routing_setting -> startActivity(Intent(this, RoutingSettingActivity::class.java))
             R.id.user_asset_setting -> startActivity(Intent(this, UserAssetActivity::class.java))
             R.id.settings -> startActivity(
                 Intent(this, SettingsActivity::class.java)
@@ -730,6 +693,7 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
                             V2RayServiceManager.stopVService(this)
                         }
                         MmkvManager.clearUserLogin()
+                        MmkvManager.removeAllSubscriptions()
                         MmkvManager.removeAllServer()
                         val intent = Intent(this, LoginActivity::class.java).apply {
                             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK

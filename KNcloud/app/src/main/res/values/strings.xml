@@ -280,6 +280,7 @@
     <string name="title_real_ping_all_server">Real delay current group configuration</string>
     <string name="title_create_intelligent_selection_all_server">Creating Intelligent Selection Current Group Configuration</string>
     <string name="title_user_asset_setting">Asset files</string>
+    <string name="title_user_asset_and_update">Assets and Update</string>
     <string name="title_sort_by_test_results">Sorting by test results</string>
     <string name="title_filter_config">Filter configuration</string>
     <string name="filter_config_all">All groups</string>

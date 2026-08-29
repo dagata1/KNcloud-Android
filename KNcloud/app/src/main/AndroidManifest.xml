@@ -107,17 +107,10 @@
             android:name=".ui.RoutingEditActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.SubSettingActivity"
-            android:exported="false" />
-        <activity
             android:name=".ui.UserAssetActivity"
             android:exported="false" />
         <activity
             android:name=".ui.UserAssetUrlActivity"
-            android:exported="false" />
-
-        <activity
-            android:name=".ui.SubEditActivity"
             android:exported="false" />
         <activity
             android:name=".ui.ScScannerActivity"
@@ -146,7 +139,6 @@
                 <data android:scheme="kncloud" />
                 <data android:scheme="v2rayng" />
                 <data android:host="install-config" />
-                <data android:host="install-sub" />
             </intent-filter>
         </activity>
         <activity
