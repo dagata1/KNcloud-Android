@@ -39,6 +39,30 @@ class UrlSchemeActivity : BaseActivity() {
                             parseUri(shareUrl, uri?.fragment)
                         }
 
+                        "auth", "login", "register" -> {
+                            val uri: Uri? = intent.data
+                            val token = uri?.getQueryParameter("token") ?: uri?.getQueryParameter("auth_data")
+                            val email = uri?.getQueryParameter("email").orEmpty()
+                            if (!token.isNullOrBlank()) {
+                                lifecycleScope.launch(Dispatchers.IO) {
+                                    val domain = MmkvManager.getApiDomain()
+                                    MmkvManager.saveUserLogin(email, token, domain)
+                                    val sub = KNcloudAuthService.getSubscribeUrl(domain, token)
+                                    if (sub.success && !sub.subscribeUrl.isNullOrBlank()) {
+                                        KNcloudAuthService.importAndSyncSubscription(sub.subscribeUrl)
+                                    }
+                                    withContext(Dispatchers.Main) {
+                                        toast(R.string.login_success)
+                                        startActivity(Intent(this@UrlSchemeActivity, MainActivity::class.java).apply {
+                                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                        })
+                                        finish()
+                                    }
+                                }
+                                return
+                            }
+                        }
+
                         "install-sub" -> {
                             // Subscriptions are strictly bound to KNcloud login account. External sub imports are disabled.
                             toastError(R.string.toast_failure)

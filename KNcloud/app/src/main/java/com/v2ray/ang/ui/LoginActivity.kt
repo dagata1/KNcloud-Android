@@ -13,7 +13,6 @@ import com.v2ray.ang.extension.toastError
 import com.v2ray.ang.extension.toastSuccess
 import com.v2ray.ang.handler.KNcloudAuthService
 import com.v2ray.ang.handler.MmkvManager
-import com.v2ray.ang.util.Utils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -37,6 +36,13 @@ class LoginActivity : BaseActivity() {
         fetchDomainAsync()
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (MmkvManager.isUserLoggedIn()) {
+            navigateToMain()
+        }
+    }
+
     private fun initViews() {
         // Pre-fill email if previously entered
         val savedEmail = MmkvManager.getUserEmail()
@@ -44,9 +50,6 @@ class LoginActivity : BaseActivity() {
             binding.etEmail.setText(savedEmail)
             binding.etPassword.requestFocus()
         }
-
-        // Domain hint
-        binding.tvDomainStatus.text = MmkvManager.getApiDomain()
 
         // Handle keyboard "Done" action on password field
         binding.etPassword.setOnEditorActionListener { _, actionId, _ ->
@@ -63,27 +66,16 @@ class LoginActivity : BaseActivity() {
             performLogin()
         }
 
-        // Register button
+        // Register button: opens in-app web registration
         binding.btnRegister.setOnClickListener {
-            openRegisterPage()
+            startActivity(Intent(this, RegisterWebActivity::class.java))
         }
     }
 
     private fun fetchDomainAsync() {
         lifecycleScope.launch(Dispatchers.IO) {
-            val domain = KNcloudAuthService.fetchDynamicDomain()
-            withContext(Dispatchers.Main) {
-                if (!isFinishing && !isDestroyed) {
-                    binding.tvDomainStatus.text = domain
-                }
-            }
+            KNcloudAuthService.fetchDynamicDomain()
         }
-    }
-
-    private fun openRegisterPage() {
-        val domain = MmkvManager.getApiDomain()
-        val registerUrl = "$domain/#/register"
-        Utils.openUri(this, registerUrl)
     }
 
     private fun performLogin() {

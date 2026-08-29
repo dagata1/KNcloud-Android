@@ -77,6 +77,10 @@
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
         <activity
+            android:name=".ui.RegisterWebActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
             android:name=".ui.ServerActivity"
             android:exported="false"
             android:windowSoftInputMode="stateUnchanged" />
@@ -126,6 +130,9 @@
                 <data android:scheme="kncloud" />
                 <data android:scheme="v2rayng" />
                 <data android:host="install-config" />
+                <data android:host="auth" />
+                <data android:host="login" />
+                <data android:host="register" />
             </intent-filter>
         </activity>
         <activity

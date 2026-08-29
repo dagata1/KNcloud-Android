@@ -10,49 +10,32 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center"
+        android:gravity="center_horizontal"
         android:orientation="vertical"
         android:paddingStart="32dp"
-        android:paddingTop="48dp"
+        android:paddingTop="32dp"
         android:paddingEnd="32dp"
-        android:paddingBottom="32dp">
+        android:paddingBottom="24dp">
 
         <!-- Logo & Branding -->
         <ImageView
             android:id="@+id/iv_logo"
-            android:layout_width="88dp"
-            android:layout_height="88dp"
+            android:layout_width="200dp"
+            android:layout_height="64dp"
+            android:adjustViewBounds="true"
             android:contentDescription="@string/app_name"
-            android:src="@mipmap/ic_launcher" />
+            android:src="@drawable/ic_logo_login" />
 
-        <TextView
-            android:id="@+id/tv_app_title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:fontFamily="@font/montserrat_thin"
-            android:text="@string/app_name"
-            android:textAppearance="@style/TextAppearance.Material3.HeadlineMedium"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/tv_subtitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:gravity="center"
-            android:text="@string/login_subtitle"
-            android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-            android:textColor="?attr/colorOutline" />
-
-        <!-- Form Card / Area -->
+        <!-- Form Card / Area (Moved up with margin 16dp) -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
+            android:layout_marginTop="16dp"
+            app:cardBackgroundColor="@color/card_sub_bg"
             app:cardCornerRadius="16dp"
-            app:cardElevation="2dp"
-            app:strokeWidth="0dp">
+            app:cardElevation="0dp"
+            app:strokeColor="@color/card_sub_stroke"
+            app:strokeWidth="1dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -117,17 +100,18 @@
                     android:layout_marginTop="16dp"
                     android:text="@string/login_btn"
                     android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                    app:backgroundTint="@color/color_fab_active"
                     app:cornerRadius="12dp" />
 
             </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Register Section -->
+        <!-- Register Section (Moved up with margin 16dp) -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="16dp"
             android:gravity="center"
             android:orientation="horizontal">
 
@@ -146,21 +130,10 @@
                 android:layout_height="wrap_content"
                 android:text="@string/login_btn_register"
                 android:textAppearance="@style/TextAppearance.Material3.LabelLarge"
-                android:textColor="@color/md_theme_secondary"
+                android:textColor="@color/color_fab_active"
                 android:textStyle="bold" />
 
         </LinearLayout>
-
-        <!-- Dynamic Domain Status Text -->
-        <TextView
-            android:id="@+id/tv_domain_status"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:gravity="center"
-            android:textAppearance="@style/TextAppearance.Material3.BodySmall"
-            android:textColor="?attr/colorOutline"
-            tools:text="https://www.kncloud.top" />
 
     </LinearLayout>
 
