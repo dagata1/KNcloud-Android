@@ -422,6 +422,7 @@
     <string name="empty_subscribe_btn">Go to Website</string>
     <string name="btn_go_website">Website</string>
     <string name="btn_speed_test">Speed Test</string>
+    <string name="btn_refresh_sub">Refresh Sub</string>
     <string name="node_selector_title">Switch Node</string>
     <string name="node_selector_current_hint">Selected Node</string>
     <string name="node_selector_sheet_title">Select Node</string>
@@ -431,6 +432,8 @@
     <string name="connect_state_connected">Protected</string>
     <string name="connect_tap_to_connect">Tap to connect</string>
     <string name="connect_tap_to_disconnect">Connected · Tap to disconnect</string>
+    <string name="title_pref_simple_mode">Simple Mode</string>
+    <string name="summary_pref_simple_mode">Enable card dashboard with drawer node selector, disable for classic list</string>
     <string name="no_node_selected">No node selected</string>
 
 </resources>

@@ -26,6 +26,8 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.ItemTouchHelper
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.AppConfig.VPN
 import com.v2ray.ang.R
@@ -37,6 +39,7 @@ import com.v2ray.ang.handler.AngConfigManager
 import com.v2ray.ang.handler.MigrateManager
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.V2RayServiceManager
+import com.v2ray.ang.helper.SimpleItemTouchHelperCallback
 import com.v2ray.ang.util.Utils
 import com.v2ray.ang.viewmodel.MainViewModel
 import kotlinx.coroutines.Dispatchers
@@ -48,6 +51,9 @@ class MainActivity : BaseActivity() {
     private val binding by lazy {
         ActivityMainBinding.inflate(layoutInflater)
     }
+
+    private val adapter by lazy { MainRecyclerAdapter(this) }
+    private var mItemTouchHelper: ItemTouchHelper? = null
 
     private val requestVpnPermission = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
         if (it.resultCode == RESULT_OK) {
@@ -132,13 +138,14 @@ class MainActivity : BaseActivity() {
             showLogoutDialog()
         }
 
-        // Hero Connect Button Toggle
+        // ==========================================
+        // Simple Mode Click Listeners
+        // ==========================================
         binding.btnConnectToggle.setOnClickListener {
             toggleV2RayConnection()
         }
 
-        // Real ping test or trigger connect on status click
-        binding.layoutTest.setOnClickListener {
+        binding.layoutTestSimple.setOnClickListener {
             if (mainViewModel.isRunning.value == true) {
                 setTestState(getString(R.string.connection_test_testing))
                 mainViewModel.testCurrentServerRealPing()
@@ -147,24 +154,47 @@ class MainActivity : BaseActivity() {
             }
         }
 
-        // Node Selector Dropdown Click -> Open BottomSheet
         binding.layoutNodeSelector.setOnClickListener {
             NodeSelectorBottomSheet.show(supportFragmentManager)
         }
 
-        // Go to Website Button
         binding.btnGoWebsite.setOnClickListener {
             openSubscribeWebPage()
         }
 
-        // One-key Speed Test Button
-        binding.btnSpeedTest.setOnClickListener {
-            realPingAll()
+        // Refresh Subscription Button
+        binding.btnRefreshSub.setOnClickListener {
+            importConfigViaSub()
         }
 
+        // ==========================================
+        // Classic Mode Click Listeners & RecyclerView
+        // ==========================================
+        binding.fab.setOnClickListener {
+            toggleV2RayConnection()
+        }
+
+        binding.layoutTest.setOnClickListener {
+            if (mainViewModel.isRunning.value == true) {
+                setTestState(getString(R.string.connection_test_testing))
+                mainViewModel.testCurrentServerRealPing()
+            }
+        }
+
+        binding.recyclerView.setHasFixedSize(true)
+        if (MmkvManager.decodeSettingsBool(AppConfig.PREF_DOUBLE_COLUMN_DISPLAY, false)) {
+            binding.recyclerView.layoutManager = GridLayoutManager(this, 2)
+        } else {
+            binding.recyclerView.layoutManager = GridLayoutManager(this, 1)
+        }
+        binding.recyclerView.adapter = adapter
+
+        mItemTouchHelper = ItemTouchHelper(SimpleItemTouchHelperCallback(adapter))
+        mItemTouchHelper?.attachToRecyclerView(binding.recyclerView)
+
         setupEmptyStateView()
-        updateSubscriptionInfo()
         setupViewModel()
+        updateModeVisibility()
         migrateLegacy()
         autoTestAllRealPing()
 
@@ -199,7 +229,12 @@ class MainActivity : BaseActivity() {
 
     @SuppressLint("NotifyDataSetChanged")
     private fun setupViewModel() {
-        mainViewModel.updateListAction.observe(this) {
+        mainViewModel.updateListAction.observe(this) { index ->
+            if (index >= 0) {
+                adapter.notifyItemChanged(index)
+            } else {
+                adapter.notifyDataSetChanged()
+            }
             updateSelectedNodeUI()
             updateEmptyState()
         }
@@ -210,6 +245,7 @@ class MainActivity : BaseActivity() {
         }
 
         mainViewModel.isRunning.observe(this) { isRunning ->
+            adapter.isRunning = isRunning
             updateConnectionUI(isRunning)
         }
 
@@ -217,24 +253,57 @@ class MainActivity : BaseActivity() {
         mainViewModel.initAssets(assets)
     }
 
+    /**
+     * Toggles between Simple Card Dashboard Mode and Classic List Mode
+     */
+    private fun updateModeVisibility() {
+        val isSimpleMode = MmkvManager.decodeSettingsBool(AppConfig.PREF_SIMPLE_MODE, true)
+        binding.scrollSimpleMode.isVisible = isSimpleMode
+        binding.layoutClassicMode.isVisible = !isSimpleMode
+
+        if (isSimpleMode) {
+            updateSelectedNodeUI()
+        } else {
+            adapter.notifyDataSetChanged()
+        }
+        updateSubscriptionInfo()
+        updateEmptyState()
+        updateConnectionUI(mainViewModel.isRunning.value == true)
+    }
+
     private fun updateConnectionUI(isRunning: Boolean) {
+        // Simple Mode Hero Connect Button
         if (isRunning) {
             binding.flConnectOuter.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_active_ring))
             binding.btnConnectToggle.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_active_bg))
             binding.ivConnectIcon.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_active_icon))
             binding.tvConnectionStatus.text = getString(R.string.connect_state_connected)
-            binding.tvTestState.text = getString(R.string.connect_tap_to_disconnect)
+            binding.tvTestStateSimple.text = getString(R.string.connect_tap_to_disconnect)
+
+            // Classic Mode FAB & Test Bar
+            binding.fab.setImageResource(R.drawable.ic_stop_24dp)
+            binding.fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_fab_active))
+            binding.fab.contentDescription = getString(R.string.action_stop_service)
+            setTestState(getString(R.string.connection_connected))
+            binding.layoutTest.isFocusable = true
         } else {
             binding.flConnectOuter.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_idle_ring))
             binding.btnConnectToggle.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_idle_bg))
             binding.ivConnectIcon.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_idle_icon))
             binding.tvConnectionStatus.text = getString(R.string.connect_state_idle)
-            binding.tvTestState.text = getString(R.string.connect_tap_to_connect)
+            binding.tvTestStateSimple.text = getString(R.string.connect_tap_to_connect)
+
+            // Classic Mode FAB & Test Bar
+            binding.fab.setImageResource(R.drawable.ic_play_24dp)
+            binding.fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_fab_inactive))
+            binding.fab.contentDescription = getString(R.string.tasker_start_service)
+            setTestState(getString(R.string.connection_not_connected))
+            binding.layoutTest.isFocusable = false
         }
     }
 
     /**
-     * Updates the Selected Node Display on the Hero Card
+     * Updates the Selected Node Display on the Hero Card (Simple Mode)
      */
     fun updateSelectedNodeUI() {
         val servers = mainViewModel.serversCache
@@ -295,6 +364,7 @@ class MainActivity : BaseActivity() {
         if (guid != currentSelected) {
             MmkvManager.setSelectServer(guid)
             updateSelectedNodeUI()
+            adapter.notifyDataSetChanged()
             if (mainViewModel.isRunning.value == true) {
                 restartV2Ray()
             }
@@ -309,6 +379,7 @@ class MainActivity : BaseActivity() {
                     toast(getString(R.string.migration_success))
                     mainViewModel.reloadServerList()
                     updateSelectedNodeUI()
+                    adapter.notifyDataSetChanged()
                 }
             }
         }
@@ -349,15 +420,20 @@ class MainActivity : BaseActivity() {
             return
         }
         mainViewModel.reloadServerList()
-        updateSubscriptionInfo()
-        updateSelectedNodeUI()
-        updateEmptyState()
+        updateModeVisibility()
     }
 
     private fun updateEmptyState() {
         val isEmpty = mainViewModel.serversCache.isEmpty()
-        binding.layoutEmptyNodes.isVisible = isEmpty
-        binding.cardMainDashboard.isVisible = !isEmpty
+        val isSimpleMode = MmkvManager.decodeSettingsBool(AppConfig.PREF_SIMPLE_MODE, true)
+
+        if (isSimpleMode) {
+            binding.layoutEmptyNodesSimple.isVisible = isEmpty
+            binding.cardMainDashboard.isVisible = !isEmpty
+        } else {
+            binding.layoutEmptyNodesClassic.isVisible = isEmpty
+            binding.recyclerView.isVisible = !isEmpty
+        }
     }
 
     private fun setupEmptyStateView() {
@@ -378,13 +454,19 @@ class MainActivity : BaseActivity() {
                 }
             }
             spannable.setSpan(clickableSpan, startIndex, startIndex + keyword.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-            binding.tvEmptyPrompt.text = spannable
-            binding.tvEmptyPrompt.movementMethod = LinkMovementMethod.getInstance()
+            binding.tvEmptyPromptSimple.text = spannable
+            binding.tvEmptyPromptSimple.movementMethod = LinkMovementMethod.getInstance()
+            binding.tvEmptyPromptClassic.text = spannable
+            binding.tvEmptyPromptClassic.movementMethod = LinkMovementMethod.getInstance()
         } else {
-            binding.tvEmptyPrompt.text = fullText
+            binding.tvEmptyPromptSimple.text = fullText
+            binding.tvEmptyPromptClassic.text = fullText
         }
 
-        binding.btnGoSubscribe.setOnClickListener {
+        binding.btnGoSubscribeSimple.setOnClickListener {
+            openSubscribeWebPage()
+        }
+        binding.btnGoSubscribeClassic.setOnClickListener {
             openSubscribeWebPage()
         }
     }
@@ -401,11 +483,15 @@ class MainActivity : BaseActivity() {
     private fun updateSubscriptionInfo() {
         val info = MmkvManager.getSubscriptionInfo()
         if (info != null && info.hasData()) {
-            binding.cardSubInfo.isVisible = true
-
-            binding.tvSubTitle.text = if (info.subName.isNotBlank()) info.subName else getString(R.string.app_name)
-
+            val title = if (info.subName.isNotBlank()) info.subName else getString(R.string.app_name)
             val formattedTraffic = info.getFormattedTraffic()
+            val percent = info.calculateUsagePercent()
+            val cleanResetDay = info.getCleanResetDay()
+            val cleanExpireDate = info.getCleanExpireDate()
+
+            // 1. Simple Mode
+            binding.cardSubInfo.isVisible = true
+            binding.tvSubTitle.text = title
             if (formattedTraffic.isNotBlank()) {
                 binding.tvSubTraffic.text = formattedTraffic
                 binding.tvSubTraffic.isVisible = true
@@ -413,7 +499,6 @@ class MainActivity : BaseActivity() {
                 binding.tvSubTraffic.isVisible = false
             }
 
-            val percent = info.calculateUsagePercent()
             if (percent >= 0) {
                 binding.tvSubPercent.text = "${percent}%"
                 binding.tvSubPercent.isVisible = true
@@ -424,7 +509,6 @@ class MainActivity : BaseActivity() {
                 binding.pbSubTraffic.isVisible = false
             }
 
-            val cleanResetDay = info.getCleanResetDay()
             if (cleanResetDay.isNotBlank()) {
                 binding.tvSubReset.text = "下次重置：$cleanResetDay"
                 binding.tvSubReset.isVisible = true
@@ -432,15 +516,49 @@ class MainActivity : BaseActivity() {
                 binding.tvSubReset.isVisible = false
             }
 
-            val cleanExpireDate = info.getCleanExpireDate()
             if (cleanExpireDate.isNotBlank()) {
                 binding.tvSubExpire.text = "套餐到期：$cleanExpireDate"
                 binding.tvSubExpire.isVisible = true
             } else {
                 binding.tvSubExpire.isVisible = false
             }
+
+            // 2. Classic Mode
+            binding.cardSubInfoClassic.isVisible = true
+            binding.tvSubTitleClassic.text = title
+            if (formattedTraffic.isNotBlank()) {
+                binding.tvSubTrafficClassic.text = formattedTraffic
+                binding.tvSubTrafficClassic.isVisible = true
+            } else {
+                binding.tvSubTrafficClassic.isVisible = false
+            }
+
+            if (percent >= 0) {
+                binding.tvSubPercentClassic.text = "${percent}%"
+                binding.tvSubPercentClassic.isVisible = true
+                binding.pbSubTrafficClassic.isVisible = true
+                binding.pbSubTrafficClassic.progress = percent
+            } else {
+                binding.tvSubPercentClassic.isVisible = false
+                binding.pbSubTrafficClassic.isVisible = false
+            }
+
+            if (cleanResetDay.isNotBlank()) {
+                binding.tvSubResetClassic.text = "下次重置：$cleanResetDay"
+                binding.tvSubResetClassic.isVisible = true
+            } else {
+                binding.tvSubResetClassic.isVisible = false
+            }
+
+            if (cleanExpireDate.isNotBlank()) {
+                binding.tvSubExpireClassic.text = "套餐到期：$cleanExpireDate"
+                binding.tvSubExpireClassic.isVisible = true
+            } else {
+                binding.tvSubExpireClassic.isVisible = false
+            }
         } else {
             binding.cardSubInfo.isVisible = false
+            binding.cardSubInfoClassic.isVisible = false
         }
     }
 

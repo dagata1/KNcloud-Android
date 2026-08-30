@@ -74,7 +74,6 @@ class NodeSelectorBottomSheet : BottomSheetDialogFragment() {
     @SuppressLint("NotifyDataSetChanged")
     private fun updateList() {
         val count = mainViewModel.serversCache.size
-        binding.tvSheetCount.text = getString(R.string.node_count_format, count)
         binding.tvSheetEmpty.isVisible = count == 0
         binding.recyclerViewNodes.isVisible = count > 0
         nodeAdapter.notifyDataSetChanged()

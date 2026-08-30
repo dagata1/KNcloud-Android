@@ -303,6 +303,7 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
                 notifyItemChanged(mActivity.mainViewModel.getPosition(selected.orEmpty()))
             }
             notifyItemChanged(mActivity.mainViewModel.getPosition(guid))
+            mActivity.updateSelectedNodeUI()
             if (isRunning) {
                 V2RayServiceManager.stopVService(mActivity)
                 mActivity.lifecycleScope.launch {

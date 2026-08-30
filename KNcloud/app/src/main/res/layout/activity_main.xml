@@ -101,47 +101,458 @@
         android:visibility="invisible"
         app:indicatorColor="@color/color_fab_active" />
 
-    <!-- Main Scrollable Area -->
-    <androidx.core.widget.NestedScrollView
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fillViewport="true"
-        android:overScrollMode="never">
+        android:layout_height="0dp"
+        android:layout_weight="1">
 
-        <LinearLayout
+        <!-- ======================================================== -->
+        <!-- 1. SIMPLE CARD MODE (简洁模式)                            -->
+        <!-- ======================================================== -->
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/scroll_simple_mode"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingStart="@dimen/padding_spacing_dp16"
-            android:paddingEnd="@dimen/padding_spacing_dp16"
-            android:paddingTop="@dimen/padding_spacing_dp8"
-            android:paddingBottom="@dimen/padding_spacing_dp24">
+            android:layout_height="match_parent"
+            android:fillViewport="true"
+            android:overScrollMode="never"
+            android:visibility="visible">
 
-            <!-- Hero Unified Dashboard Card -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/card_main_dashboard"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardBackgroundColor="@color/card_main_bg"
-                app:cardCornerRadius="22dp"
-                app:cardElevation="2dp"
-                app:strokeColor="@color/card_main_stroke"
-                app:strokeWidth="1dp">
+                android:orientation="vertical"
+                android:paddingStart="@dimen/padding_spacing_dp16"
+                android:paddingEnd="@dimen/padding_spacing_dp16"
+                android:paddingTop="@dimen/padding_spacing_dp8"
+                android:paddingBottom="@dimen/padding_spacing_dp24">
 
-                <LinearLayout
+                <!-- Hero Unified Dashboard Card -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/card_main_dashboard"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="@dimen/padding_spacing_dp20">
+                    app:cardBackgroundColor="@color/card_main_bg"
+                    app:cardCornerRadius="22dp"
+                    app:cardElevation="2dp"
+                    app:strokeColor="@color/card_main_stroke"
+                    app:strokeWidth="1dp">
 
-                    <!-- SECTION 1: Subscription Info Header -->
                     <LinearLayout
-                        android:id="@+id/card_sub_info"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical">
+                        android:orientation="vertical"
+                        android:padding="@dimen/padding_spacing_dp20">
 
-                        <!-- Top Header: Sub Title & Usage Percentage -->
+                        <!-- SECTION 1: Subscription Info Header -->
+                        <LinearLayout
+                            android:id="@+id/card_sub_info"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
+
+                            <!-- Top Header: Sub Title & Usage Percentage -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                                <TextView
+                                    android:id="@+id/tv_sub_title"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:ellipsize="end"
+                                    android:maxLines="1"
+                                    android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
+                                    android:textColor="@color/md_theme_onSurface"
+                                    android:textSize="16sp"
+                                    android:textStyle="bold"
+                                    tools:text="KNcloud 专属专线" />
+
+                                <TextView
+                                    android:id="@+id/tv_sub_percent"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:background="@drawable/bg_badge_pill"
+                                    android:paddingStart="10dp"
+                                    android:paddingTop="3dp"
+                                    android:paddingEnd="10dp"
+                                    android:paddingBottom="3dp"
+                                    android:textColor="@color/color_fab_active"
+                                    android:textSize="12sp"
+                                    android:textStyle="bold"
+                                    tools:text="23%" />
+                            </LinearLayout>
+
+                            <!-- Middle Row: Traffic Volume & Reset Days -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                                <TextView
+                                    android:id="@+id/tv_sub_traffic"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:textAppearance="@style/TextAppearance.AppCompat.Headline"
+                                    android:textColor="@color/md_theme_onSurface"
+                                    android:textSize="19sp"
+                                    android:textStyle="bold"
+                                    tools:text="23.04 TB / 99.99 TB" />
+
+                                <TextView
+                                    android:id="@+id/tv_sub_reset"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:textAppearance="@style/TextAppearance.AppCompat.Caption"
+                                    android:textColor="@color/color_fab_active"
+                                    android:textSize="12sp"
+                                    tools:text="下次重置：15 天" />
+                            </LinearLayout>
+
+                            <!-- Progress Bar -->
+                            <com.google.android.material.progressindicator.LinearProgressIndicator
+                                android:id="@+id/pb_sub_traffic"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:layout_marginBottom="6dp"
+                                app:indicatorColor="@color/color_fab_active"
+                                app:trackColor="@color/connect_btn_idle_ring"
+                                app:trackCornerRadius="4dp"
+                                app:trackStopIndicatorSize="0dp"
+                                app:trackThickness="6dp"
+                                tools:progress="23" />
+
+                            <!-- Bottom Row: Expire Date -->
+                            <TextView
+                                android:id="@+id/tv_sub_expire"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:textAppearance="@style/TextAppearance.AppCompat.Caption"
+                                android:textColor="@color/md_theme_onSurfaceVariant"
+                                android:textSize="12sp"
+                                tools:text="套餐到期：长期有效" />
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="1dp"
+                                android:layout_marginTop="16dp"
+                                android:layout_marginBottom="16dp"
+                                android:background="@color/card_main_stroke" />
+                        </LinearLayout>
+
+                        <!-- SECTION 2: Hero Connect Button Area -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:paddingTop="12dp"
+                            android:paddingBottom="16dp">
+
+                            <!-- Outer Ring Container -->
+                            <FrameLayout
+                                android:id="@+id/fl_connect_outer"
+                                android:layout_width="120dp"
+                                android:layout_height="120dp"
+                                android:background="@drawable/bg_connect_outer_circle">
+
+                                <!-- Main Interactive Connect Button -->
+                                <FrameLayout
+                                    android:id="@+id/btn_connect_toggle"
+                                    android:layout_width="96dp"
+                                    android:layout_height="96dp"
+                                    android:layout_gravity="center"
+                                    android:background="@drawable/bg_connect_circle"
+                                    android:clickable="true"
+                                    android:contentDescription="@string/tasker_start_service"
+                                    android:elevation="4dp"
+                                    android:focusable="true">
+
+                                    <ImageView
+                                        android:id="@+id/iv_connect_icon"
+                                        android:layout_width="44dp"
+                                        android:layout_height="44dp"
+                                        android:layout_gravity="center"
+                                        android:src="@drawable/ic_power_24dp"
+                                        app:tint="@color/connect_btn_idle_icon" />
+                                </FrameLayout>
+                            </FrameLayout>
+
+                            <!-- Connection Status Heading -->
+                            <TextView
+                                android:id="@+id/tv_connection_status"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="14dp"
+                                android:text="@string/connect_state_idle"
+                                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                                android:textColor="@color/md_theme_onSurface"
+                                android:textSize="17sp"
+                                android:textStyle="bold" />
+
+                            <!-- Connection Detail / Ping Status -->
+                            <LinearLayout
+                                android:id="@+id/layout_test_simple"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:background="?attr/selectableItemBackground"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:gravity="center"
+                                android:paddingStart="12dp"
+                                android:paddingTop="4dp"
+                                android:paddingEnd="12dp"
+                                android:paddingBottom="4dp">
+
+                                <TextView
+                                    android:id="@+id/tv_test_state_simple"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center"
+                                    android:text="@string/connect_tap_to_connect"
+                                    android:textAppearance="@style/TextAppearance.AppCompat.Caption"
+                                    android:textColor="@color/md_theme_onSurfaceVariant"
+                                    android:textSize="13sp" />
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <!-- SECTION 3: Node Selector Dropdown Card -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="6dp"
+                                android:text="@string/node_selector_current_hint"
+                                android:textAppearance="@style/TextAppearance.AppCompat.Caption"
+                                android:textColor="@color/md_theme_onSurfaceVariant"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+
+                            <!-- Interactive Node Dropdown Box -->
+                            <LinearLayout
+                                android:id="@+id/layout_node_selector"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:background="@drawable/bg_node_selector_box"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:gravity="center_vertical"
+                                android:minHeight="60dp"
+                                android:orientation="horizontal"
+                                android:paddingStart="14dp"
+                                android:paddingTop="10dp"
+                                android:paddingEnd="14dp"
+                                android:paddingBottom="10dp">
+
+                                <!-- Protocol Badge -->
+                                <TextView
+                                    android:id="@+id/tv_selected_node_type"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:background="@drawable/bg_badge_pill"
+                                    android:paddingStart="7dp"
+                                    android:paddingTop="2dp"
+                                    android:paddingEnd="7dp"
+                                    android:paddingBottom="2dp"
+                                    android:textColor="@color/color_fab_active"
+                                    android:textSize="10sp"
+                                    android:textStyle="bold"
+                                    tools:text="SS" />
+
+                                <!-- Node Name -->
+                                <TextView
+                                    android:id="@+id/tv_selected_node_name"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="10dp"
+                                    android:layout_marginEnd="8dp"
+                                    android:layout_weight="1"
+                                    android:ellipsize="end"
+                                    android:maxLines="1"
+                                    android:text="@string/no_node_selected"
+                                    android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
+                                    android:textColor="@color/md_theme_onSurface"
+                                    android:textSize="14sp"
+                                    android:textStyle="bold"
+                                    tools:text="香港 [01] 专线 4K" />
+
+                                <!-- Ping Latency Badge -->
+                                <TextView
+                                    android:id="@+id/tv_selected_node_ping"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginEnd="6dp"
+                                    android:background="@drawable/bg_badge_pill"
+                                    android:paddingStart="8dp"
+                                    android:paddingTop="2dp"
+                                    android:paddingEnd="8dp"
+                                    android:paddingBottom="2dp"
+                                    android:textColor="@color/colorPingGreen"
+                                    android:textSize="11sp"
+                                    android:textStyle="bold"
+                                    tools:text="58 ms" />
+
+                                <!-- Dropdown Arrow -->
+                                <ImageView
+                                    android:layout_width="22dp"
+                                    android:layout_height="22dp"
+                                    android:src="@drawable/ic_expand_more_24dp"
+                                    app:tint="@color/md_theme_onSurfaceVariant" />
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <!-- SECTION 4: Quick Action Buttons -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="18dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <!-- Go to Website Button -->
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btn_go_website"
+                                android:layout_width="0dp"
+                                android:layout_height="48dp"
+                                android:layout_marginEnd="8dp"
+                                android:layout_weight="1"
+                                android:backgroundTint="@color/color_fab_active"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                android:text="@string/btn_go_website"
+                                android:textColor="@color/colorWhite"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                app:cornerRadius="14dp"
+                                app:icon="@drawable/ic_language_24dp"
+                                app:iconGravity="textStart"
+                                app:iconPadding="6dp"
+                                app:iconSize="18dp"
+                                app:iconTint="@color/colorWhite" />
+
+                            <!-- Refresh Subscription Button -->
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btn_refresh_sub"
+                                style="@style/Widget.Material3.Button.OutlinedButton"
+                                android:layout_width="0dp"
+                                android:layout_height="48dp"
+                                android:layout_marginStart="8dp"
+                                android:layout_weight="1"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                android:text="@string/btn_refresh_sub"
+                                android:textColor="@color/md_theme_onSurface"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                app:cornerRadius="14dp"
+                                app:icon="@drawable/ic_refresh_24dp"
+                                app:iconGravity="textStart"
+                                app:iconPadding="6dp"
+                                app:iconSize="18dp"
+                                app:iconTint="@color/color_fab_active"
+                                app:strokeColor="@color/card_main_stroke"
+                                app:strokeWidth="1.2dp" />
+                        </LinearLayout>
+
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Empty State Layout in Simple Mode -->
+                <LinearLayout
+                    android:id="@+id/layout_empty_nodes_simple"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="32dp"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:paddingStart="@dimen/padding_spacing_dp16"
+                    android:paddingEnd="@dimen/padding_spacing_dp16"
+                    android:visibility="gone"
+                    tools:visibility="visible">
+
+                    <ImageView
+                        android:layout_width="56dp"
+                        android:layout_height="56dp"
+                        android:src="@drawable/ic_cloud_download_24dp"
+                        app:tint="@color/color_fab_active" />
+
+                    <TextView
+                        android:id="@+id/tv_empty_prompt_simple"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/margin_spacing_dp16"
+                        android:gravity="center"
+                        android:lineSpacingExtra="4dp"
+                        android:text="@string/empty_no_nodes_full_text"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
+                        android:textColor="@color/md_theme_onSurface" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_go_subscribe_simple"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/margin_spacing_dp16"
+                        android:backgroundTint="@color/color_fab_active"
+                        android:text="@string/empty_subscribe_btn"
+                        android:textColor="@color/colorWhite"
+                        app:cornerRadius="20dp"
+                        app:icon="@drawable/ic_subscriptions_24dp"
+                        app:iconTint="@color/colorWhite" />
+                </LinearLayout>
+
+            </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
+
+        <!-- ======================================================== -->
+        <!-- 2. CLASSIC LIST MODE (经典列表模式)                       -->
+        <!-- ======================================================== -->
+        <androidx.coordinatorlayout.widget.CoordinatorLayout
+            android:id="@+id/layout_classic_mode"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <!-- Polished Subscription Info Dashboard Card -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/card_sub_info_classic"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/margin_spacing_dp16"
+                    android:layout_marginEnd="@dimen/margin_spacing_dp16"
+                    android:layout_marginTop="@dimen/margin_spacing_dp8"
+                    android:layout_marginBottom="@dimen/margin_spacing_dp8"
+                    android:visibility="gone"
+                    app:cardBackgroundColor="@color/card_sub_bg"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="@color/card_sub_stroke"
+                    app:strokeWidth="1dp"
+                    tools:visibility="visible">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="@dimen/padding_spacing_dp16">
+
+                        <!-- Top Header: Title & Usage Percentage Badge -->
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -149,29 +560,26 @@
                             android:orientation="horizontal">
 
                             <TextView
-                                android:id="@+id/tv_sub_title"
+                                android:id="@+id/tv_sub_title_classic"
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:ellipsize="end"
-                                android:maxLines="1"
                                 android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
                                 android:textColor="@color/md_theme_onSurface"
-                                android:textSize="16sp"
                                 android:textStyle="bold"
-                                tools:text="KNcloud 专属专线" />
+                                tools:text="KNcloud 订阅" />
 
                             <TextView
-                                android:id="@+id/tv_sub_percent"
+                                android:id="@+id/tv_sub_percent_classic"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:background="@drawable/bg_badge_pill"
-                                android:paddingStart="10dp"
-                                android:paddingTop="3dp"
-                                android:paddingEnd="10dp"
-                                android:paddingBottom="3dp"
+                                android:paddingStart="@dimen/padding_spacing_dp8"
+                                android:paddingTop="2dp"
+                                android:paddingEnd="@dimen/padding_spacing_dp8"
+                                android:paddingBottom="2dp"
                                 android:textColor="@color/color_fab_active"
-                                android:textSize="12sp"
+                                android:textSize="11sp"
                                 android:textStyle="bold"
                                 tools:text="23%" />
                         </LinearLayout>
@@ -180,40 +588,39 @@
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
+                            android:layout_marginTop="@dimen/margin_spacing_dp8"
                             android:gravity="center_vertical"
                             android:orientation="horizontal">
 
                             <TextView
-                                android:id="@+id/tv_sub_traffic"
+                                android:id="@+id/tv_sub_traffic_classic"
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 android:textAppearance="@style/TextAppearance.AppCompat.Headline"
                                 android:textColor="@color/md_theme_onSurface"
-                                android:textSize="19sp"
+                                android:textSize="18sp"
                                 android:textStyle="bold"
                                 tools:text="23.04 TB / 99.99 TB" />
 
                             <TextView
-                                android:id="@+id/tv_sub_reset"
+                                android:id="@+id/tv_sub_reset_classic"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:textAppearance="@style/TextAppearance.AppCompat.Caption"
                                 android:textColor="@color/color_fab_active"
-                                android:textSize="12sp"
                                 tools:text="下次重置：15 天" />
                         </LinearLayout>
 
-                        <!-- Progress Bar -->
+                        <!-- Clean Progress Bar -->
                         <com.google.android.material.progressindicator.LinearProgressIndicator
-                            android:id="@+id/pb_sub_traffic"
+                            android:id="@+id/pb_sub_traffic_classic"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:layout_marginBottom="6dp"
+                            android:layout_marginTop="@dimen/margin_spacing_dp8"
+                            android:layout_marginBottom="@dimen/margin_spacing_dp8"
                             app:indicatorColor="@color/color_fab_active"
-                            app:trackColor="@color/connect_btn_idle_ring"
+                            app:trackColor="@color/card_node_stroke"
                             app:trackCornerRadius="4dp"
                             app:trackStopIndicatorSize="0dp"
                             app:trackThickness="6dp"
@@ -221,289 +628,134 @@
 
                         <!-- Bottom Row: Expire Date -->
                         <TextView
-                            android:id="@+id/tv_sub_expire"
+                            android:id="@+id/tv_sub_expire_classic"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:textAppearance="@style/TextAppearance.AppCompat.Caption"
                             android:textColor="@color/md_theme_onSurfaceVariant"
-                            android:textSize="12sp"
                             tools:text="套餐到期：长期有效" />
-
-                        <View
-                            android:layout_width="match_parent"
-                            android:layout_height="1dp"
-                            android:layout_marginTop="16dp"
-                            android:layout_marginBottom="16dp"
-                            android:background="@color/card_main_stroke" />
                     </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
 
-                    <!-- SECTION 2: Hero Connect Button Area -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center"
-                        android:orientation="vertical"
-                        android:paddingTop="12dp"
-                        android:paddingBottom="16dp">
+                <!-- Node List RecyclerView -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recycler_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:clipToPadding="false"
+                    android:paddingBottom="@dimen/padding_spacing_dp8"
+                    android:nextFocusRight="@+id/fab"
+                    android:scrollbars="vertical" />
 
-                        <!-- Outer Ring Container -->
-                        <FrameLayout
-                            android:id="@+id/fl_connect_outer"
-                            android:layout_width="120dp"
-                            android:layout_height="120dp"
-                            android:background="@drawable/bg_connect_outer_circle">
-
-                            <!-- Main Interactive Connect Button -->
-                            <FrameLayout
-                                android:id="@+id/btn_connect_toggle"
-                                android:layout_width="96dp"
-                                android:layout_height="96dp"
-                                android:layout_gravity="center"
-                                android:background="@drawable/bg_connect_circle"
-                                android:clickable="true"
-                                android:contentDescription="@string/tasker_start_service"
-                                android:elevation="4dp"
-                                android:focusable="true">
-
-                                <ImageView
-                                    android:id="@+id/iv_connect_icon"
-                                    android:layout_width="44dp"
-                                    android:layout_height="44dp"
-                                    android:layout_gravity="center"
-                                    android:src="@drawable/ic_power_24dp"
-                                    app:tint="@color/connect_btn_idle_icon" />
-                            </FrameLayout>
-                        </FrameLayout>
-
-                        <!-- Connection Status Heading -->
-                        <TextView
-                            android:id="@+id/tv_connection_status"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="14dp"
-                            android:text="@string/connect_state_idle"
-                            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-                            android:textColor="@color/md_theme_onSurface"
-                            android:textSize="17sp"
-                            android:textStyle="bold" />
-
-                        <!-- Connection Detail / Ping Status -->
-                        <LinearLayout
-                            android:id="@+id/layout_test"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:background="?attr/selectableItemBackground"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:gravity="center"
-                            android:paddingStart="12dp"
-                            android:paddingTop="4dp"
-                            android:paddingEnd="12dp"
-                            android:paddingBottom="4dp">
-
-                            <TextView
-                                android:id="@+id/tv_test_state"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:gravity="center"
-                                android:text="@string/connect_tap_to_connect"
-                                android:textAppearance="@style/TextAppearance.AppCompat.Caption"
-                                android:textColor="@color/md_theme_onSurfaceVariant"
-                                android:textSize="13sp" />
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <!-- SECTION 3: Node Selector Dropdown Card -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginBottom="6dp"
-                            android:text="@string/node_selector_current_hint"
-                            android:textAppearance="@style/TextAppearance.AppCompat.Caption"
-                            android:textColor="@color/md_theme_onSurfaceVariant"
-                            android:textSize="12sp"
-                            android:textStyle="bold" />
-
-                        <!-- Interactive Node Dropdown Box -->
-                        <LinearLayout
-                            android:id="@+id/layout_node_selector"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:background="@drawable/bg_node_selector_box"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:gravity="center_vertical"
-                            android:minHeight="60dp"
-                            android:orientation="horizontal"
-                            android:paddingStart="14dp"
-                            android:paddingTop="10dp"
-                            android:paddingEnd="14dp"
-                            android:paddingBottom="10dp">
-
-                            <!-- Protocol Badge -->
-                            <TextView
-                                android:id="@+id/tv_selected_node_type"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:background="@drawable/bg_badge_pill"
-                                android:paddingStart="7dp"
-                                android:paddingTop="2dp"
-                                android:paddingEnd="7dp"
-                                android:paddingBottom="2dp"
-                                android:textColor="@color/color_fab_active"
-                                android:textSize="10sp"
-                                android:textStyle="bold"
-                                tools:text="SS" />
-
-                            <!-- Node Name -->
-                            <TextView
-                                android:id="@+id/tv_selected_node_name"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="10dp"
-                                android:layout_marginEnd="8dp"
-                                android:layout_weight="1"
-                                android:ellipsize="end"
-                                android:maxLines="1"
-                                android:text="@string/no_node_selected"
-                                android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
-                                android:textColor="@color/md_theme_onSurface"
-                                android:textSize="14sp"
-                                android:textStyle="bold"
-                                tools:text="香港 [01] 专线 4K" />
-
-                            <!-- Ping Latency Badge -->
-                            <TextView
-                                android:id="@+id/tv_selected_node_ping"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginEnd="6dp"
-                                android:background="@drawable/bg_badge_pill"
-                                android:paddingStart="8dp"
-                                android:paddingTop="2dp"
-                                android:paddingEnd="8dp"
-                                android:paddingBottom="2dp"
-                                android:textColor="@color/colorPingGreen"
-                                android:textSize="11sp"
-                                android:textStyle="bold"
-                                tools:text="58 ms" />
-
-                            <!-- Dropdown Arrow -->
-                            <ImageView
-                                android:layout_width="22dp"
-                                android:layout_height="22dp"
-                                android:src="@drawable/ic_expand_more_24dp"
-                                app:tint="@color/md_theme_onSurfaceVariant" />
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <!-- SECTION 4: Quick Action Buttons -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="18dp"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <!-- Go to Website Button -->
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btn_go_website"
-                            android:layout_width="0dp"
-                            android:layout_height="48dp"
-                            android:layout_marginEnd="8dp"
-                            android:layout_weight="1"
-                            android:backgroundTint="@color/color_fab_active"
-                            android:insetTop="0dp"
-                            android:insetBottom="0dp"
-                            android:text="@string/btn_go_website"
-                            android:textColor="@color/colorWhite"
-                            android:textSize="13sp"
-                            android:textStyle="bold"
-                            app:cornerRadius="14dp"
-                            app:icon="@drawable/ic_language_24dp"
-                            app:iconGravity="textStart"
-                            app:iconPadding="6dp"
-                            app:iconSize="18dp"
-                            app:iconTint="@color/colorWhite" />
-
-                        <!-- Ping / Speed Test Button -->
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btn_speed_test"
-                            style="@style/Widget.Material3.Button.OutlinedButton"
-                            android:layout_width="0dp"
-                            android:layout_height="48dp"
-                            android:layout_marginStart="8dp"
-                            android:layout_weight="1"
-                            android:insetTop="0dp"
-                            android:insetBottom="0dp"
-                            android:text="@string/btn_speed_test"
-                            android:textColor="@color/md_theme_onSurface"
-                            android:textSize="13sp"
-                            android:textStyle="bold"
-                            app:cornerRadius="14dp"
-                            app:icon="@drawable/ic_bolt_24dp"
-                            app:iconGravity="textStart"
-                            app:iconPadding="6dp"
-                            app:iconSize="18dp"
-                            app:iconTint="@color/color_fab_active"
-                            app:strokeColor="@color/card_main_stroke"
-                            app:strokeWidth="1.2dp" />
-                    </LinearLayout>
-
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Empty State Layout (when no servers are loaded) -->
-            <LinearLayout
-                android:id="@+id/layout_empty_nodes"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
-                android:gravity="center"
-                android:orientation="vertical"
-                android:paddingStart="@dimen/padding_spacing_dp16"
-                android:paddingEnd="@dimen/padding_spacing_dp16"
-                android:visibility="gone"
-                tools:visibility="visible">
-
-                <ImageView
-                    android:layout_width="56dp"
-                    android:layout_height="56dp"
-                    android:src="@drawable/ic_cloud_download_24dp"
-                    app:tint="@color/color_fab_active" />
-
-                <TextView
-                    android:id="@+id/tv_empty_prompt"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/margin_spacing_dp16"
+                <!-- Empty State Layout in Classic Mode -->
+                <LinearLayout
+                    android:id="@+id/layout_empty_nodes_classic"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
                     android:gravity="center"
-                    android:lineSpacingExtra="4dp"
-                    android:text="@string/empty_no_nodes_full_text"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
-                    android:textColor="@color/md_theme_onSurface" />
+                    android:orientation="vertical"
+                    android:paddingStart="@dimen/padding_spacing_dp16"
+                    android:paddingEnd="@dimen/padding_spacing_dp16"
+                    android:visibility="gone"
+                    tools:visibility="visible">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_go_subscribe"
-                    android:layout_width="wrap_content"
+                    <ImageView
+                        android:layout_width="56dp"
+                        android:layout_height="56dp"
+                        android:src="@drawable/ic_cloud_download_24dp"
+                        app:tint="@color/colorAccent" />
+
+                    <TextView
+                        android:id="@+id/tv_empty_prompt_classic"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/margin_spacing_dp16"
+                        android:gravity="center"
+                        android:lineSpacingExtra="4dp"
+                        android:text="@string/empty_no_nodes_full_text"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
+                        android:textColor="@color/md_theme_onSurface" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_go_subscribe_classic"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/margin_spacing_dp16"
+                        android:backgroundTint="@color/color_fab_active"
+                        android:text="@string/empty_subscribe_btn"
+                        android:textColor="@color/colorWhite"
+                        app:cornerRadius="20dp"
+                        app:icon="@drawable/ic_subscriptions_24dp"
+                        app:iconTint="@color/colorWhite" />
+                </LinearLayout>
+
+                <!-- Bottom Connection & Test Bar in Classic Mode -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/card_bottom_bar"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/margin_spacing_dp16"
-                    android:backgroundTint="@color/color_fab_active"
-                    android:text="@string/empty_subscribe_btn"
-                    android:textColor="@color/colorWhite"
-                    app:cornerRadius="20dp"
-                    app:icon="@drawable/ic_subscriptions_24dp"
-                    app:iconTint="@color/colorWhite" />
+                    android:layout_marginStart="@dimen/margin_spacing_dp16"
+                    android:layout_marginEnd="@dimen/margin_spacing_dp16"
+                    android:layout_marginBottom="@dimen/margin_spacing_dp12"
+                    app:cardBackgroundColor="@color/bottom_bar_bg"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="3dp"
+                    app:strokeColor="@color/bottom_bar_stroke"
+                    app:strokeWidth="1dp">
+
+                    <LinearLayout
+                        android:id="@+id/layout_test"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/view_height_dp64"
+                        android:background="?attr/selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingStart="@dimen/padding_spacing_dp16"
+                        android:paddingEnd="72dp">
+
+                        <TextView
+                            android:id="@+id/tv_test_state"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:ellipsize="end"
+                            android:maxLines="2"
+                            android:text="@string/connection_test_pending"
+                            android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                            android:textColor="@color/md_theme_onSurface" />
+
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
             </LinearLayout>
 
-        </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
+            <!-- Floating Action Button in Classic Mode -->
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|end"
+                android:layout_marginEnd="24dp"
+                android:layout_marginBottom="16dp">
+
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/fab"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:clickable="true"
+                    android:contentDescription="@string/tasker_start_service"
+                    android:focusable="true"
+                    android:src="@drawable/ic_play_24dp"
+                    app:backgroundTint="@color/color_fab_active"
+                    app:elevation="6dp"
+                    app:fabCustomSize="56dp"
+                    app:maxImageSize="28dp"
+                    app:tint="@color/colorWhite" />
+
+            </FrameLayout>
+        </androidx.coordinatorlayout.widget.CoordinatorLayout>
+    </FrameLayout>
 
 </LinearLayout>

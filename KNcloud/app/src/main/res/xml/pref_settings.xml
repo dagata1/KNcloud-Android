@@ -117,6 +117,12 @@
 
     <PreferenceCategory android:title="@string/title_ui_settings">
         <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="pref_simple_mode"
+            android:summary="@string/summary_pref_simple_mode"
+            android:title="@string/title_pref_simple_mode" />
+
+        <CheckBoxPreference
             android:key="pref_speed_enabled"
             android:summary="@string/summary_pref_speed_enabled"
             android:title="@string/title_pref_speed_enabled" />

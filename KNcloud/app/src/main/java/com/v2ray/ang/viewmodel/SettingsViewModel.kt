@@ -88,7 +88,8 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             }
 
             AppConfig.PREF_SNIFFING_ENABLED,
-            AppConfig.PREF_USE_HEV_TUNNEL -> {
+            AppConfig.PREF_USE_HEV_TUNNEL,
+            AppConfig.PREF_SIMPLE_MODE -> {
                 MmkvManager.encodeSettings(key, sharedPreferences.getBoolean(key, true))
             }
 

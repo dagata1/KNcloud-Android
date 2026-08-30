@@ -410,6 +410,7 @@
     <string name="empty_subscribe_btn">前往网站</string>
     <string name="btn_go_website">前往官网</string>
     <string name="btn_speed_test">一键测速</string>
+    <string name="btn_refresh_sub">刷新订阅</string>
     <string name="node_selector_title">切换节点</string>
     <string name="node_selector_current_hint">当前节点</string>
     <string name="node_selector_sheet_title">选择节点</string>
@@ -419,6 +420,8 @@
     <string name="connect_state_connected">已连接</string>
     <string name="connect_tap_to_connect">点击启动代理保护</string>
     <string name="connect_tap_to_disconnect">已连接 · 点击停止连接</string>
+    <string name="title_pref_simple_mode">简洁模式</string>
+    <string name="summary_pref_simple_mode">开启卡片式仪表板与抽屉节点选择，关闭使用经典列表</string>
     <string name="no_node_selected">未选择节点</string>
 
 </resources>
