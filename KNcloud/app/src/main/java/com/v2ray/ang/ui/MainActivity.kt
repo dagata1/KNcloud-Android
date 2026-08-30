@@ -462,13 +462,11 @@ class MainActivity : BaseActivity() {
                             mainViewModel.reloadServerList()
                             updateSubscriptionInfo()
                             updateEmptyState()
-                            updateDrawerHeader()
                             autoTestAllRealPing()
                         }
 
                         countSub > 0 -> {
                             updateSubscriptionInfo()
-                            updateDrawerHeader()
                         }
                         else -> toastError(R.string.toast_failure)
                     }
@@ -513,7 +511,6 @@ class MainActivity : BaseActivity() {
                     mainViewModel.reloadServerList()
                     updateSubscriptionInfo()
                     updateEmptyState()
-                    updateDrawerHeader()
                     autoTestAllRealPing()
                 } else {
                     toastError(R.string.toast_failure)
