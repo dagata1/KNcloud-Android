@@ -419,6 +419,18 @@
     <string name="dialog_logout_message">Are you sure you want to sign out? This will clear your account session and servers.</string>
     <string name="empty_no_nodes_full_text">No available nodes. If you haven\'t subscribed or your plan has expired, please Subscribe.</string>
     <string name="empty_subscribe_keyword">Subscribe</string>
-    <string name="empty_subscribe_btn">Subscribe</string>
+    <string name="empty_subscribe_btn">Go to Website</string>
+    <string name="btn_go_website">Website</string>
+    <string name="btn_speed_test">Speed Test</string>
+    <string name="node_selector_title">Switch Node</string>
+    <string name="node_selector_current_hint">Selected Node</string>
+    <string name="node_selector_sheet_title">Select Node</string>
+    <string name="node_count_format">%d nodes available</string>
+    <string name="node_selector_empty">No nodes available</string>
+    <string name="connect_state_idle">Not Connected</string>
+    <string name="connect_state_connected">Protected</string>
+    <string name="connect_tap_to_connect">Tap to connect</string>
+    <string name="connect_tap_to_disconnect">Connected · Tap to disconnect</string>
+    <string name="no_node_selected">No node selected</string>
 
 </resources>

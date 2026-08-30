@@ -381,6 +381,6 @@
     <string name="pre_resolving_domain">Pre-resolving domain…</string>
     <string name="empty_no_nodes_full_text">لا توجد عقد متاحة، إذا لم تكن مشتركًا أو انتهت صلاحية اشتراكك، يُرجى الاشتراك.</string>
     <string name="empty_subscribe_keyword">الاشتراك</string>
-    <string name="empty_subscribe_btn">اشترك الآن</string>
+    <string name="empty_subscribe_btn">الانتقال إلى الموقع</string>
 
 </resources>

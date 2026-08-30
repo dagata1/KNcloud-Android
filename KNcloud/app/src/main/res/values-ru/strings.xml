@@ -395,6 +395,6 @@
     <string name="pre_resolving_domain">Предварительное определение домена…</string>
     <string name="empty_no_nodes_full_text">Нет доступных узлов. Если вы не подписаны или срок действия истек, пожалуйста, оформите Подписку.</string>
     <string name="empty_subscribe_keyword">Подписку</string>
-    <string name="empty_subscribe_btn">Оформить подписку</string>
+    <string name="empty_subscribe_btn">Перейти на сайт</string>
 
 </resources>

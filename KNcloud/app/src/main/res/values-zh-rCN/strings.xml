@@ -407,6 +407,18 @@
     <string name="dialog_logout_message">确定要退出登录吗？退出后将清除当前账号与节点数据。</string>
     <string name="empty_no_nodes_full_text">没有可用节点，如果您未订阅或已过期请订阅。</string>
     <string name="empty_subscribe_keyword">订阅</string>
-    <string name="empty_subscribe_btn">立即订阅</string>
+    <string name="empty_subscribe_btn">前往网站</string>
+    <string name="btn_go_website">前往官网</string>
+    <string name="btn_speed_test">一键测速</string>
+    <string name="node_selector_title">切换节点</string>
+    <string name="node_selector_current_hint">当前节点</string>
+    <string name="node_selector_sheet_title">选择节点</string>
+    <string name="node_count_format">共 %d 个可用节点</string>
+    <string name="node_selector_empty">暂无可用节点</string>
+    <string name="connect_state_idle">未连接</string>
+    <string name="connect_state_connected">已连接</string>
+    <string name="connect_tap_to_connect">点击启动代理保护</string>
+    <string name="connect_tap_to_disconnect">已连接 · 点击停止连接</string>
+    <string name="no_node_selected">未选择节点</string>
 
 </resources>

@@ -384,6 +384,6 @@
     <string name="pre_resolving_domain">Pre-resolving domain…</string>
     <string name="empty_no_nodes_full_text">Không có máy chủ khả dụng, nếu bạn chưa đăng ký hoặc gói đã hết hạn, vui lòng Đăng ký.</string>
     <string name="empty_subscribe_keyword">Đăng ký</string>
-    <string name="empty_subscribe_btn">Đăng ký ngay</string>
+    <string name="empty_subscribe_btn">Đến trang web</string>
 
 </resources>

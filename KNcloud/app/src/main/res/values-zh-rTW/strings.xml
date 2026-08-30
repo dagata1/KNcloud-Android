@@ -404,8 +404,20 @@
     <string name="menu_logout">登出帳號</string>
     <string name="dialog_logout_title">登出帳號</string>
     <string name="dialog_logout_message">確定要登出嗎？登出後將清除當前帳號與節點資料。</string>
-    <string name="empty_no_nodes_full_text">沒有可用節點，如果您未訂閱或已過期請 訂閱。</string>
+    <string name="empty_no_nodes_full_text">沒有可用節點，如果您未訂閱或已過期請訂閱。</string>
     <string name="empty_subscribe_keyword">訂閱</string>
-    <string name="empty_subscribe_btn">立即訂閱</string>
+    <string name="empty_subscribe_btn">前往網站</string>
+    <string name="btn_go_website">前往官網</string>
+    <string name="btn_speed_test">一鍵測速</string>
+    <string name="node_selector_title">切換節點</string>
+    <string name="node_selector_current_hint">當前節點</string>
+    <string name="node_selector_sheet_title">選擇節点</string>
+    <string name="node_count_format">共 %d 個可用節點</string>
+    <string name="node_selector_empty">暫無可用節點</string>
+    <string name="connect_state_idle">未連線</string>
+    <string name="connect_state_connected">已連線</string>
+    <string name="connect_tap_to_connect">點擊啟動代理保護</string>
+    <string name="connect_tap_to_disconnect">已連線 · 點擊停止連線</string>
+    <string name="no_node_selected">未選擇節點</string>
 
 </resources>

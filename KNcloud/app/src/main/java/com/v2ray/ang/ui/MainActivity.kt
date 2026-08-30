@@ -9,10 +9,16 @@ import android.net.Uri
 import android.net.VpnService
 import android.os.Build
 import android.os.Bundle
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.TextPaint
+import android.text.method.LinkMovementMethod
+import android.text.style.ClickableSpan
 import android.util.Log
 import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -20,27 +26,19 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.ItemTouchHelper
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.AppConfig.VPN
 import com.v2ray.ang.R
 import com.v2ray.ang.databinding.ActivityMainBinding
+import com.v2ray.ang.dto.ProfileItem
 import com.v2ray.ang.extension.toast
 import com.v2ray.ang.extension.toastError
 import com.v2ray.ang.handler.AngConfigManager
 import com.v2ray.ang.handler.MigrateManager
 import com.v2ray.ang.handler.MmkvManager
-import com.v2ray.ang.helper.SimpleItemTouchHelperCallback
 import com.v2ray.ang.handler.V2RayServiceManager
 import com.v2ray.ang.util.Utils
 import com.v2ray.ang.viewmodel.MainViewModel
-import android.text.SpannableString
-import android.text.Spanned
-import android.text.TextPaint
-import android.text.method.LinkMovementMethod
-import android.text.style.ClickableSpan
-import android.view.View
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -51,13 +49,12 @@ class MainActivity : BaseActivity() {
         ActivityMainBinding.inflate(layoutInflater)
     }
 
-    private val adapter by lazy { MainRecyclerAdapter(this) }
     private val requestVpnPermission = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
         if (it.resultCode == RESULT_OK) {
             startV2Ray()
         }
     }
-    private var mItemTouchHelper: ItemTouchHelper? = null
+
     val mainViewModel: MainViewModel by viewModels()
 
     // register activity result for requesting permission
@@ -119,6 +116,7 @@ class MainActivity : BaseActivity() {
 
         setContentView(binding.root)
 
+        // Top bar buttons
         binding.btnTopSettings.setOnClickListener {
             startActivity(
                 Intent(this, SettingsActivity::class.java)
@@ -134,39 +132,35 @@ class MainActivity : BaseActivity() {
             showLogoutDialog()
         }
 
-        binding.fab.setOnClickListener {
-            if (mainViewModel.isRunning.value == true) {
-                V2RayServiceManager.stopVService(this)
-            } else if ((MmkvManager.decodeSettingsString(AppConfig.PREF_MODE) ?: VPN) == VPN) {
-                val intent = VpnService.prepare(this)
-                if (intent == null) {
-                    startV2Ray()
-                } else {
-                    requestVpnPermission.launch(intent)
-                }
-            } else {
-                startV2Ray()
-            }
+        // Hero Connect Button Toggle
+        binding.btnConnectToggle.setOnClickListener {
+            toggleV2RayConnection()
         }
+
+        // Real ping test or trigger connect on status click
         binding.layoutTest.setOnClickListener {
             if (mainViewModel.isRunning.value == true) {
                 setTestState(getString(R.string.connection_test_testing))
                 mainViewModel.testCurrentServerRealPing()
             } else {
-//                tv_test_state.text = getString(R.string.connection_test_fail)
+                toggleV2RayConnection()
             }
         }
 
-        binding.recyclerView.setHasFixedSize(true)
-        if (MmkvManager.decodeSettingsBool(AppConfig.PREF_DOUBLE_COLUMN_DISPLAY, false)) {
-            binding.recyclerView.layoutManager = GridLayoutManager(this, 2)
-        } else {
-            binding.recyclerView.layoutManager = GridLayoutManager(this, 1)
+        // Node Selector Dropdown Click -> Open BottomSheet
+        binding.layoutNodeSelector.setOnClickListener {
+            NodeSelectorBottomSheet.show(supportFragmentManager)
         }
-        binding.recyclerView.adapter = adapter
 
-        mItemTouchHelper = ItemTouchHelper(SimpleItemTouchHelperCallback(adapter))
-        mItemTouchHelper?.attachToRecyclerView(binding.recyclerView)
+        // Go to Website Button
+        binding.btnGoWebsite.setOnClickListener {
+            openSubscribeWebPage()
+        }
+
+        // One-key Speed Test Button
+        binding.btnSpeedTest.setOnClickListener {
+            realPingAll()
+        }
 
         setupEmptyStateView()
         updateSubscriptionInfo()
@@ -188,35 +182,123 @@ class MainActivity : BaseActivity() {
         })
     }
 
+    private fun toggleV2RayConnection() {
+        if (mainViewModel.isRunning.value == true) {
+            V2RayServiceManager.stopVService(this)
+        } else if ((MmkvManager.decodeSettingsString(AppConfig.PREF_MODE) ?: VPN) == VPN) {
+            val intent = VpnService.prepare(this)
+            if (intent == null) {
+                startV2Ray()
+            } else {
+                requestVpnPermission.launch(intent)
+            }
+        } else {
+            startV2Ray()
+        }
+    }
+
     @SuppressLint("NotifyDataSetChanged")
     private fun setupViewModel() {
-        mainViewModel.updateListAction.observe(this) { index ->
-            if (index >= 0) {
-                adapter.notifyItemChanged(index)
-            } else {
-                adapter.notifyDataSetChanged()
-            }
+        mainViewModel.updateListAction.observe(this) {
+            updateSelectedNodeUI()
             updateEmptyState()
         }
-        mainViewModel.updateTestResultAction.observe(this) { setTestState(it) }
-        mainViewModel.isRunning.observe(this) { isRunning ->
-            adapter.isRunning = isRunning
-            if (isRunning) {
-                binding.fab.setImageResource(R.drawable.ic_stop_24dp)
-                binding.fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_fab_active))
-                binding.fab.contentDescription = getString(R.string.action_stop_service)
-                setTestState(getString(R.string.connection_connected))
-                binding.layoutTest.isFocusable = true
-            } else {
-                binding.fab.setImageResource(R.drawable.ic_play_24dp)
-                binding.fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_fab_inactive))
-                binding.fab.contentDescription = getString(R.string.tasker_start_service)
-                setTestState(getString(R.string.connection_not_connected))
-                binding.layoutTest.isFocusable = false
-            }
+
+        mainViewModel.updateTestResultAction.observe(this) {
+            setTestState(it)
+            updateSelectedNodeUI()
         }
+
+        mainViewModel.isRunning.observe(this) { isRunning ->
+            updateConnectionUI(isRunning)
+        }
+
         mainViewModel.startListenBroadcast()
         mainViewModel.initAssets(assets)
+    }
+
+    private fun updateConnectionUI(isRunning: Boolean) {
+        if (isRunning) {
+            binding.flConnectOuter.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_active_ring))
+            binding.btnConnectToggle.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_active_bg))
+            binding.ivConnectIcon.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_active_icon))
+            binding.tvConnectionStatus.text = getString(R.string.connect_state_connected)
+            binding.tvTestState.text = getString(R.string.connect_tap_to_disconnect)
+        } else {
+            binding.flConnectOuter.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_idle_ring))
+            binding.btnConnectToggle.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_idle_bg))
+            binding.ivConnectIcon.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_idle_icon))
+            binding.tvConnectionStatus.text = getString(R.string.connect_state_idle)
+            binding.tvTestState.text = getString(R.string.connect_tap_to_connect)
+        }
+    }
+
+    /**
+     * Updates the Selected Node Display on the Hero Card
+     */
+    fun updateSelectedNodeUI() {
+        val servers = mainViewModel.serversCache
+        if (servers.isEmpty()) {
+            binding.tvSelectedNodeName.text = getString(R.string.no_node_selected)
+            binding.tvSelectedNodeType.isVisible = false
+            binding.tvSelectedNodePing.isVisible = false
+            return
+        }
+
+        var selectServerGuid = MmkvManager.getSelectServer()
+        var currentServer = servers.find { it.guid == selectServerGuid }
+
+        // If no server selected or selected server doesn't exist, default to the first server
+        if (currentServer == null) {
+            currentServer = servers.first()
+            selectServerGuid = currentServer.guid
+            MmkvManager.setSelectServer(selectServerGuid)
+        }
+
+        val profile = currentServer.profile
+        binding.tvSelectedNodeName.text = profile.remarks.ifBlank { getString(R.string.app_name) }
+        binding.tvSelectedNodeType.text = profile.configType.name
+        binding.tvSelectedNodeType.isVisible = true
+
+        // Ping Delay Badge
+        val aff = MmkvManager.decodeServerAffiliationInfo(selectServerGuid)
+        val delayMillis = aff?.testDelayMillis ?: 0L
+        val delayStr = aff?.getTestDelayString().orEmpty()
+
+        if (delayStr.isNotBlank()) {
+            binding.tvSelectedNodePing.isVisible = true
+            binding.tvSelectedNodePing.text = delayStr
+            when {
+                delayMillis < 0L -> {
+                    binding.tvSelectedNodePing.setTextColor(ContextCompat.getColor(this, R.color.colorPingRed))
+                }
+                delayMillis in 1..150 -> {
+                    binding.tvSelectedNodePing.setTextColor(ContextCompat.getColor(this, R.color.colorPingGreen))
+                }
+                delayMillis in 151..300 -> {
+                    binding.tvSelectedNodePing.setTextColor(ContextCompat.getColor(this, R.color.colorPingYellow))
+                }
+                else -> {
+                    binding.tvSelectedNodePing.setTextColor(ContextCompat.getColor(this, R.color.colorPingRed))
+                }
+            }
+        } else {
+            binding.tvSelectedNodePing.isVisible = false
+        }
+    }
+
+    /**
+     * Called when a node is chosen from the Node Selector BottomSheet
+     */
+    fun onNodeSelected(guid: String) {
+        val currentSelected = MmkvManager.getSelectServer()
+        if (guid != currentSelected) {
+            MmkvManager.setSelectServer(guid)
+            updateSelectedNodeUI()
+            if (mainViewModel.isRunning.value == true) {
+                restartV2Ray()
+            }
+        }
     }
 
     private fun migrateLegacy() {
@@ -226,11 +308,9 @@ class MainActivity : BaseActivity() {
                 if (result) {
                     toast(getString(R.string.migration_success))
                     mainViewModel.reloadServerList()
-                } else {
-                    //toast(getString(R.string.migration_fail))
+                    updateSelectedNodeUI()
                 }
             }
-
         }
     }
 
@@ -270,13 +350,14 @@ class MainActivity : BaseActivity() {
         }
         mainViewModel.reloadServerList()
         updateSubscriptionInfo()
+        updateSelectedNodeUI()
         updateEmptyState()
     }
 
     private fun updateEmptyState() {
         val isEmpty = mainViewModel.serversCache.isEmpty()
         binding.layoutEmptyNodes.isVisible = isEmpty
-        binding.recyclerView.isVisible = !isEmpty
+        binding.cardMainDashboard.isVisible = !isEmpty
     }
 
     private fun setupEmptyStateView() {
@@ -361,10 +442,6 @@ class MainActivity : BaseActivity() {
         } else {
             binding.cardSubInfo.isVisible = false
         }
-    }
-
-    public override fun onPause() {
-        super.onPause()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -457,8 +534,7 @@ class MainActivity : BaseActivity() {
     /**
      * import config from clipboard
      */
-    private fun importClipboard()
-            : Boolean {
+    private fun importClipboard(): Boolean {
         try {
             val clipboard = Utils.getClipboard(this)
             importBatchConfig(clipboard)
@@ -482,6 +558,7 @@ class MainActivity : BaseActivity() {
                             toast(getString(R.string.title_import_config_count, count))
                             mainViewModel.reloadServerList()
                             updateSubscriptionInfo()
+                            updateSelectedNodeUI()
                             updateEmptyState()
                             autoTestAllRealPing()
                         }
@@ -516,7 +593,6 @@ class MainActivity : BaseActivity() {
         return true
     }
 
-
     /**
      * import config from sub
      */
@@ -531,6 +607,7 @@ class MainActivity : BaseActivity() {
                     toast(getString(R.string.title_update_config_count, count))
                     mainViewModel.reloadServerList()
                     updateSubscriptionInfo()
+                    updateSelectedNodeUI()
                     updateEmptyState()
                     autoTestAllRealPing()
                 } else {
@@ -564,6 +641,8 @@ class MainActivity : BaseActivity() {
                     val ret = mainViewModel.removeAllServer()
                     launch(Dispatchers.Main) {
                         mainViewModel.reloadServerList()
+                        updateSelectedNodeUI()
+                        updateEmptyState()
                         toast(getString(R.string.title_del_config_count, ret))
                         binding.pbWaiting.hide()
                     }
@@ -583,6 +662,8 @@ class MainActivity : BaseActivity() {
                     val ret = mainViewModel.removeDuplicateServer()
                     launch(Dispatchers.Main) {
                         mainViewModel.reloadServerList()
+                        updateSelectedNodeUI()
+                        updateEmptyState()
                         toast(getString(R.string.title_del_duplicate_config_count, ret))
                         binding.pbWaiting.hide()
                     }
@@ -602,6 +683,8 @@ class MainActivity : BaseActivity() {
                     val ret = mainViewModel.removeInvalidServer()
                     launch(Dispatchers.Main) {
                         mainViewModel.reloadServerList()
+                        updateSelectedNodeUI()
+                        updateEmptyState()
                         toast(getString(R.string.title_del_config_count, ret))
                         binding.pbWaiting.hide()
                     }
@@ -619,6 +702,7 @@ class MainActivity : BaseActivity() {
             mainViewModel.sortByTestResults()
             launch(Dispatchers.Main) {
                 mainViewModel.reloadServerList()
+                updateSelectedNodeUI()
                 binding.pbWaiting.hide()
             }
         }
@@ -672,15 +756,6 @@ class MainActivity : BaseActivity() {
     private fun setTestState(content: String?) {
         binding.tvTestState.text = content
     }
-
-//    val mConnection = object : ServiceConnection {
-//        override fun onServiceDisconnected(name: ComponentName?) {
-//        }
-//
-//        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-//            sendMsg(AppConfig.MSG_REGISTER_CLIENT, "")
-//        }
-//    }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         if (keyCode == KeyEvent.KEYCODE_BACK || keyCode == KeyEvent.KEYCODE_BUTTON_B) {

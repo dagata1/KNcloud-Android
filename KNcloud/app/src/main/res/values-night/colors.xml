@@ -54,6 +54,8 @@
     <color name="md_theme_surfaceTint">#C0C0C0</color>
     <color name="md_theme_scrim">#000000</color>
     <!-- Card & Component Styling Colors -->
+    <color name="card_main_bg">#23222A</color>
+    <color name="card_main_stroke">#34323E</color>
     <color name="card_sub_bg">#23222A</color>
     <color name="card_sub_stroke">#34323E</color>
     <color name="card_node_bg">#1D1C22</color>
@@ -67,4 +69,17 @@
     <color name="top_bar_capsule_bg">#252528</color>
     <color name="top_bar_capsule_stroke">#34333A</color>
     <color name="top_bar_icon_tint">#FFFFFF</color>
+
+    <!-- Modern Hero Dashboard Colors -->
+    <color name="connect_btn_idle_bg">#2D2C37</color>
+    <color name="connect_btn_idle_icon">#A5A1B2</color>
+    <color name="connect_btn_idle_ring">#383745</color>
+    <color name="connect_btn_active_bg">#f97910</color>
+    <color name="connect_btn_active_icon">#FFFFFF</color>
+    <color name="connect_btn_active_ring">#5C2F0B</color>
+    <color name="node_selector_bg">#1D1C22</color>
+    <color name="node_selector_stroke">#34323E</color>
+    <color name="node_selector_icon_bg">#2D2C37</color>
+    <color name="colorPingGreen">#10B981</color>
+    <color name="colorPingYellow">#F59E0B</color>
 </resources>

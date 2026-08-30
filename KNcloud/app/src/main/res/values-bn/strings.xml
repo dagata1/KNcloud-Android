@@ -386,6 +386,6 @@
     <string name="pre_resolving_domain">Pre-resolving domain…</string>
     <string name="empty_no_nodes_full_text">কোনো নোড উপলব্ধ নেই, আপনি যদি সাবস্ক্রাইব না করে থাকেন বা মেয়াদ শেষ হয়ে থাকে তবে অনুগ্রহ করে সাবস্ক্রাইব করুন।</string>
     <string name="empty_subscribe_keyword">সাবস্ক্রাইব</string>
-    <string name="empty_subscribe_btn">সাবস্ক্রাইব করুন</string>
+    <string name="empty_subscribe_btn">ওয়েবসাইটে যান</string>
 
 </resources>
