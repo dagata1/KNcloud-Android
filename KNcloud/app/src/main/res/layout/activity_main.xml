@@ -68,6 +68,7 @@
 
             <!-- Small Divider -->
             <View
+                android:id="@+id/top_capsule_divider"
                 android:layout_width="1dp"
                 android:layout_height="16dp"
                 android:layout_marginStart="2dp"

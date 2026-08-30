@@ -262,8 +262,14 @@ class MainActivity : BaseActivity() {
         binding.layoutClassicMode.isVisible = !isSimpleMode
 
         if (isSimpleMode) {
+            binding.btnTopRefresh.isVisible = false
+            binding.topCapsuleDivider.isVisible = false
+            binding.layoutTopCapsule.setBackgroundResource(R.drawable.bg_top_bar_circle)
             updateSelectedNodeUI()
         } else {
+            binding.btnTopRefresh.isVisible = true
+            binding.topCapsuleDivider.isVisible = true
+            binding.layoutTopCapsule.setBackgroundResource(R.drawable.bg_top_bar_capsule)
             adapter.notifyDataSetChanged()
         }
         updateSubscriptionInfo()
