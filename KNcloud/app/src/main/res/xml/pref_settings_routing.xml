@@ -13,7 +13,6 @@
         <Preference
             android:key="pref_routing_setting"
             android:icon="@drawable/ic_routing_24dp"
-            android:summary="@string/summary_pref_routing_setting"
             android:title="@string/routing_settings_title" />
 
         <ListPreference

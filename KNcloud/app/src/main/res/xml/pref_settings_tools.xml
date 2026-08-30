@@ -7,13 +7,11 @@
         <Preference
             android:key="pref_user_asset_and_update"
             android:icon="@drawable/ic_cloud_download_24dp"
-            android:summary="@string/summary_pref_user_asset_and_update"
             android:title="@string/title_user_asset_and_update" />
 
         <Preference
             android:key="pref_logcat"
             android:icon="@drawable/ic_logcat_24dp"
-            android:summary="@string/summary_pref_logcat"
             android:title="@string/title_logcat" />
 
         <ListPreference
