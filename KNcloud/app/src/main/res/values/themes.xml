@@ -53,6 +53,31 @@
         <!-- Status bar and navigation bar - system bars -->
         <item name="android:statusBarColor">@color/md_theme_surface</item>
         <item name="android:navigationBarColor">@color/md_theme_surface</item>
+
+        <!-- Unified Material 3 Dialog Theme -->
+        <item name="materialAlertDialogTheme">@style/KNcloudMaterialAlertDialogTheme</item>
+        <item name="alertDialogTheme">@style/KNcloudMaterialAlertDialogTheme</item>
+    </style>
+
+    <!-- Unified Material Alert Dialog Theme -->
+    <style name="KNcloudMaterialAlertDialogTheme" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="shapeAppearanceOverlay">@style/KNcloudDialogShape</item>
+        <item name="colorSurface">@color/card_main_bg</item>
+        <item name="colorOnSurface">@color/md_theme_onSurface</item>
+        <item name="colorOnSurfaceVariant">@color/md_theme_onSurfaceVariant</item>
+        <item name="colorPrimary">@color/color_fab_active</item>
+        <item name="buttonBarPositiveButtonStyle">@style/KNcloudDialogButtonStyle</item>
+        <item name="buttonBarNegativeButtonStyle">@style/KNcloudDialogButtonStyle</item>
+        <item name="buttonBarNeutralButtonStyle">@style/KNcloudDialogButtonStyle</item>
+    </style>
+
+    <style name="KNcloudDialogShape" parent="">
+        <item name="cornerSize">22dp</item>
+    </style>
+
+    <style name="KNcloudDialogButtonStyle" parent="Widget.Material3.Button.TextButton.Dialog">
+        <item name="android:textColor">@color/color_fab_active</item>
+        <item name="rippleColor">@color/color_fab_active</item>
     </style>
 
     <!-- Day/Night theme: inherit common values and set light-mode-specific items -->

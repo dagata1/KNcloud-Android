@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory android:title="@string/title_feature_settings">
+
+        <Preference
+            android:key="pref_user_asset_and_update"
+            android:icon="@drawable/ic_cloud_download_24dp"
+            android:summary="@string/summary_pref_user_asset_and_update"
+            android:title="@string/title_user_asset_and_update" />
+
+        <Preference
+            android:key="pref_logcat"
+            android:icon="@drawable/ic_logcat_24dp"
+            android:summary="@string/summary_pref_logcat"
+            android:title="@string/title_logcat" />
+
+        <ListPreference
+            android:defaultValue="warning"
+            android:entries="@array/core_loglevel"
+            android:entryValues="@array/core_loglevel"
+            android:key="pref_core_loglevel"
+            android:summary="%s"
+            android:title="@string/title_core_loglevel" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

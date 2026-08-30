@@ -432,6 +432,7 @@
     <string name="connect_state_connected">Protected</string>
     <string name="connect_tap_to_connect">Tap to connect</string>
     <string name="connect_tap_to_disconnect">Connected · Tap to disconnect</string>
+    <string name="connect_tap_to_test">Tap to test connectivity</string>
     <string name="title_pref_simple_mode">Simple Mode</string>
     <string name="summary_pref_simple_mode">Enable card dashboard with drawer node selector, disable for classic list</string>
     <string name="no_node_selected">No node selected</string>
@@ -443,5 +444,17 @@
     <string name="sub_status_no_traffic">No Data Available</string>
     <string name="sub_status_go_buy_hint">Please go to website to purchase a plan</string>
     <string name="sub_status_expired">Expired</string>
+    <string name="title_settings_ui">Interface &amp; Appearance</string>
+    <string name="summary_settings_ui">Simple mode, dark theme, language, display</string>
+    <string name="title_settings_routing">Routing &amp; Proxy</string>
+    <string name="summary_settings_routing">Per-app proxy, routing rules, domain strategy</string>
+    <string name="title_settings_vpn">VPN &amp; Connection</string>
+    <string name="summary_settings_vpn">Run mode, auto connect, LAN share, local port</string>
+    <string name="title_settings_dns">DNS &amp; Hosts</string>
+    <string name="summary_settings_dns">Local DNS, FakeDNS, direct/remote DNS, Hosts</string>
+    <string name="title_settings_advanced">Protocols &amp; Optimization</string>
+    <string name="summary_settings_advanced">Mux multiplexing, TLS Fragment, auto update</string>
+    <string name="title_settings_tools">Tools &amp; Logs</string>
+    <string name="summary_settings_tools">Geo asset update, logcat viewer, log level</string>
 
 </resources>

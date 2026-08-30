@@ -21,8 +21,10 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:minHeight="48dp"
         android:paddingStart="20dp"
         android:paddingEnd="16dp"
+        android:paddingTop="4dp"
         android:paddingBottom="12dp">
 
         <TextView
@@ -54,16 +56,23 @@
                 android:layout_width="wrap_content"
                 android:layout_height="36dp"
                 android:layout_marginEnd="8dp"
+                android:minHeight="0dp"
+                android:minWidth="0dp"
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
                 android:paddingStart="12dp"
                 android:paddingEnd="12dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
+                android:gravity="center"
+                android:includeFontPadding="false"
                 android:text="@string/btn_speed_test"
                 android:textColor="@color/color_fab_active"
                 android:textSize="12sp"
                 app:backgroundTint="@color/node_selector_bg"
                 app:cornerRadius="18dp"
                 app:icon="@drawable/ic_bolt_24dp"
+                app:iconGravity="textStart"
                 app:iconPadding="4dp"
                 app:iconSize="14dp"
                 app:iconTint="@color/color_fab_active" />

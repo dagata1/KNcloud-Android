@@ -2,7 +2,7 @@ package com.v2ray.ang.ui
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.AlertDialog
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -155,7 +155,7 @@ class UserAssetActivity : BaseActivity() {
     }
 
     private fun showUpdateDialog(result: CheckUpdateResult) {
-        androidx.appcompat.app.AlertDialog.Builder(this)
+        MaterialAlertDialogBuilder(this)
             .setTitle(getString(R.string.update_new_version_found, result.latestVersion))
             .setMessage(result.releaseNotes)
             .setPositiveButton(R.string.update_now) { _, _ ->
@@ -172,7 +172,7 @@ class UserAssetActivity : BaseActivity() {
     }
 
     private fun setGeoFilesSources() {
-        AlertDialog.Builder(this).setItems(AppConfig.GEO_FILES_SOURCES.toTypedArray()) { _, i ->
+        MaterialAlertDialogBuilder(this).setItems(AppConfig.GEO_FILES_SOURCES.toTypedArray()) { _, i ->
             try {
                 val value = AppConfig.GEO_FILES_SOURCES[i]
                 MmkvManager.encodeSettings(AppConfig.PREF_GEO_FILES_SOURCES, value)
@@ -402,7 +402,7 @@ class UserAssetActivity : BaseActivity() {
                 startActivity(intent)
             }
             holder.itemUserAssetBinding.layoutRemove.setOnClickListener {
-                AlertDialog.Builder(this@UserAssetActivity).setMessage(R.string.del_config_comfirm)
+                MaterialAlertDialogBuilder(this@UserAssetActivity).setMessage(R.string.del_config_comfirm)
                     .setPositiveButton(android.R.string.ok) { _, _ ->
                         file?.delete()
                         MmkvManager.removeAssetUrl(item.first)

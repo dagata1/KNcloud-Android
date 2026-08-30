@@ -11,7 +11,7 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.Spinner
 import android.widget.TextView
-import androidx.appcompat.app.AlertDialog
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.AppConfig.DEFAULT_PORT
 import com.v2ray.ang.AppConfig.PREF_ALLOW_INSECURE
@@ -618,7 +618,7 @@ class ServerActivity : BaseActivity() {
         if (editGuid.isNotEmpty()) {
             if (editGuid != MmkvManager.getSelectServer()) {
                 if (MmkvManager.decodeSettingsBool(AppConfig.PREF_CONFIRM_REMOVE) == true) {
-                    AlertDialog.Builder(this).setMessage(R.string.del_config_comfirm)
+                    MaterialAlertDialogBuilder(this).setMessage(R.string.del_config_comfirm)
                         .setPositiveButton(android.R.string.ok) { _, _ ->
                             MmkvManager.removeServer(editGuid)
                             finish()

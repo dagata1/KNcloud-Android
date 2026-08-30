@@ -7,10 +7,10 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.v2ray.ang.AngApplication.Companion.application
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
@@ -177,7 +177,7 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
      * @param skip The number of options to skip
      */
     private fun shareServer(guid: String, profile: ProfileItem, position: Int, shareOptions: List<String>, skip: Int) {
-        AlertDialog.Builder(mActivity).setItems(shareOptions.toTypedArray()) { _, i ->
+        MaterialAlertDialogBuilder(mActivity).setItems(shareOptions.toTypedArray()) { _, i ->
             try {
                 when (i + skip) {
                     0 -> showQRCode(guid)
@@ -205,7 +205,7 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
         } else {
             ivBinding.ivQcode.contentDescription = "QR Code"
         }
-        AlertDialog.Builder(mActivity).setView(ivBinding.root).show()
+        MaterialAlertDialogBuilder(mActivity).setView(ivBinding.root).show()
     }
 
     /**
@@ -263,7 +263,7 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
     private fun removeServer(guid: String, position: Int) {
         if (guid != MmkvManager.getSelectServer()) {
             if (MmkvManager.decodeSettingsBool(AppConfig.PREF_CONFIRM_REMOVE) == true) {
-                AlertDialog.Builder(mActivity).setMessage(R.string.del_config_comfirm)
+                MaterialAlertDialogBuilder(mActivity).setMessage(R.string.del_config_comfirm)
                     .setPositiveButton(android.R.string.ok) { _, _ ->
                         removeServerSub(guid, position)
                     }

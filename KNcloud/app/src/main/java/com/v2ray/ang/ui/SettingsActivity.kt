@@ -3,8 +3,11 @@ package com.v2ray.ang.ui
 import android.content.Intent
 import android.os.Bundle
 import android.text.TextUtils
+import android.view.MenuItem
 import android.view.View
 import androidx.activity.viewModels
+import androidx.annotation.StringRes
+import androidx.annotation.XmlRes
 import androidx.preference.CheckBoxPreference
 import androidx.preference.EditTextPreference
 import androidx.preference.ListPreference
@@ -17,6 +20,7 @@ import com.v2ray.ang.AngApplication
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.AppConfig.VPN
 import com.v2ray.ang.R
+import com.v2ray.ang.databinding.ActivitySettingsBinding
 import com.v2ray.ang.extension.toLongEx
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.SubscriptionUpdater
@@ -25,18 +29,138 @@ import com.v2ray.ang.viewmodel.SettingsViewModel
 import java.util.concurrent.TimeUnit
 
 class SettingsActivity : BaseActivity() {
+
+    private val binding by lazy { ActivitySettingsBinding.inflate(layoutInflater) }
     private val settingsViewModel: SettingsViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_settings)
+        setContentView(binding.root)
 
+        setSupportActionBar(binding.toolbar)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
         title = getString(R.string.title_settings)
+
+        if (savedInstanceState == null) {
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.settings_container, MainMenuFragment())
+                .commit()
+        }
+
+        supportFragmentManager.addOnBackStackChangedListener {
+            if (supportFragmentManager.backStackEntryCount == 0) {
+                binding.toolbar.title = getString(R.string.title_settings)
+            }
+        }
 
         settingsViewModel.startListenPreferenceChange()
     }
 
-    class SettingsFragment : PreferenceFragmentCompat() {
+    fun openSubSettings(@XmlRes xmlRes: Int, @StringRes titleRes: Int) {
+        val fragment = SubSettingsFragment.newInstance(xmlRes, titleRes)
+        val titleText = getString(titleRes)
+        binding.toolbar.title = titleText
+
+        supportFragmentManager.beginTransaction()
+            .setCustomAnimations(
+                android.R.anim.fade_in,
+                android.R.anim.fade_out,
+                android.R.anim.fade_in,
+                android.R.anim.fade_out
+            )
+            .replace(R.id.settings_container, fragment, titleText)
+            .addToBackStack(titleText)
+            .commit()
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == android.R.id.home) {
+            if (supportFragmentManager.backStackEntryCount > 0) {
+                supportFragmentManager.popBackStack()
+                return true
+            }
+            finish()
+            return true
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
+    /**
+     * Level 2: Main Settings Menu (Categorized Navigation)
+     */
+    class MainMenuFragment : PreferenceFragmentCompat() {
+
+        override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+            addPreferencesFromResource(R.xml.pref_settings)
+
+            findPreference<Preference>("pref_cat_ui")?.setOnPreferenceClickListener {
+                (activity as? SettingsActivity)?.openSubSettings(
+                    R.xml.pref_settings_ui,
+                    R.string.title_settings_ui
+                )
+                true
+            }
+
+            findPreference<Preference>("pref_cat_routing")?.setOnPreferenceClickListener {
+                (activity as? SettingsActivity)?.openSubSettings(
+                    R.xml.pref_settings_routing,
+                    R.string.title_settings_routing
+                )
+                true
+            }
+
+            findPreference<Preference>("pref_cat_vpn")?.setOnPreferenceClickListener {
+                (activity as? SettingsActivity)?.openSubSettings(
+                    R.xml.pref_settings_vpn,
+                    R.string.title_settings_vpn
+                )
+                true
+            }
+
+            findPreference<Preference>("pref_cat_dns")?.setOnPreferenceClickListener {
+                (activity as? SettingsActivity)?.openSubSettings(
+                    R.xml.pref_settings_dns,
+                    R.string.title_settings_dns
+                )
+                true
+            }
+
+            findPreference<Preference>("pref_cat_advanced")?.setOnPreferenceClickListener {
+                (activity as? SettingsActivity)?.openSubSettings(
+                    R.xml.pref_settings_advanced,
+                    R.string.title_settings_advanced
+                )
+                true
+            }
+
+            findPreference<Preference>("pref_cat_tools")?.setOnPreferenceClickListener {
+                (activity as? SettingsActivity)?.openSubSettings(
+                    R.xml.pref_settings_tools,
+                    R.string.title_settings_tools
+                )
+                true
+            }
+        }
+    }
+
+    /**
+     * Level 3: Concrete Subcategory Settings Screen
+     */
+    class SubSettingsFragment : PreferenceFragmentCompat() {
+
+        companion object {
+            private const val ARG_XML_RES = "arg_xml_res"
+            private const val ARG_TITLE_RES = "arg_title_res"
+
+            fun newInstance(@XmlRes xmlRes: Int, @StringRes titleRes: Int): SubSettingsFragment {
+                return SubSettingsFragment().apply {
+                    arguments = Bundle().apply {
+                        putInt(ARG_XML_RES, xmlRes)
+                        putInt(ARG_TITLE_RES, titleRes)
+                    }
+                }
+            }
+        }
 
         private val perAppProxy by lazy { findPreference<Preference>("pref_per_app_proxy") }
         private val routingSetting by lazy { findPreference<Preference>("pref_routing_setting") }
@@ -76,8 +200,9 @@ class SettingsActivity : BaseActivity() {
         private val hevTunRwTimeout by lazy { findPreference<EditTextPreference>(AppConfig.PREF_HEV_TUNNEL_RW_TIMEOUT) }
         private val useHevTun by lazy { findPreference<CheckBoxPreference>(AppConfig.PREF_USE_HEV_TUNNEL) }
 
-        override fun onCreatePreferences(bundle: Bundle?, s: String?) {
-            addPreferencesFromResource(R.xml.pref_settings)
+        override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+            val xmlRes = arguments?.getInt(ARG_XML_RES) ?: R.xml.pref_settings_ui
+            addPreferencesFromResource(xmlRes)
 
             perAppProxy?.setOnPreferenceClickListener {
                 startActivity(Intent(activity, PerAppProxyActivity::class.java))
@@ -157,8 +282,6 @@ class SettingsActivity : BaseActivity() {
             }
             autoUpdateInterval?.setOnPreferenceChangeListener { _, any ->
                 var nval = any as String
-
-                // It must be greater than 15 minutes because WorkManager couldn't run tasks under 15 minutes intervals
                 nval =
                     if (TextUtils.isEmpty(nval) || nval.toLongEx() < 15) AppConfig.SUBSCRIPTION_DEFAULT_UPDATE_INTERVAL else nval
                 autoUpdateInterval?.summary = nval
@@ -197,7 +320,6 @@ class SettingsActivity : BaseActivity() {
                 true
             }
             mode?.dialogLayoutResource = R.layout.preference_with_help_link
-            //loglevel.summary = "LogLevel"
 
             useHevTun?.setOnPreferenceChangeListener { _, newValue ->
                 updateHevTunSettings(newValue as Boolean)
@@ -270,7 +392,8 @@ class SettingsActivity : BaseActivity() {
 
             listOf(
                 AppConfig.PREF_SNIFFING_ENABLED,
-                AppConfig.PREF_USE_HEV_TUNNEL
+                AppConfig.PREF_USE_HEV_TUNNEL,
+                AppConfig.PREF_SIMPLE_MODE
             ).forEach { key ->
                 findPreference<CheckBoxPreference>(key)?.isChecked =
                     MmkvManager.decodeSettingsBool(key, true)
@@ -314,8 +437,6 @@ class SettingsActivity : BaseActivity() {
 
         private fun updateMode(mode: String?) {
             val vpn = mode == VPN
-//            perAppProxy?.isEnabled = vpn
-//            perAppProxy?.isChecked = MmkvManager.decodeSettingsBool(AppConfig.PREF_PER_APP_PROXY, false)
             localDns?.isEnabled = vpn
             fakeDns?.isEnabled = vpn
             appendHttpProxy?.isEnabled = vpn
@@ -377,7 +498,6 @@ class SettingsActivity : BaseActivity() {
             val concurrency = value?.toIntOrNull() ?: 8
             muxConcurrency?.summary = concurrency.toString()
         }
-
 
         private fun updateMuxXudpConcurrency(value: String?) {
             if (value == null) {

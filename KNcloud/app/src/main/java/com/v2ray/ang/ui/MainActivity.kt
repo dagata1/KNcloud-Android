@@ -22,12 +22,12 @@ import android.view.View
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.AppConfig.VPN
 import com.v2ray.ang.R
@@ -40,6 +40,7 @@ import com.v2ray.ang.handler.MigrateManager
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.V2RayServiceManager
 import com.v2ray.ang.helper.SimpleItemTouchHelperCallback
+import com.v2ray.ang.util.DialogUtil
 import com.v2ray.ang.util.Utils
 import com.v2ray.ang.viewmodel.MainViewModel
 import kotlinx.coroutines.Dispatchers
@@ -150,7 +151,12 @@ class MainActivity : BaseActivity() {
         }
 
         binding.layoutTestSimple.setOnClickListener {
-            toggleV2RayConnection()
+            if (mainViewModel.isRunning.value == true) {
+                toast(R.string.connection_test_testing)
+                mainViewModel.testCurrentServerRealPing()
+            } else {
+                toggleV2RayConnection()
+            }
         }
 
         binding.layoutNodeSelector.setOnClickListener {
@@ -263,10 +269,12 @@ class MainActivity : BaseActivity() {
         binding.layoutClassicMode.isVisible = !isSimpleMode
 
         if (isSimpleMode) {
+            binding.ivTopLogo.isVisible = true
             binding.btnTopLogoutCircle.isVisible = true
             binding.layoutTopCapsule.isVisible = false
             updateSelectedNodeUI()
         } else {
+            binding.ivTopLogo.isVisible = false
             binding.btnTopLogoutCircle.isVisible = false
             binding.layoutTopCapsule.isVisible = true
             adapter.notifyDataSetChanged()
@@ -283,7 +291,7 @@ class MainActivity : BaseActivity() {
             binding.btnConnectToggle.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_active_bg))
             binding.ivConnectIcon.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_active_icon))
             binding.tvConnectionStatus.text = getString(R.string.connect_state_connected)
-            binding.tvTestStateSimple.text = getString(R.string.connect_tap_to_disconnect)
+            binding.tvTestStateSimple.text = getString(R.string.connect_tap_to_test)
 
             // Classic Mode FAB & Test Bar
             binding.fab.setImageResource(R.drawable.ic_stop_24dp)
@@ -662,24 +670,25 @@ class MainActivity : BaseActivity() {
     }
 
     private fun showLogoutDialog() {
-        AlertDialog.Builder(this)
-            .setTitle(R.string.dialog_logout_title)
-            .setMessage(R.string.dialog_logout_message)
-            .setPositiveButton(android.R.string.ok) { _, _ ->
-                if (mainViewModel.isRunning.value == true) {
-                    V2RayServiceManager.stopVService(this)
-                }
-                MmkvManager.clearUserLogin()
-                MmkvManager.removeAllSubscriptions()
-                MmkvManager.removeAllServer()
-                val intent = Intent(this, LoginActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                }
-                startActivity(intent)
-                finish()
+        DialogUtil.showConfirmDialog(
+            context = this,
+            iconRes = R.drawable.ic_logout_24dp,
+            titleRes = R.string.dialog_logout_title,
+            messageRes = R.string.dialog_logout_message,
+            confirmTextRes = R.string.menu_logout
+        ) {
+            if (mainViewModel.isRunning.value == true) {
+                V2RayServiceManager.stopVService(this)
             }
-            .setNegativeButton(android.R.string.cancel, null)
-            .show()
+            MmkvManager.clearUserLogin()
+            MmkvManager.removeAllSubscriptions()
+            MmkvManager.removeAllServer()
+            val intent = Intent(this, LoginActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
+            startActivity(intent)
+            finish()
+        }
     }
 
     /**
@@ -824,66 +833,69 @@ class MainActivity : BaseActivity() {
     }
 
     private fun delAllConfig() {
-        AlertDialog.Builder(this).setMessage(R.string.del_config_comfirm)
-            .setPositiveButton(android.R.string.ok) { _, _ ->
-                binding.pbWaiting.show()
-                lifecycleScope.launch(Dispatchers.IO) {
-                    val ret = mainViewModel.removeAllServer()
-                    launch(Dispatchers.Main) {
-                        mainViewModel.reloadServerList()
-                        updateSelectedNodeUI()
-                        updateEmptyState()
-                        toast(getString(R.string.title_del_config_count, ret))
-                        binding.pbWaiting.hide()
-                    }
+        DialogUtil.showConfirmDialog(
+            context = this,
+            iconRes = R.drawable.ic_delete_24dp,
+            title = getString(R.string.title_del_all_config),
+            message = getString(R.string.del_config_comfirm),
+            confirmText = getString(R.string.menu_item_del_config)
+        ) {
+            binding.pbWaiting.show()
+            lifecycleScope.launch(Dispatchers.IO) {
+                val ret = mainViewModel.removeAllServer()
+                launch(Dispatchers.Main) {
+                    mainViewModel.reloadServerList()
+                    updateSelectedNodeUI()
+                    updateEmptyState()
+                    toast(getString(R.string.title_del_config_count, ret))
+                    binding.pbWaiting.hide()
                 }
             }
-            .setNegativeButton(android.R.string.cancel) { _, _ ->
-                //do noting
-            }
-            .show()
+        }
     }
 
     private fun delDuplicateConfig() {
-        AlertDialog.Builder(this).setMessage(R.string.del_config_comfirm)
-            .setPositiveButton(android.R.string.ok) { _, _ ->
-                binding.pbWaiting.show()
-                lifecycleScope.launch(Dispatchers.IO) {
-                    val ret = mainViewModel.removeDuplicateServer()
-                    launch(Dispatchers.Main) {
-                        mainViewModel.reloadServerList()
-                        updateSelectedNodeUI()
-                        updateEmptyState()
-                        toast(getString(R.string.title_del_duplicate_config_count, ret))
-                        binding.pbWaiting.hide()
-                    }
+        DialogUtil.showConfirmDialog(
+            context = this,
+            iconRes = R.drawable.ic_delete_24dp,
+            title = getString(R.string.title_del_duplicate_config),
+            message = getString(R.string.del_config_comfirm),
+            confirmText = getString(R.string.menu_item_del_config)
+        ) {
+            binding.pbWaiting.show()
+            lifecycleScope.launch(Dispatchers.IO) {
+                val ret = mainViewModel.removeDuplicateServer()
+                launch(Dispatchers.Main) {
+                    mainViewModel.reloadServerList()
+                    updateSelectedNodeUI()
+                    updateEmptyState()
+                    toast(getString(R.string.title_del_duplicate_config_count, ret))
+                    binding.pbWaiting.hide()
                 }
             }
-            .setNegativeButton(android.R.string.cancel) { _, _ ->
-                //do noting
-            }
-            .show()
+        }
     }
 
     private fun delInvalidConfig() {
-        AlertDialog.Builder(this).setMessage(R.string.del_invalid_config_comfirm)
-            .setPositiveButton(android.R.string.ok) { _, _ ->
-                binding.pbWaiting.show()
-                lifecycleScope.launch(Dispatchers.IO) {
-                    val ret = mainViewModel.removeInvalidServer()
-                    launch(Dispatchers.Main) {
-                        mainViewModel.reloadServerList()
-                        updateSelectedNodeUI()
-                        updateEmptyState()
-                        toast(getString(R.string.title_del_config_count, ret))
-                        binding.pbWaiting.hide()
-                    }
+        DialogUtil.showConfirmDialog(
+            context = this,
+            iconRes = R.drawable.ic_delete_24dp,
+            title = getString(R.string.title_del_invalid_config),
+            message = getString(R.string.del_invalid_config_comfirm),
+            confirmText = getString(R.string.menu_item_del_config)
+        ) {
+            binding.pbWaiting.show()
+            lifecycleScope.launch(Dispatchers.IO) {
+                val ret = mainViewModel.removeInvalidServer()
+                launch(Dispatchers.Main) {
+                    mainViewModel.reloadServerList()
+                    updateSelectedNodeUI()
+                    updateEmptyState()
+                    toast(getString(R.string.title_del_config_count, ret))
+                    binding.pbWaiting.hide()
                 }
             }
-            .setNegativeButton(android.R.string.cancel) { _, _ ->
-                //do noting
-            }
-            .show()
+        }
     }
 
     private fun sortByTestResults() {

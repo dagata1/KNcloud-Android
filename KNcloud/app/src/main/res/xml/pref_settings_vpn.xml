@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory android:title="@string/title_vpn_settings">
+
+        <ListPreference
+            android:defaultValue="VPN"
+            android:entries="@array/mode_entries"
+            android:entryValues="@array/mode_value"
+            android:key="pref_mode"
+            android:summary="%s"
+            android:title="@string/title_mode" />
+
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="pref_is_booted"
+            android:summary="@string/summary_pref_is_booted"
+            android:title="@string/title_pref_is_booted" />
+
+        <ListPreference
+            android:defaultValue="1"
+            android:entries="@array/vpn_bypass_lan"
+            android:entryValues="@array/vpn_bypass_lan_value"
+            android:key="pref_vpn_bypass_lan"
+            android:summary="%s"
+            android:title="@string/title_pref_vpn_bypass_lan" />
+
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="pref_proxy_sharing_enabled"
+            android:summary="@string/summary_pref_proxy_sharing_enabled"
+            android:title="@string/title_pref_proxy_sharing_enabled" />
+
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="pref_prefer_ipv6"
+            android:summary="@string/summary_pref_prefer_ipv6"
+            android:title="@string/title_pref_prefer_ipv6" />
+
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="pref_allow_insecure"
+            android:summary="@string/summary_pref_allow_insecure"
+            android:title="@string/title_pref_allow_insecure" />
+
+        <EditTextPreference
+            android:inputType="number"
+            android:key="pref_socks_port"
+            android:summary="10808"
+            android:title="@string/title_pref_socks_port" />
+
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="pref_append_http_proxy"
+            android:summary="@string/summary_pref_append_http_proxy"
+            android:title="@string/title_pref_append_http_proxy" />
+
+        <EditTextPreference
+            android:key="pref_delay_test_url"
+            android:summary="@string/summary_pref_delay_test_url"
+            android:title="@string/title_pref_delay_test_url" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="虚拟网卡与核心通道"
+        app:initialExpandedChildrenCount="0">
+
+        <EditTextPreference
+            android:inputType="number"
+            android:key="pref_vpn_mtu"
+            android:summary="1500"
+            android:title="@string/title_pref_vpn_mtu" />
+
+        <ListPreference
+            android:defaultValue="0"
+            android:entries="@array/vpn_interface_address"
+            android:entryValues="@array/vpn_interface_address_value"
+            android:key="pref_vpn_interface_address_config_index"
+            android:summary="%s"
+            android:title="@string/title_pref_vpn_interface_address" />
+
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="pref_use_hev_tunnel"
+            android:summary="@string/summary_pref_use_hev_tunnel"
+            android:title="@string/title_pref_use_hev_tunnel" />
+
+        <ListPreference
+            android:defaultValue="warn"
+            android:entries="@array/hev_tunnel_loglevel"
+            android:entryValues="@array/hev_tunnel_loglevel"
+            android:key="pref_hev_tunnel_loglevel"
+            android:summary="%s"
+            android:title="@string/title_pref_hev_tunnel_loglevel" />
+
+        <EditTextPreference
+            android:key="pref_hev_tunnel_rw_timeout_v2"
+            android:summary="300,60"
+            android:title="@string/title_pref_hev_tunnel_rw_timeout" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

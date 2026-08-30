@@ -1,15 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/md_theme_background"
     android:fitsSystemWindows="true"
     android:orientation="vertical"
     tools:context=".ui.SettingsActivity">
 
-    <androidx.fragment.app.FragmentContainerView
-        android:id="@+id/fragment_settings"
-        android:name="com.v2ray.ang.ui.SettingsActivity$SettingsFragment"
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/md_theme_surface"
+        app:title="@string/title_settings"
+        app:titleTextColor="@color/md_theme_onSurface" />
+
+    <FrameLayout
+        android:id="@+id/settings_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
