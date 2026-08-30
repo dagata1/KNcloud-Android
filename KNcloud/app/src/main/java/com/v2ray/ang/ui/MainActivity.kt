@@ -261,7 +261,7 @@ class MainActivity : BaseActivity() {
         binding.tvSelectedNodeType.isVisible = true
 
         // Ping Delay Badge
-        val aff = MmkvManager.decodeServerAffiliationInfo(selectServerGuid)
+        val aff = MmkvManager.decodeServerAffiliationInfo(currentServer.guid)
         val delayMillis = aff?.testDelayMillis ?: 0L
         val delayStr = aff?.getTestDelayString().orEmpty()
 
