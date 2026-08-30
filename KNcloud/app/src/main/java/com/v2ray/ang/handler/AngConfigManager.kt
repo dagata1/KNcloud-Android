@@ -446,6 +446,12 @@ object AngConfigManager {
     fun updateConfigViaSubAll(): Int {
         var count = 0
         try {
+            if (MmkvManager.isUserLoggedIn()) {
+                val dynamicCount = KNcloudAuthService.refreshDynamicSubscription()
+                if (dynamicCount > 0) {
+                    return dynamicCount
+                }
+            }
             MmkvManager.decodeSubscriptions().forEach {
                 count += updateConfigViaSub(it)
             }

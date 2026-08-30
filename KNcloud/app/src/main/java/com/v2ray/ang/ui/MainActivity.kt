@@ -258,6 +258,10 @@ class MainActivity : BaseActivity() {
         mainViewModel.reloadServerList()
         updateSubscriptionInfo()
         updateEmptyState()
+
+        if (mainViewModel.serversCache.isEmpty()) {
+            importConfigViaSub()
+        }
     }
 
     private fun updateEmptyState() {
@@ -267,7 +271,6 @@ class MainActivity : BaseActivity() {
     }
 
     private fun setupEmptyStateView() {
-        val planUrl = "${MmkvManager.getApiDomain()}/#/plan"
         val fullText = getString(R.string.empty_no_nodes_full_text)
         val keyword = getString(R.string.empty_subscribe_keyword)
         val spannable = SpannableString(fullText)
@@ -275,7 +278,7 @@ class MainActivity : BaseActivity() {
         if (startIndex >= 0) {
             val clickableSpan = object : ClickableSpan() {
                 override fun onClick(widget: View) {
-                    Utils.openUri(this@MainActivity, planUrl)
+                    openSubscribeWebPage()
                 }
 
                 override fun updateDrawState(ds: TextPaint) {
@@ -292,8 +295,17 @@ class MainActivity : BaseActivity() {
         }
 
         binding.btnGoSubscribe.setOnClickListener {
-            Utils.openUri(this, planUrl)
+            openSubscribeWebPage()
         }
+    }
+
+    private fun openSubscribeWebPage() {
+        val planUrl = "${MmkvManager.getApiDomain()}/#/plan"
+        startActivity(
+            Intent(this, RegisterWebActivity::class.java)
+                .putExtra(RegisterWebActivity.EXTRA_URL, planUrl)
+                .putExtra(RegisterWebActivity.EXTRA_TITLE, getString(R.string.empty_subscribe_btn))
+        )
     }
 
     private fun updateSubscriptionInfo() {

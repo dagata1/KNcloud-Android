@@ -208,4 +208,37 @@ object KNcloudAuthService {
             false
         }
     }
+
+    /**
+     * Re-queries dynamic domain from aws.kncloud.top and refreshes subscription URL and servers.
+     */
+    fun refreshDynamicSubscription(): Int {
+        if (!MmkvManager.isUserLoggedIn()) return 0
+        val token = MmkvManager.getUserToken() ?: return 0
+        return try {
+            val dynamicDomain = fetchDynamicDomain()
+            val subResult = getSubscribeUrl(dynamicDomain, token)
+            if (subResult.success && !subResult.subscribeUrl.isNullOrBlank()) {
+                val subItem = SubscriptionItem().apply {
+                    remarks = AppConfig.DEFAULT_SUB_REMARKS
+                    url = subResult.subscribeUrl
+                    autoUpdate = true
+                }
+                val subId = MmkvManager.encodeSubscription(AppConfig.DEFAULT_SUB_REMARKS.lowercase(), subItem)
+                val count = AngConfigManager.updateConfigViaSub(Pair(subId, subItem))
+                if (MmkvManager.getSelectServer().isNullOrEmpty()) {
+                    val servers = MmkvManager.decodeServerList()
+                    if (servers.isNotEmpty()) {
+                        MmkvManager.setSelectServer(servers[0])
+                    }
+                }
+                count
+            } else {
+                0
+            }
+        } catch (e: Exception) {
+            Log.e(AppConfig.TAG, "Failed to refresh dynamic subscription", e)
+            0
+        }
+    }
 }

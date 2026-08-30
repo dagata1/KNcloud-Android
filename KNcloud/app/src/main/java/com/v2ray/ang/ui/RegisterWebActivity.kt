@@ -31,6 +31,11 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 class RegisterWebActivity : BaseActivity() {
 
+    companion object {
+        const val EXTRA_URL = "extra_url"
+        const val EXTRA_TITLE = "extra_title"
+    }
+
     private val binding by lazy { ActivityRegisterWebBinding.inflate(layoutInflater) }
     private val isHandlingAuth = AtomicBoolean(false)
 
@@ -38,22 +43,35 @@ class RegisterWebActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
 
-        title = getString(R.string.login_btn_register)
+        val extraUrl = intent.getStringExtra(EXTRA_URL)
+        val extraTitle = intent.getStringExtra(EXTRA_TITLE)
+
+        title = extraTitle?.takeIf { it.isNotBlank() } ?: getString(R.string.login_btn_register)
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
+        val domain = MmkvManager.getApiDomain()
+        val targetUrl = extraUrl?.takeIf { it.isNotBlank() } ?: "$domain/#/register"
 
         try {
             setupWebView()
             setupBackPress()
 
-            val domain = MmkvManager.getApiDomain()
-            val registerUrl = "$domain/#/register"
-            binding.webView.loadUrl(registerUrl)
+            // If user is already logged in, configure session cookies
+            val token = MmkvManager.getUserToken()
+            if (!token.isNullOrBlank()) {
+                try {
+                    val cookieDomain = Uri.parse(domain).host ?: domain
+                    CookieManager.getInstance().setCookie(cookieDomain, "auth_data=$token; path=/")
+                    CookieManager.getInstance().setCookie(cookieDomain, "token=$token; path=/")
+                    CookieManager.getInstance().flush()
+                } catch (_: Exception) {}
+            }
+
+            binding.webView.loadUrl(targetUrl)
         } catch (e: Exception) {
             Log.e(AppConfig.TAG, "WebView initialization error", e)
-            val domain = MmkvManager.getApiDomain()
-            val registerUrl = "$domain/#/register"
-            com.v2ray.ang.util.Utils.openUri(this, registerUrl)
+            com.v2ray.ang.util.Utils.openUri(this, targetUrl)
             finish()
         }
     }
@@ -87,7 +105,7 @@ class RegisterWebActivity : BaseActivity() {
 
             override fun onReceivedTitle(view: WebView?, title: String?) {
                 super.onReceivedTitle(view, title)
-                if (!title.isNullOrBlank() && !title.contains("http", ignoreCase = true)) {
+                if (!title.isNullOrBlank() && !title.contains("http", ignoreCase = true) && intent.getStringExtra(EXTRA_TITLE).isNullOrBlank()) {
                     this@RegisterWebActivity.title = title
                 }
             }
@@ -117,8 +135,24 @@ class RegisterWebActivity : BaseActivity() {
     }
 
     private fun injectAuthInterceptor(view: WebView?) {
+        val storedToken = MmkvManager.getUserToken().orEmpty()
+        val tokenInitJs = if (storedToken.isNotEmpty()) {
+            """
+            try {
+                if (!localStorage.getItem('auth_data')) {
+                    localStorage.setItem('auth_data', '$storedToken');
+                }
+                if (!localStorage.getItem('token')) {
+                    localStorage.setItem('token', '$storedToken');
+                }
+            } catch(e) {}
+            """.trimIndent()
+        } else ""
+
         val jsCode = """
             (function() {
+                $tokenInitJs
+
                 if (window.__kncloud_injected) return;
                 window.__kncloud_injected = true;
 
