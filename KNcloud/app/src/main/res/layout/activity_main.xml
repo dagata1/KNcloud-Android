@@ -337,37 +337,12 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="14dp"
+                                android:layout_marginBottom="4dp"
                                 android:text="@string/connect_state_idle"
                                 android:textAppearance="@style/TextAppearance.AppCompat.Medium"
                                 android:textColor="@color/md_theme_onSurface"
                                 android:textSize="17sp"
                                 android:textStyle="bold" />
-
-                            <!-- Connection Detail / Ping Status -->
-                            <LinearLayout
-                                android:id="@+id/layout_test_simple"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="4dp"
-                                android:background="?attr/selectableItemBackground"
-                                android:clickable="true"
-                                android:focusable="true"
-                                android:gravity="center"
-                                android:paddingStart="12dp"
-                                android:paddingTop="4dp"
-                                android:paddingEnd="12dp"
-                                android:paddingBottom="4dp">
-
-                                <TextView
-                                    android:id="@+id/tv_test_state_simple"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:gravity="center"
-                                    android:text="@string/connect_tap_to_connect"
-                                    android:textAppearance="@style/TextAppearance.AppCompat.Caption"
-                                    android:textColor="@color/md_theme_onSurfaceVariant"
-                                    android:textSize="13sp" />
-                            </LinearLayout>
                         </LinearLayout>
 
                         <!-- SECTION 3: Node Selector Dropdown Card -->

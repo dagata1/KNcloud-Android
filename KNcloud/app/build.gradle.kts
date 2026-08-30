@@ -9,11 +9,11 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "top.kncloud"
+        applicationId = "top.kncloud.com"
         minSdk = 24
         targetSdk = 35
-        versionCode = 693
-        versionName = "1.10.41"
+        versionCode = 694
+        versionName = "1.10.42"
         multiDexEnabled = true
 
         val abiFilterList = (properties["ABI_FILTERS"] as? String)?.split(';')

@@ -27,7 +27,11 @@ import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import android.animation.ObjectAnimator
+import android.animation.PropertyValuesHolder
+import android.animation.ValueAnimator
+import android.view.animation.AccelerateDecelerateInterpolator
+import kotlinx.coroutines.Job
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.AppConfig.VPN
 import com.v2ray.ang.R
@@ -63,6 +67,17 @@ class MainActivity : BaseActivity() {
     }
 
     val mainViewModel: MainViewModel by viewModels()
+
+    enum class ConnectionState {
+        DISCONNECTED,
+        CONNECTING,
+        CONNECTED
+    }
+
+    private var connectionState: ConnectionState = ConnectionState.DISCONNECTED
+    private var connectingPulseAnimator: ObjectAnimator? = null
+    private var connectingAlphaAnimator: ObjectAnimator? = null
+    private var connectingTimeoutJob: Job? = null
 
     // register activity result for requesting permission
     private val requestPermissionLauncher =
@@ -150,15 +165,6 @@ class MainActivity : BaseActivity() {
             toggleV2RayConnection()
         }
 
-        binding.layoutTestSimple.setOnClickListener {
-            if (mainViewModel.isRunning.value == true) {
-                toast(R.string.connection_test_testing)
-                mainViewModel.testCurrentServerRealPing()
-            } else {
-                toggleV2RayConnection()
-            }
-        }
-
         binding.layoutNodeSelector.setOnClickListener {
             NodeSelectorBottomSheet.show(supportFragmentManager)
         }
@@ -218,19 +224,41 @@ class MainActivity : BaseActivity() {
     }
 
     private fun toggleV2RayConnection() {
-        if (mainViewModel.isRunning.value == true) {
+        if (connectionState == ConnectionState.CONNECTING || connectionState == ConnectionState.CONNECTED || mainViewModel.isRunning.value == true) {
+            setConnectionState(ConnectionState.DISCONNECTED)
             V2RayServiceManager.stopVService(this)
         } else if (mainViewModel.serversCache.isEmpty() || MmkvManager.getSelectServer().isNullOrEmpty()) {
             toast(R.string.title_file_chooser)
         } else if ((MmkvManager.decodeSettingsString(AppConfig.PREF_MODE) ?: VPN) == VPN) {
             val intent = VpnService.prepare(this)
             if (intent == null) {
-                startV2Ray()
+                startV2RayWithConnectingState()
             } else {
                 requestVpnPermission.launch(intent)
             }
         } else {
-            startV2Ray()
+            startV2RayWithConnectingState()
+        }
+    }
+
+    private fun startV2RayWithConnectingState() {
+        if (MmkvManager.getSelectServer().isNullOrEmpty()) {
+            toast(R.string.title_file_chooser)
+            return
+        }
+        setConnectionState(ConnectionState.CONNECTING)
+        V2RayServiceManager.startVService(this)
+
+        connectingTimeoutJob?.cancel()
+        connectingTimeoutJob = lifecycleScope.launch {
+            delay(15000L)
+            if (connectionState == ConnectionState.CONNECTING) {
+                if (mainViewModel.isRunning.value == true) {
+                    mainViewModel.testCurrentServerRealPing()
+                } else {
+                    setConnectionState(ConnectionState.DISCONNECTED)
+                }
+            }
         }
     }
 
@@ -246,14 +274,34 @@ class MainActivity : BaseActivity() {
             updateEmptyState()
         }
 
-        mainViewModel.updateTestResultAction.observe(this) {
-            setTestState(it)
+        mainViewModel.updateTestResultAction.observe(this) { testResult ->
+            setTestState(testResult)
             updateSelectedNodeUI()
+
+            if (connectionState == ConnectionState.CONNECTING && mainViewModel.isRunning.value == true) {
+                val selectServerGuid = MmkvManager.getSelectServer()
+                val aff = if (!selectServerGuid.isNullOrEmpty()) MmkvManager.decodeServerAffiliationInfo(selectServerGuid) else null
+                val delayMillis = aff?.testDelayMillis ?: -1L
+                val isSuccess = delayMillis > 0 || (testResult != null && !testResult.contains("失败") && !testResult.contains("Fail") && !testResult.contains("无互联网连接"))
+
+                if (isSuccess) {
+                    setConnectionState(ConnectionState.CONNECTED)
+                }
+            }
         }
 
         mainViewModel.isRunning.observe(this) { isRunning ->
             adapter.isRunning = isRunning
-            updateConnectionUI(isRunning)
+            if (isRunning) {
+                if (connectionState == ConnectionState.CONNECTING) {
+                    mainViewModel.testCurrentServerRealPing()
+                } else {
+                    setConnectionState(ConnectionState.CONNECTED)
+                }
+            } else {
+                setConnectionState(ConnectionState.DISCONNECTED)
+            }
+            updateClassicConnectionUI(isRunning)
         }
 
         mainViewModel.startListenBroadcast()
@@ -281,32 +329,89 @@ class MainActivity : BaseActivity() {
         }
         updateSubscriptionInfo()
         updateEmptyState()
-        updateConnectionUI(mainViewModel.isRunning.value == true)
+        val isRunning = mainViewModel.isRunning.value == true
+        if (isRunning && connectionState != ConnectionState.CONNECTING) {
+            setConnectionState(ConnectionState.CONNECTED)
+        } else if (!isRunning) {
+            setConnectionState(ConnectionState.DISCONNECTED)
+        }
+        updateClassicConnectionUI(isRunning)
     }
 
-    private fun updateConnectionUI(isRunning: Boolean) {
-        // Simple Mode Hero Connect Button
-        if (isRunning) {
-            binding.flConnectOuter.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_active_ring))
-            binding.btnConnectToggle.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_active_bg))
-            binding.ivConnectIcon.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_active_icon))
-            binding.tvConnectionStatus.text = getString(R.string.connect_state_connected)
-            binding.tvTestStateSimple.text = getString(R.string.connect_tap_to_test)
+    private fun setConnectionState(state: ConnectionState) {
+        connectionState = state
+        when (state) {
+            ConnectionState.CONNECTING -> {
+                binding.tvConnectionStatus.text = getString(R.string.connect_state_connecting)
+                binding.flConnectOuter.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_active_ring))
+                binding.btnConnectToggle.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_active_bg))
+                binding.ivConnectIcon.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_active_icon))
+                startConnectingAnimation()
+            }
+            ConnectionState.CONNECTED -> {
+                stopConnectingAnimation()
+                connectingTimeoutJob?.cancel()
+                binding.tvConnectionStatus.text = getString(R.string.connect_state_connected)
+                binding.flConnectOuter.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_active_ring))
+                binding.btnConnectToggle.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_active_bg))
+                binding.ivConnectIcon.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_active_icon))
+            }
+            ConnectionState.DISCONNECTED -> {
+                stopConnectingAnimation()
+                connectingTimeoutJob?.cancel()
+                binding.tvConnectionStatus.text = getString(R.string.connect_state_idle)
+                binding.flConnectOuter.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_idle_ring))
+                binding.btnConnectToggle.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_idle_bg))
+                binding.ivConnectIcon.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_idle_icon))
+            }
+        }
+    }
 
-            // Classic Mode FAB & Test Bar
+    private fun startConnectingAnimation() {
+        stopConnectingAnimation()
+
+        val scaleX = PropertyValuesHolder.ofFloat(View.SCALE_X, 1.0f, 1.08f)
+        val scaleY = PropertyValuesHolder.ofFloat(View.SCALE_Y, 1.0f, 1.08f)
+        val alpha = PropertyValuesHolder.ofFloat(View.ALPHA, 1.0f, 0.7f)
+
+        connectingPulseAnimator = ObjectAnimator.ofPropertyValuesHolder(binding.flConnectOuter, scaleX, scaleY, alpha).apply {
+            duration = 850
+            repeatCount = ValueAnimator.INFINITE
+            repeatMode = ValueAnimator.REVERSE
+            interpolator = AccelerateDecelerateInterpolator()
+            start()
+        }
+
+        val iconAlpha = PropertyValuesHolder.ofFloat(View.ALPHA, 1.0f, 0.4f)
+        connectingAlphaAnimator = ObjectAnimator.ofPropertyValuesHolder(binding.ivConnectIcon, iconAlpha).apply {
+            duration = 850
+            repeatCount = ValueAnimator.INFINITE
+            repeatMode = ValueAnimator.REVERSE
+            interpolator = AccelerateDecelerateInterpolator()
+            start()
+        }
+    }
+
+    private fun stopConnectingAnimation() {
+        connectingPulseAnimator?.cancel()
+        connectingPulseAnimator = null
+        connectingAlphaAnimator?.cancel()
+        connectingAlphaAnimator = null
+
+        binding.flConnectOuter.scaleX = 1.0f
+        binding.flConnectOuter.scaleY = 1.0f
+        binding.flConnectOuter.alpha = 1.0f
+        binding.ivConnectIcon.alpha = 1.0f
+    }
+
+    private fun updateClassicConnectionUI(isRunning: Boolean) {
+        if (isRunning) {
             binding.fab.setImageResource(R.drawable.ic_stop_24dp)
             binding.fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_fab_active))
             binding.fab.contentDescription = getString(R.string.action_stop_service)
             setTestState(getString(R.string.connection_connected))
             binding.layoutTest.isFocusable = true
         } else {
-            binding.flConnectOuter.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_idle_ring))
-            binding.btnConnectToggle.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_idle_bg))
-            binding.ivConnectIcon.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_idle_icon))
-            binding.tvConnectionStatus.text = getString(R.string.connect_state_idle)
-            binding.tvTestStateSimple.text = getString(R.string.connect_tap_to_connect)
-
-            // Classic Mode FAB & Test Bar
             binding.fab.setImageResource(R.drawable.ic_play_24dp)
             binding.fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_fab_inactive))
             binding.fab.contentDescription = getString(R.string.tasker_start_service)
@@ -478,8 +583,8 @@ class MainActivity : BaseActivity() {
     }
 
     private fun openSubscribeWebPage() {
-        val planUrl = "${MmkvManager.getApiDomain()}/#/plan"
-        Utils.openUri(this, planUrl)
+        val websiteUrl = MmkvManager.getApiDomain()
+        Utils.openUri(this, websiteUrl)
     }
 
     private fun updateSubscriptionInfo() {

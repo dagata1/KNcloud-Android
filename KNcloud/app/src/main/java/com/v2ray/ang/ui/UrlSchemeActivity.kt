@@ -34,43 +34,32 @@ class UrlSchemeActivity : BaseActivity() {
                         }
                     }
                 } else if (action == Intent.ACTION_VIEW) {
-                    when (data?.host) {
+                    val uri: Uri? = intent.data
+                    val host = uri?.host?.lowercase()
+
+                    when (host) {
                         "install-config" -> {
-                            val uri: Uri? = intent.data
-                            val shareUrl = uri?.getQueryParameter("url").orEmpty()
-                            parseUri(shareUrl, uri?.fragment)
+                            val shareUrl = uri.getQueryParameter("url").orEmpty()
+                            parseUri(shareUrl, uri.fragment)
                         }
 
-                        "auth", "login", "register" -> {
-                            val uri: Uri? = intent.data
-                            val token = uri?.getQueryParameter("token") ?: uri?.getQueryParameter("auth_data")
-                            val email = uri?.getQueryParameter("email").orEmpty()
-                            if (!token.isNullOrBlank()) {
-                                lifecycleScope.launch(Dispatchers.IO) {
-                                    val domain = MmkvManager.getApiDomain()
-                                    MmkvManager.saveUserLogin(email, token, domain)
-                                    val sub = KNcloudAuthService.getSubscribeUrl(domain, token)
-                                    if (sub.success && !sub.subscribeUrl.isNullOrBlank()) {
-                                        KNcloudAuthService.importAndSyncSubscription(sub.subscribeUrl)
-                                    }
-                                    withContext(Dispatchers.Main) {
-                                        toast(R.string.login_success)
-                                        startActivity(Intent(this@UrlSchemeActivity, MainActivity::class.java).apply {
-                                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                                        })
-                                        finish()
-                                    }
-                                }
-                                return
-                            }
+                        "auth", "login", "register", "oneclick", "quick-login" -> {
+                            handleOneClickLogin(uri)
+                            return
                         }
 
                         "install-sub" -> {
-                            // Subscriptions are strictly bound to KNcloud login account. External sub imports are disabled.
+                            // Subscriptions are strictly bound to KNcloud login account
                             toastError(R.string.toast_failure)
                         }
 
                         else -> {
+                            // Check if uri path contains login / auth
+                            val path = uri?.path?.lowercase().orEmpty()
+                            if (path.contains("login") || path.contains("auth") || uri?.getQueryParameter("token") != null) {
+                                handleOneClickLogin(uri)
+                                return
+                            }
                             toastError(R.string.toast_failure)
                         }
                     }
@@ -81,6 +70,70 @@ class UrlSchemeActivity : BaseActivity() {
             finish()
         } catch (e: Exception) {
             Log.e(AppConfig.TAG, "Error processing URL scheme", e)
+            startActivity(Intent(this, MainActivity::class.java))
+            finish()
+        }
+    }
+
+    /**
+     * Handles one-click login from web / URL scheme:
+     * e.g. kncloud://login?token={TOKEN}&email={EMAIL}&domain={DOMAIN}&sub_url={SUB_URL}
+     */
+    private fun handleOneClickLogin(uri: Uri?) {
+        val token = uri?.getQueryParameter("token")
+            ?: uri?.getQueryParameter("auth_data")
+            ?: uri?.getQueryParameter("auth_token")
+            ?: uri?.getQueryParameter("auth")
+
+        val email = uri?.getQueryParameter("email")
+            ?: uri?.getQueryParameter("user")
+            ?: uri?.getQueryParameter("account").orEmpty()
+
+        val domainParam = uri?.getQueryParameter("domain")
+            ?: uri?.getQueryParameter("api_domain")
+
+        val directSubUrl = uri?.getQueryParameter("sub_url")
+            ?: uri?.getQueryParameter("subscribe_url")
+            ?: uri?.getQueryParameter("sub")
+
+        if (!token.isNullOrBlank()) {
+            lifecycleScope.launch(Dispatchers.IO) {
+                var domain = domainParam?.trim().orEmpty()
+                if (domain.isNotEmpty() && !domain.startsWith("http://") && !domain.startsWith("https://")) {
+                    domain = "https://$domain"
+                }
+                if (domain.endsWith("/")) {
+                    domain = domain.dropLast(1)
+                }
+                if (domain.isBlank()) {
+                    domain = MmkvManager.getApiDomain()
+                }
+
+                // Save user login state
+                MmkvManager.saveUserLogin(email, token, domain)
+
+                // Sync subscription
+                if (!directSubUrl.isNullOrBlank()) {
+                    KNcloudAuthService.importAndSyncSubscription(directSubUrl)
+                } else {
+                    val sub = KNcloudAuthService.getSubscribeUrl(domain, token)
+                    if (sub.success && !sub.subscribeUrl.isNullOrBlank()) {
+                        KNcloudAuthService.importAndSyncSubscription(sub.subscribeUrl)
+                    }
+                }
+
+                withContext(Dispatchers.Main) {
+                    toast(R.string.login_success)
+                    startActivity(Intent(this@UrlSchemeActivity, MainActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    })
+                    finish()
+                }
+            }
+        } else {
+            toastError(R.string.login_failed)
+            startActivity(Intent(this, MainActivity::class.java))
+            finish()
         }
     }
 
@@ -105,6 +158,8 @@ class UrlSchemeActivity : BaseActivity() {
                     } else {
                         toast(R.string.import_subscription_failure)
                     }
+                    startActivity(Intent(this@UrlSchemeActivity, MainActivity::class.java))
+                    finish()
                 }
             }
         }
