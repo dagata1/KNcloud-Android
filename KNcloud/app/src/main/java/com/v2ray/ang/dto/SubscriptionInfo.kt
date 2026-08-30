@@ -55,6 +55,49 @@ data class SubscriptionInfo(
     }
 
     /**
+     * Checks whether the subscription is expired.
+     */
+    fun isExpired(): Boolean {
+        val clean = getCleanExpireDate().trim()
+        if (clean.isBlank()) return false
+        if (clean.contains("长期") || clean.contains("无限") || clean.contains("永久") || clean.contains("不限")) return false
+        if (clean.contains("过期") || clean.contains("已到期")) return true
+
+        // Try timestamp (seconds or milliseconds)
+        val timestamp = clean.toLongOrNull()
+        if (timestamp != null) {
+            val millis = if (timestamp < 10000000000L) timestamp * 1000L else timestamp
+            return millis < System.currentTimeMillis()
+        }
+
+        // Try standard date formats
+        val formats = listOf(
+            "yyyy-MM-dd HH:mm:ss",
+            "yyyy-MM-dd HH:mm",
+            "yyyy-MM-dd",
+            "yyyy/MM/dd HH:mm:ss",
+            "yyyy/MM/dd",
+            "yyyy.MM.dd"
+        )
+        for (pattern in formats) {
+            try {
+                val sdf = java.text.SimpleDateFormat(pattern, java.util.Locale.getDefault())
+                sdf.isLenient = false
+                val date = sdf.parse(clean)
+                if (date != null) {
+                    val expiryMillis = if (!pattern.contains("HH")) {
+                        date.time + 24 * 3600 * 1000L - 1
+                    } else {
+                        date.time
+                    }
+                    return expiryMillis < System.currentTimeMillis()
+                }
+            } catch (_: Exception) {}
+        }
+        return false
+    }
+
+    /**
      * Calculates the usage percentage between 0 and 100, or -1 if unable to parse.
      */
     fun calculateUsagePercent(): Int {

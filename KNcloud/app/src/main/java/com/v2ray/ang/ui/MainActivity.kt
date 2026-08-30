@@ -130,6 +130,10 @@ class MainActivity : BaseActivity() {
             )
         }
 
+        binding.btnTopLogoutCircle.setOnClickListener {
+            showLogoutDialog()
+        }
+
         binding.btnTopRefresh.setOnClickListener {
             importConfigViaSub()
         }
@@ -146,12 +150,7 @@ class MainActivity : BaseActivity() {
         }
 
         binding.layoutTestSimple.setOnClickListener {
-            if (mainViewModel.isRunning.value == true) {
-                setTestState(getString(R.string.connection_test_testing))
-                mainViewModel.testCurrentServerRealPing()
-            } else {
-                toggleV2RayConnection()
-            }
+            toggleV2RayConnection()
         }
 
         binding.layoutNodeSelector.setOnClickListener {
@@ -215,6 +214,8 @@ class MainActivity : BaseActivity() {
     private fun toggleV2RayConnection() {
         if (mainViewModel.isRunning.value == true) {
             V2RayServiceManager.stopVService(this)
+        } else if (mainViewModel.serversCache.isEmpty() || MmkvManager.getSelectServer().isNullOrEmpty()) {
+            toast(R.string.title_file_chooser)
         } else if ((MmkvManager.decodeSettingsString(AppConfig.PREF_MODE) ?: VPN) == VPN) {
             val intent = VpnService.prepare(this)
             if (intent == null) {
@@ -262,14 +263,12 @@ class MainActivity : BaseActivity() {
         binding.layoutClassicMode.isVisible = !isSimpleMode
 
         if (isSimpleMode) {
-            binding.btnTopRefresh.isVisible = false
-            binding.topCapsuleDivider.isVisible = false
-            binding.layoutTopCapsule.setBackgroundResource(R.drawable.bg_top_bar_circle)
+            binding.btnTopLogoutCircle.isVisible = true
+            binding.layoutTopCapsule.isVisible = false
             updateSelectedNodeUI()
         } else {
-            binding.btnTopRefresh.isVisible = true
-            binding.topCapsuleDivider.isVisible = true
-            binding.layoutTopCapsule.setBackgroundResource(R.drawable.bg_top_bar_capsule)
+            binding.btnTopLogoutCircle.isVisible = false
+            binding.layoutTopCapsule.isVisible = true
             adapter.notifyDataSetChanged()
         }
         updateSubscriptionInfo()
@@ -434,8 +433,7 @@ class MainActivity : BaseActivity() {
         val isSimpleMode = MmkvManager.decodeSettingsBool(AppConfig.PREF_SIMPLE_MODE, true)
 
         if (isSimpleMode) {
-            binding.layoutEmptyNodesSimple.isVisible = isEmpty
-            binding.cardMainDashboard.isVisible = !isEmpty
+            binding.cardMainDashboard.isVisible = true
         } else {
             binding.layoutEmptyNodesClassic.isVisible = isEmpty
             binding.recyclerView.isVisible = !isEmpty
@@ -460,18 +458,12 @@ class MainActivity : BaseActivity() {
                 }
             }
             spannable.setSpan(clickableSpan, startIndex, startIndex + keyword.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-            binding.tvEmptyPromptSimple.text = spannable
-            binding.tvEmptyPromptSimple.movementMethod = LinkMovementMethod.getInstance()
             binding.tvEmptyPromptClassic.text = spannable
             binding.tvEmptyPromptClassic.movementMethod = LinkMovementMethod.getInstance()
         } else {
-            binding.tvEmptyPromptSimple.text = fullText
             binding.tvEmptyPromptClassic.text = fullText
         }
 
-        binding.btnGoSubscribeSimple.setOnClickListener {
-            openSubscribeWebPage()
-        }
         binding.btnGoSubscribeClassic.setOnClickListener {
             openSubscribeWebPage()
         }
@@ -479,24 +471,63 @@ class MainActivity : BaseActivity() {
 
     private fun openSubscribeWebPage() {
         val planUrl = "${MmkvManager.getApiDomain()}/#/plan"
-        startActivity(
-            Intent(this, RegisterWebActivity::class.java)
-                .putExtra(RegisterWebActivity.EXTRA_URL, planUrl)
-                .putExtra(RegisterWebActivity.EXTRA_TITLE, getString(R.string.empty_subscribe_btn))
-        )
+        Utils.openUri(this, planUrl)
     }
 
     private fun updateSubscriptionInfo() {
         val info = MmkvManager.getSubscriptionInfo()
-        if (info != null && info.hasData()) {
-            val title = if (info.subName.isNotBlank()) info.subName else getString(R.string.app_name)
+        val hasData = info != null && info.hasData()
+        val isExpired = hasData && info!!.isExpired()
+
+        // 1. Simple Mode: Card subscription info is always displayed on the dashboard card
+        binding.cardSubInfo.isVisible = true
+
+        if (!hasData) {
+            // Case A: No subscription
+            binding.tvSubTitle.text = getString(R.string.sub_title_empty)
+            binding.tvSubPercent.isVisible = false
+
+            binding.tvSubTraffic.text = getString(R.string.sub_traffic_empty)
+            binding.tvSubTraffic.isVisible = true
+
+            binding.pbSubTraffic.isVisible = true
+            binding.pbSubTraffic.setIndicatorColor(ContextCompat.getColor(this, R.color.color_fab_active))
+            binding.pbSubTraffic.progress = 0
+            binding.tvSubReset.isVisible = false
+
+            binding.tvSubExpire.text = getString(R.string.sub_expire_empty)
+            binding.tvSubExpire.setTextColor(ContextCompat.getColor(this, R.color.md_theme_onSurfaceVariant))
+            binding.tvSubExpire.isVisible = true
+        } else if (isExpired) {
+            // Case B: Expired subscription
+            val title = if (info!!.subName.isNotBlank()) info.subName else getString(R.string.app_name)
+            binding.tvSubTitle.text = title
+            binding.tvSubPercent.text = getString(R.string.sub_status_expired)
+            binding.tvSubPercent.setTextColor(ContextCompat.getColor(this, R.color.colorPingRed))
+            binding.tvSubPercent.isVisible = true
+
+            val formattedTraffic = info.getFormattedTraffic()
+            binding.tvSubTraffic.text = formattedTraffic.ifBlank { "0 B / 0 B" }
+            binding.tvSubTraffic.isVisible = true
+
+            binding.pbSubTraffic.isVisible = true
+            binding.pbSubTraffic.setIndicatorColor(ContextCompat.getColor(this, R.color.colorPingRed))
+            binding.pbSubTraffic.progress = 100
+
+            binding.tvSubReset.isVisible = false
+
+            val cleanExpireDate = info.getCleanExpireDate()
+            binding.tvSubExpire.text = "套餐到期：$cleanExpireDate (${getString(R.string.sub_status_expired)})"
+            binding.tvSubExpire.setTextColor(ContextCompat.getColor(this, R.color.colorPingRed))
+            binding.tvSubExpire.isVisible = true
+        } else {
+            // Case C: Active valid subscription
+            val title = if (info!!.subName.isNotBlank()) info.subName else getString(R.string.app_name)
             val formattedTraffic = info.getFormattedTraffic()
             val percent = info.calculateUsagePercent()
             val cleanResetDay = info.getCleanResetDay()
             val cleanExpireDate = info.getCleanExpireDate()
 
-            // 1. Simple Mode
-            binding.cardSubInfo.isVisible = true
             binding.tvSubTitle.text = title
             if (formattedTraffic.isNotBlank()) {
                 binding.tvSubTraffic.text = formattedTraffic
@@ -507,8 +538,10 @@ class MainActivity : BaseActivity() {
 
             if (percent >= 0) {
                 binding.tvSubPercent.text = "${percent}%"
+                binding.tvSubPercent.setTextColor(ContextCompat.getColor(this, R.color.color_fab_active))
                 binding.tvSubPercent.isVisible = true
                 binding.pbSubTraffic.isVisible = true
+                binding.pbSubTraffic.setIndicatorColor(ContextCompat.getColor(this, R.color.color_fab_active))
                 binding.pbSubTraffic.progress = percent
             } else {
                 binding.tvSubPercent.isVisible = false
@@ -524,12 +557,21 @@ class MainActivity : BaseActivity() {
 
             if (cleanExpireDate.isNotBlank()) {
                 binding.tvSubExpire.text = "套餐到期：$cleanExpireDate"
+                binding.tvSubExpire.setTextColor(ContextCompat.getColor(this, R.color.md_theme_onSurfaceVariant))
                 binding.tvSubExpire.isVisible = true
             } else {
                 binding.tvSubExpire.isVisible = false
             }
+        }
 
-            // 2. Classic Mode
+        // 2. Classic Mode
+        if (hasData) {
+            val title = if (info!!.subName.isNotBlank()) info.subName else getString(R.string.app_name)
+            val formattedTraffic = info.getFormattedTraffic()
+            val percent = info.calculateUsagePercent()
+            val cleanResetDay = info.getCleanResetDay()
+            val cleanExpireDate = info.getCleanExpireDate()
+
             binding.cardSubInfoClassic.isVisible = true
             binding.tvSubTitleClassic.text = title
             if (formattedTraffic.isNotBlank()) {
@@ -539,31 +581,55 @@ class MainActivity : BaseActivity() {
                 binding.tvSubTrafficClassic.isVisible = false
             }
 
-            if (percent >= 0) {
-                binding.tvSubPercentClassic.text = "${percent}%"
+            if (isExpired) {
+                binding.tvSubPercentClassic.text = getString(R.string.sub_status_expired)
+                binding.tvSubPercentClassic.setTextColor(ContextCompat.getColor(this, R.color.colorPingRed))
                 binding.tvSubPercentClassic.isVisible = true
                 binding.pbSubTrafficClassic.isVisible = true
+                binding.pbSubTrafficClassic.setIndicatorColor(ContextCompat.getColor(this, R.color.colorPingRed))
+                binding.pbSubTrafficClassic.progress = 100
+                binding.tvSubExpireClassic.text = "套餐到期：$cleanExpireDate (${getString(R.string.sub_status_expired)})"
+                binding.tvSubExpireClassic.setTextColor(ContextCompat.getColor(this, R.color.colorPingRed))
+                binding.tvSubExpireClassic.isVisible = true
+                binding.tvSubResetClassic.isVisible = false
+            } else if (percent >= 0) {
+                binding.tvSubPercentClassic.text = "${percent}%"
+                binding.tvSubPercentClassic.setTextColor(ContextCompat.getColor(this, R.color.color_fab_active))
+                binding.tvSubPercentClassic.isVisible = true
+                binding.pbSubTrafficClassic.isVisible = true
+                binding.pbSubTrafficClassic.setIndicatorColor(ContextCompat.getColor(this, R.color.color_fab_active))
                 binding.pbSubTrafficClassic.progress = percent
+                if (cleanExpireDate.isNotBlank()) {
+                    binding.tvSubExpireClassic.text = "套餐到期：$cleanExpireDate"
+                    binding.tvSubExpireClassic.setTextColor(ContextCompat.getColor(this, R.color.md_theme_onSurfaceVariant))
+                    binding.tvSubExpireClassic.isVisible = true
+                } else {
+                    binding.tvSubExpireClassic.isVisible = false
+                }
+                if (cleanResetDay.isNotBlank()) {
+                    binding.tvSubResetClassic.text = "下次重置：$cleanResetDay"
+                    binding.tvSubResetClassic.isVisible = true
+                } else {
+                    binding.tvSubResetClassic.isVisible = false
+                }
             } else {
                 binding.tvSubPercentClassic.isVisible = false
                 binding.pbSubTrafficClassic.isVisible = false
-            }
-
-            if (cleanResetDay.isNotBlank()) {
-                binding.tvSubResetClassic.text = "下次重置：$cleanResetDay"
-                binding.tvSubResetClassic.isVisible = true
-            } else {
-                binding.tvSubResetClassic.isVisible = false
-            }
-
-            if (cleanExpireDate.isNotBlank()) {
-                binding.tvSubExpireClassic.text = "套餐到期：$cleanExpireDate"
-                binding.tvSubExpireClassic.isVisible = true
-            } else {
-                binding.tvSubExpireClassic.isVisible = false
+                if (cleanExpireDate.isNotBlank()) {
+                    binding.tvSubExpireClassic.text = "套餐到期：$cleanExpireDate"
+                    binding.tvSubExpireClassic.setTextColor(ContextCompat.getColor(this, R.color.md_theme_onSurfaceVariant))
+                    binding.tvSubExpireClassic.isVisible = true
+                } else {
+                    binding.tvSubExpireClassic.isVisible = false
+                }
+                if (cleanResetDay.isNotBlank()) {
+                    binding.tvSubResetClassic.text = "下次重置：$cleanResetDay"
+                    binding.tvSubResetClassic.isVisible = true
+                } else {
+                    binding.tvSubResetClassic.isVisible = false
+                }
             }
         } else {
-            binding.cardSubInfo.isVisible = false
             binding.cardSubInfoClassic.isVisible = false
         }
     }

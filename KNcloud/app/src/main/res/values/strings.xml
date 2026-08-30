@@ -435,5 +435,13 @@
     <string name="title_pref_simple_mode">Simple Mode</string>
     <string name="summary_pref_simple_mode">Enable card dashboard with drawer node selector, disable for classic list</string>
     <string name="no_node_selected">No node selected</string>
+    <string name="sub_title_empty">No Subscription</string>
+    <string name="sub_traffic_empty">0 / 0</string>
+    <string name="sub_expire_empty">Plan Expiry: No Active Plan</string>
+    <string name="sub_status_no_sub">No Active Plan</string>
+    <string name="sub_status_unsubscribed">Unsubscribed</string>
+    <string name="sub_status_no_traffic">No Data Available</string>
+    <string name="sub_status_go_buy_hint">Please go to website to purchase a plan</string>
+    <string name="sub_status_expired">Expired</string>
 
 </resources>

@@ -423,5 +423,13 @@
     <string name="title_pref_simple_mode">简洁模式</string>
     <string name="summary_pref_simple_mode">开启卡片式仪表板与抽屉节点选择，关闭使用经典列表</string>
     <string name="no_node_selected">未选择节点</string>
+    <string name="sub_title_empty">无订阅</string>
+    <string name="sub_traffic_empty">0 / 0</string>
+    <string name="sub_expire_empty">套餐到期：未订购套餐</string>
+    <string name="sub_status_no_sub">未订阅套餐</string>
+    <string name="sub_status_unsubscribed">未订阅</string>
+    <string name="sub_status_no_traffic">暂无可用流量</string>
+    <string name="sub_status_go_buy_hint">请前往网站购买订阅套餐</string>
+    <string name="sub_status_expired">已过期</string>
 
 </resources>

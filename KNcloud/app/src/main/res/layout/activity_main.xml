@@ -36,7 +36,27 @@
                 app:tint="@color/top_bar_icon_tint" />
         </FrameLayout>
 
-        <!-- Right Capsule (Refresh & Logout) -->
+        <!-- Right Circular Logout Button (for Simple Mode - perfect circle matching settings) -->
+        <FrameLayout
+            android:id="@+id/btn_top_logout_circle"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:background="@drawable/bg_top_bar_circle"
+            android:clickable="true"
+            android:focusable="true"
+            android:visibility="visible">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_logout_24dp"
+                app:tint="@color/top_bar_icon_tint" />
+        </FrameLayout>
+
+        <!-- Right Capsule (Refresh & Logout for Classic Mode) -->
         <LinearLayout
             android:id="@+id/layout_top_capsule"
             android:layout_width="wrap_content"
@@ -47,7 +67,8 @@
             android:gravity="center_vertical"
             android:orientation="horizontal"
             android:paddingStart="4dp"
-            android:paddingEnd="4dp">
+            android:paddingEnd="4dp"
+            android:visibility="gone">
 
             <!-- Refresh Button -->
             <FrameLayout
@@ -469,49 +490,6 @@
 
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
-
-                <!-- Empty State Layout in Simple Mode -->
-                <LinearLayout
-                    android:id="@+id/layout_empty_nodes_simple"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="32dp"
-                    android:gravity="center"
-                    android:orientation="vertical"
-                    android:paddingStart="@dimen/padding_spacing_dp16"
-                    android:paddingEnd="@dimen/padding_spacing_dp16"
-                    android:visibility="gone"
-                    tools:visibility="visible">
-
-                    <ImageView
-                        android:layout_width="56dp"
-                        android:layout_height="56dp"
-                        android:src="@drawable/ic_cloud_download_24dp"
-                        app:tint="@color/color_fab_active" />
-
-                    <TextView
-                        android:id="@+id/tv_empty_prompt_simple"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/margin_spacing_dp16"
-                        android:gravity="center"
-                        android:lineSpacingExtra="4dp"
-                        android:text="@string/empty_no_nodes_full_text"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
-                        android:textColor="@color/md_theme_onSurface" />
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btn_go_subscribe_simple"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/margin_spacing_dp16"
-                        android:backgroundTint="@color/color_fab_active"
-                        android:text="@string/empty_subscribe_btn"
-                        android:textColor="@color/colorWhite"
-                        app:cornerRadius="20dp"
-                        app:icon="@drawable/ic_subscriptions_24dp"
-                        app:iconTint="@color/colorWhite" />
-                </LinearLayout>
 
             </LinearLayout>
         </androidx.core.widget.NestedScrollView>
