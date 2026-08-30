@@ -184,6 +184,19 @@
                             android:layout_height="wrap_content"
                             android:orientation="vertical">
 
+                            <!-- User Email (Above Subscription Name) -->
+                            <TextView
+                                android:id="@+id/tv_user_email"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="4dp"
+                                android:ellipsize="end"
+                                android:maxLines="1"
+                                android:textAppearance="@style/TextAppearance.AppCompat.Caption"
+                                android:textColor="@color/md_theme_onSurfaceVariant"
+                                android:textSize="12sp"
+                                tools:text="user@kncloud.top" />
+
                             <!-- Top Header: Sub Title & Usage Percentage -->
                             <LinearLayout
                                 android:layout_width="match_parent"
@@ -542,6 +555,19 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:padding="@dimen/padding_spacing_dp16">
+
+                        <!-- User Email (Above Subscription Name) -->
+                        <TextView
+                            android:id="@+id/tv_user_email_classic"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="4dp"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:textAppearance="@style/TextAppearance.AppCompat.Caption"
+                            android:textColor="@color/md_theme_onSurfaceVariant"
+                            android:textSize="12sp"
+                            tools:text="user@kncloud.top" />
 
                         <!-- Top Header: Title & Usage Percentage Badge -->
                         <LinearLayout

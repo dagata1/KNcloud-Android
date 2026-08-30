@@ -483,6 +483,17 @@ class MainActivity : BaseActivity() {
     }
 
     private fun updateSubscriptionInfo() {
+        val userEmail = MmkvManager.getUserEmail().orEmpty()
+        if (userEmail.isNotBlank()) {
+            binding.tvUserEmail.text = userEmail
+            binding.tvUserEmail.isVisible = true
+            binding.tvUserEmailClassic.text = userEmail
+            binding.tvUserEmailClassic.isVisible = true
+        } else {
+            binding.tvUserEmail.isVisible = false
+            binding.tvUserEmailClassic.isVisible = false
+        }
+
         val info = MmkvManager.getSubscriptionInfo()
         val hasData = info != null && info.hasData()
         val isExpired = hasData && info!!.isExpired()

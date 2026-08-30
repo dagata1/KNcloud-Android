@@ -429,7 +429,8 @@
     <string name="node_count_format">%d nodes available</string>
     <string name="node_selector_empty">No nodes available</string>
     <string name="connect_state_idle">Not Connected</string>
-    <string name="connect_state_connected">Protected</string>
+    <string name="connect_state_connecting">Connecting…</string>
+    <string name="connect_state_connected">Connected</string>
     <string name="connect_tap_to_connect">Tap to connect</string>
     <string name="connect_tap_to_disconnect">Connected · Tap to disconnect</string>
     <string name="connect_tap_to_test">Tap to test connectivity</string>

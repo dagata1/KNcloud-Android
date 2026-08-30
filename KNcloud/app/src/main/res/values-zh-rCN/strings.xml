@@ -417,6 +417,7 @@
     <string name="node_count_format">共 %d 个可用节点</string>
     <string name="node_selector_empty">暂无可用节点</string>
     <string name="connect_state_idle">未连接</string>
+    <string name="connect_state_connecting">正在连接…</string>
     <string name="connect_state_connected">已连接</string>
     <string name="connect_tap_to_connect">点击启动代理保护</string>
     <string name="connect_tap_to_disconnect">已连接 · 点击停止连接</string>
