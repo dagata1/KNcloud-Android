@@ -64,4 +64,7 @@
     <color name="pill_badge_text">#B6B2C2</color>
     <color name="bottom_bar_bg">#23222A</color>
     <color name="bottom_bar_stroke">#34323E</color>
+    <color name="top_bar_capsule_bg">#252528</color>
+    <color name="top_bar_capsule_stroke">#34333A</color>
+    <color name="top_bar_icon_tint">#FFFFFF</color>
 </resources>

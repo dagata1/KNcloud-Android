@@ -118,8 +118,21 @@ class MainActivity : BaseActivity() {
         }
 
         setContentView(binding.root)
-        title = getString(R.string.app_name)
-        setSupportActionBar(binding.toolbar)
+
+        binding.btnTopSettings.setOnClickListener {
+            startActivity(
+                Intent(this, SettingsActivity::class.java)
+                    .putExtra("isRunning", mainViewModel.isRunning.value == true)
+            )
+        }
+
+        binding.btnTopRefresh.setOnClickListener {
+            importConfigViaSub()
+        }
+
+        binding.btnTopLogout.setOnClickListener {
+            showLogoutDialog()
+        }
 
         binding.fab.setOnClickListener {
             if (mainViewModel.isRunning.value == true) {
