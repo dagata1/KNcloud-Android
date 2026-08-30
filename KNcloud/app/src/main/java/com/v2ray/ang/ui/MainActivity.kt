@@ -235,7 +235,7 @@ class MainActivity : BaseActivity() {
     }
 
     private fun autoTestAllRealPing() {
-        lifecycleScope.launch(Dispatchers.IO) {
+        lifecycleScope.launch {
             delay(1000L) // Wait for core environment and server list to initialize
             if (mainViewModel.serversCache.isNotEmpty()) {
                 mainViewModel.testAllRealPing()
@@ -271,10 +271,6 @@ class MainActivity : BaseActivity() {
         mainViewModel.reloadServerList()
         updateSubscriptionInfo()
         updateEmptyState()
-
-        if (mainViewModel.serversCache.isEmpty()) {
-            importConfigViaSub()
-        }
     }
 
     private fun updateEmptyState() {

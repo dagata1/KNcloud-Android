@@ -10,7 +10,7 @@
     android:layout_marginTop="@dimen/margin_spacing_dp4"
     android:layout_marginBottom="@dimen/margin_spacing_dp4"
     app:cardBackgroundColor="@color/card_node_bg"
-    app:cardCornerRadius="12dp"
+    app:cardCornerRadius="16dp"
     app:cardElevation="0dp"
     app:strokeColor="@color/card_node_stroke"
     app:strokeWidth="1dp">

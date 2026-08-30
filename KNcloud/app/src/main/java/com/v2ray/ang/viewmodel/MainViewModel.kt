@@ -72,7 +72,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun reloadServerList() {
         serverList = MmkvManager.decodeServerList()
         updateCache()
-        updateListAction.value = -1
+        updateListAction.postValue(-1)
     }
 
     /**
@@ -232,7 +232,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun testAllRealPing() {
         MessageUtil.sendMsg2TestService(getApplication(), AppConfig.MSG_MEASURE_CONFIG_CANCEL, "")
         MmkvManager.clearAllTestDelayResults(serversCache.map { it.guid }.toList())
-        updateListAction.value = -1
+        updateListAction.postValue(-1)
 
         val serversCopy = serversCache.toList()
         viewModelScope.launch(Dispatchers.Default) {
@@ -434,35 +434,35 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         override fun onReceive(ctx: Context?, intent: Intent?) {
             when (intent?.getIntExtra("key", 0)) {
                 AppConfig.MSG_STATE_RUNNING -> {
-                    isRunning.value = true
+                    isRunning.postValue(true)
                 }
 
                 AppConfig.MSG_STATE_NOT_RUNNING -> {
-                    isRunning.value = false
+                    isRunning.postValue(false)
                 }
 
                 AppConfig.MSG_STATE_START_SUCCESS -> {
                     getApplication<AngApplication>().toastSuccess(R.string.toast_services_success)
-                    isRunning.value = true
+                    isRunning.postValue(true)
                 }
 
                 AppConfig.MSG_STATE_START_FAILURE -> {
                     getApplication<AngApplication>().toastError(R.string.toast_services_failure)
-                    isRunning.value = false
+                    isRunning.postValue(false)
                 }
 
                 AppConfig.MSG_STATE_STOP_SUCCESS -> {
-                    isRunning.value = false
+                    isRunning.postValue(false)
                 }
 
                 AppConfig.MSG_MEASURE_DELAY_SUCCESS -> {
-                    updateTestResultAction.value = intent.getStringExtra("content")
+                    updateTestResultAction.postValue(intent.getStringExtra("content"))
                 }
 
                 AppConfig.MSG_MEASURE_CONFIG_SUCCESS -> {
                     val resultPair = intent.serializable<Pair<String, Long>>("content") ?: return
                     MmkvManager.encodeServerTestDelayMillis(resultPair.first, resultPair.second)
-                    updateListAction.value = getPosition(resultPair.first)
+                    updateListAction.postValue(getPosition(resultPair.first))
                 }
             }
         }

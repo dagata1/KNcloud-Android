@@ -101,7 +101,7 @@
                     android:text="@string/login_btn"
                     android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
                     app:backgroundTint="@color/color_fab_active"
-                    app:cornerRadius="12dp" />
+                    app:cornerRadius="16dp" />
 
             </LinearLayout>
 
