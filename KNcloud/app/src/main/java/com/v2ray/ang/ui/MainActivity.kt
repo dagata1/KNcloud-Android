@@ -16,16 +16,12 @@ import android.view.MenuItem
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
-import androidx.core.view.GravityCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
-import com.google.android.material.navigation.NavigationView
-import com.google.android.material.tabs.TabLayout
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.AppConfig.VPN
 import com.v2ray.ang.R
@@ -50,7 +46,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedListener {
+class MainActivity : BaseActivity() {
     private val binding by lazy {
         ActivityMainBinding.inflate(layoutInflater)
     }
@@ -159,17 +155,11 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
         mItemTouchHelper = ItemTouchHelper(SimpleItemTouchHelperCallback(adapter))
         mItemTouchHelper?.attachToRecyclerView(binding.recyclerView)
 
-        val toggle = ActionBarDrawerToggle(
-            this, binding.drawerLayout, binding.toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close
-        )
-        binding.drawerLayout.addDrawerListener(toggle)
-        toggle.syncState()
-        binding.navView.setNavigationItemSelectedListener(this)
-
         setupEmptyStateView()
         updateSubscriptionInfo()
         setupViewModel()
         migrateLegacy()
+        autoTestAllRealPing()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
@@ -180,13 +170,7 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
-                    binding.drawerLayout.closeDrawer(GravityCompat.START)
-                } else {
-                    isEnabled = false
-                    onBackPressedDispatcher.onBackPressed()
-                    isEnabled = true
-                }
+                moveTaskToBack(false)
             }
         })
     }
@@ -237,6 +221,15 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
         }
     }
 
+    private fun autoTestAllRealPing() {
+        lifecycleScope.launch(Dispatchers.IO) {
+            delay(1000L) // Wait for core environment and server list to initialize
+            if (mainViewModel.serversCache.isNotEmpty()) {
+                mainViewModel.testAllRealPing()
+            }
+        }
+    }
+
     private fun startV2Ray() {
         if (MmkvManager.getSelectServer().isNullOrEmpty()) {
             toast(R.string.title_file_chooser)
@@ -265,7 +258,6 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
         mainViewModel.reloadServerList()
         updateSubscriptionInfo()
         updateEmptyState()
-        updateDrawerHeader()
     }
 
     private fun updateEmptyState() {
@@ -350,47 +342,6 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
         }
     }
 
-    private fun updateDrawerHeader() {
-        val headerView = binding.navView.getHeaderView(0) ?: return
-        val tvUserEmail = headerView.findViewById<android.widget.TextView>(R.id.tv_user_email)
-        val tvHeaderTraffic = headerView.findViewById<android.widget.TextView>(R.id.tv_header_traffic)
-        val tvHeaderExpire = headerView.findViewById<android.widget.TextView>(R.id.tv_header_expire)
-
-        val email = MmkvManager.getUserEmail()
-        if (!email.isNullOrBlank()) {
-            tvUserEmail?.text = email
-            tvUserEmail?.isVisible = true
-        } else {
-            tvUserEmail?.isVisible = false
-        }
-
-        val info = MmkvManager.getSubscriptionInfo()
-        if (info != null && info.hasData()) {
-            val traffic = info.getFormattedTraffic()
-            if (traffic.isNotBlank()) {
-                tvHeaderTraffic?.text = "流量：$traffic"
-                tvHeaderTraffic?.isVisible = true
-            } else {
-                tvHeaderTraffic?.isVisible = false
-            }
-
-            val expireParts = listOf(
-                info.getCleanExpireDate().takeIf { it.isNotBlank() }?.let { "到期：$it" },
-                info.getCleanResetDay().takeIf { it.isNotBlank() }?.let { "重置：$it" }
-            ).filterNotNull()
-
-            if (expireParts.isNotEmpty()) {
-                tvHeaderExpire?.text = expireParts.joinToString(" · ")
-                tvHeaderExpire?.isVisible = true
-            } else {
-                tvHeaderExpire?.isVisible = false
-            }
-        } else {
-            tvHeaderTraffic?.isVisible = false
-            tvHeaderExpire?.isVisible = false
-        }
-    }
-
     public override fun onPause() {
         super.onPause()
     }
@@ -406,7 +357,41 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
             true
         }
 
+        R.id.settings -> {
+            startActivity(
+                Intent(this, SettingsActivity::class.java)
+                    .putExtra("isRunning", mainViewModel.isRunning.value == true)
+            )
+            true
+        }
+
+        R.id.logout -> {
+            showLogoutDialog()
+            true
+        }
+
         else -> super.onOptionsItemSelected(item)
+    }
+
+    private fun showLogoutDialog() {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.dialog_logout_title)
+            .setMessage(R.string.dialog_logout_message)
+            .setPositiveButton(android.R.string.ok) { _, _ ->
+                if (mainViewModel.isRunning.value == true) {
+                    V2RayServiceManager.stopVService(this)
+                }
+                MmkvManager.clearUserLogin()
+                MmkvManager.removeAllSubscriptions()
+                MmkvManager.removeAllServer()
+                val intent = Intent(this, LoginActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                }
+                startActivity(intent)
+                finish()
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
     }
 
     /**
@@ -476,7 +461,9 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
                             toast(getString(R.string.title_import_config_count, count))
                             mainViewModel.reloadServerList()
                             updateSubscriptionInfo()
+                            updateEmptyState()
                             updateDrawerHeader()
+                            autoTestAllRealPing()
                         }
 
                         countSub > 0 -> {
@@ -525,7 +512,9 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
                     toast(getString(R.string.title_update_config_count, count))
                     mainViewModel.reloadServerList()
                     updateSubscriptionInfo()
+                    updateEmptyState()
                     updateDrawerHeader()
+                    autoTestAllRealPing()
                 } else {
                     toastError(R.string.toast_failure)
                 }
@@ -681,40 +670,5 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
             return true
         }
         return super.onKeyDown(keyCode, event)
-    }
-
-
-    override fun onNavigationItemSelected(item: MenuItem): Boolean {
-        // Handle navigation view item clicks here.
-        when (item.itemId) {
-            R.id.settings -> startActivity(
-                Intent(this, SettingsActivity::class.java)
-                    .putExtra("isRunning", mainViewModel.isRunning.value == true)
-            )
-
-            R.id.logout -> {
-                AlertDialog.Builder(this)
-                    .setTitle(R.string.dialog_logout_title)
-                    .setMessage(R.string.dialog_logout_message)
-                    .setPositiveButton(android.R.string.ok) { _, _ ->
-                        if (mainViewModel.isRunning.value == true) {
-                            V2RayServiceManager.stopVService(this)
-                        }
-                        MmkvManager.clearUserLogin()
-                        MmkvManager.removeAllSubscriptions()
-                        MmkvManager.removeAllServer()
-                        val intent = Intent(this, LoginActivity::class.java).apply {
-                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                        }
-                        startActivity(intent)
-                        finish()
-                    }
-                    .setNegativeButton(android.R.string.cancel, null)
-                    .show()
-            }
-        }
-
-        binding.drawerLayout.closeDrawer(GravityCompat.START)
-        return true
     }
 }

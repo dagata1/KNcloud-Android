@@ -42,12 +42,20 @@ class RegisterWebActivity : BaseActivity() {
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-        setupWebView()
-        setupBackPress()
+        try {
+            setupWebView()
+            setupBackPress()
 
-        val domain = MmkvManager.getApiDomain()
-        val registerUrl = "$domain/#/register"
-        binding.webView.loadUrl(registerUrl)
+            val domain = MmkvManager.getApiDomain()
+            val registerUrl = "$domain/#/register"
+            binding.webView.loadUrl(registerUrl)
+        } catch (e: Exception) {
+            Log.e(AppConfig.TAG, "WebView initialization error", e)
+            val domain = MmkvManager.getApiDomain()
+            val registerUrl = "$domain/#/register"
+            com.v2ray.ang.util.Utils.openUri(this, registerUrl)
+            finish()
+        }
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -254,8 +262,10 @@ class RegisterWebActivity : BaseActivity() {
     }
 
     override fun onDestroy() {
-        binding.webView.stopLoading()
-        binding.webView.destroy()
+        try {
+            binding.webView.stopLoading()
+            binding.webView.destroy()
+        } catch (_: Exception) {}
         super.onDestroy()
     }
 }
