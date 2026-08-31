@@ -1,3 +1,7 @@
+import java.io.InputStream
+import java.io.OutputStream
+import java.security.KeyStore
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -12,8 +16,8 @@ android {
         applicationId = "top.kncloud.com"
         minSdk = 24
         targetSdk = 35
-        versionCode = 703
-        versionName = "1.10.51"
+        versionCode = 704
+        versionName = "1.10.52"
         multiDexEnabled = true
 
         val abiFilterList = (properties["ABI_FILTERS"] as? String)?.split(';')
@@ -117,15 +121,20 @@ val workspaceKeystore = project.rootProject.file("../android_keystore.jks")
 fun syncPermanentKeystore() {
     try {
         if (permanentKeystore.exists()) {
-            val srcKs = java.security.KeyStore.getInstance("PKCS12")
-            permanentKeystore.inputStream().use { srcKs.load(it, "kncloud123456".toCharArray()) }
-            val key = srcKs.getKey("kncloud", "kncloud123456".toCharArray())
+            val srcKs = KeyStore.getInstance("PKCS12")
+            val srcPass = "kncloud123456".toCharArray()
+            permanentKeystore.inputStream().use { inputStream ->
+                srcKs.load(inputStream, srcPass)
+            }
+            val key = srcKs.getKey("kncloud", srcPass)
             val chain = srcKs.getCertificateChain("kncloud")
 
-            val dstKs = java.security.KeyStore.getInstance("PKCS12")
+            val dstKs = KeyStore.getInstance("PKCS12")
             dstKs.load(null, null)
             dstKs.setKeyEntry("androiddebugkey", key, "android".toCharArray(), chain)
-            workspaceKeystore.outputStream().use { dstKs.store(it, "android".toCharArray()) }
+            workspaceKeystore.outputStream().use { outputStream ->
+                dstKs.store(outputStream, "android".toCharArray())
+            }
         }
     } catch (e: Exception) {
         logger.warn("Keystore sync warning: ${e.message}")
