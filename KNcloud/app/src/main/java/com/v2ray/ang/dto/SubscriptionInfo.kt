@@ -9,12 +9,13 @@ data class SubscriptionInfo(
     fun hasData(): Boolean = subName.isNotBlank() || traffic.isNotBlank() || resetDay.isNotBlank() || expireDate.isNotBlank()
 
     /**
-     * Returns a cleanly formatted string for used/total traffic, e.g. "22.5 TB / 97.6 TB" or "23.0 GB / 100.0 GB"
+     * Returns the raw or cleanly stripped string for used/total traffic,
+     * displaying original units without conversion (e.g. "23041.3G / 99999G").
      */
     fun getFormattedTraffic(): String {
         if (traffic.isBlank()) return ""
         try {
-            // Strip any prefix before colon if present
+            // Strip any prefix before colon if present (e.g. "流量信息：23041.3G/99999G" -> "23041.3G/99999G")
             val raw = if (traffic.contains("：")) {
                 traffic.substringAfter("：")
             } else if (traffic.contains(":")) {
@@ -25,15 +26,11 @@ data class SubscriptionInfo(
 
             val parts = raw.split("/")
             if (parts.size == 2) {
-                val usedBytes = parseToBytes(parts[0].trim())
-                val totalBytes = parseToBytes(parts[1].trim())
-                if (usedBytes >= 0 && totalBytes > 0) {
-                    return "${formatBytes(usedBytes)} / ${formatBytes(totalBytes)}"
-                }
+                return "${parts[0].trim()} / ${parts[1].trim()}"
             }
             return raw
         } catch (_: Exception) {
-            return traffic
+            return traffic.trim()
         }
     }
 

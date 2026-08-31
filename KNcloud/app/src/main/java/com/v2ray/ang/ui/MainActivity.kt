@@ -409,7 +409,7 @@ class MainActivity : BaseActivity() {
 
                 binding.btnConnectClassic.text = getString(R.string.action_stop_service)
                 binding.btnConnectClassic.setIconResource(R.drawable.ic_stop_24dp)
-                binding.btnConnectClassic.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.colorPingRed))
+                binding.btnConnectClassic.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_fab_active))
 
                 if (previousState == ConnectionState.CONNECTING) {
                     playConnectedSuccessAnimation()
@@ -498,7 +498,7 @@ class MainActivity : BaseActivity() {
         if (isRunning) {
             binding.btnConnectClassic.text = getString(R.string.action_stop_service)
             binding.btnConnectClassic.setIconResource(R.drawable.ic_stop_24dp)
-            binding.btnConnectClassic.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.colorPingRed))
+            binding.btnConnectClassic.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_fab_active))
             binding.btnConnectClassic.contentDescription = getString(R.string.action_stop_service)
         } else {
             binding.btnConnectClassic.text = getString(R.string.tasker_start_service)

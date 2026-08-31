@@ -12,8 +12,8 @@ android {
         applicationId = "top.kncloud.com"
         minSdk = 24
         targetSdk = 35
-        versionCode = 701
-        versionName = "1.10.49"
+        versionCode = 702
+        versionName = "1.10.50"
         multiDexEnabled = true
 
         val abiFilterList = (properties["ABI_FILTERS"] as? String)?.split(';')
@@ -38,9 +38,24 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        create("release") {
+            val keystoreFile = project.rootProject.file("../keystore/kncloud.keystore")
+            if (keystoreFile.exists()) {
+                storeFile = keystoreFile
+                storePassword = "kncloud123456"
+                keyAlias = "kncloud"
+                keyPassword = "kncloud123456"
+            }
+            enableV1Signing = true
+            enableV2Signing = true
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -93,6 +108,18 @@ android {
         }
     }
 
+}
+
+afterEvaluate {
+    val permanentKeystore = project.rootProject.file("../keystore/kncloud.keystore")
+    if (permanentKeystore.exists()) {
+        val releaseConfig = android.signingConfigs.getByName("release")
+        android.applicationVariants.all { variant ->
+            if (variant.buildType.name == "release") {
+                variant.signingConfig = releaseConfig
+            }
+        }
+    }
 }
 
 dependencies {
