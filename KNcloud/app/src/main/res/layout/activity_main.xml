@@ -676,6 +676,8 @@
                     android:layout_height="0dp"
                     android:layout_weight="1"
                     android:clipToPadding="false"
+                    android:paddingStart="@dimen/margin_spacing_dp12"
+                    android:paddingEnd="@dimen/margin_spacing_dp12"
                     android:paddingBottom="@dimen/padding_spacing_dp8"
                     android:nextFocusRight="@+id/fab"
                     android:scrollbars="vertical" />

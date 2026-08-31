@@ -205,7 +205,13 @@ class MainActivity : BaseActivity() {
 
         binding.recyclerView.setHasFixedSize(true)
         if (MmkvManager.decodeSettingsBool(AppConfig.PREF_DOUBLE_COLUMN_DISPLAY, false)) {
-            binding.recyclerView.layoutManager = GridLayoutManager(this, 2)
+            val gridLayoutManager = GridLayoutManager(this, 2)
+            gridLayoutManager.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
+                override fun getSpanSize(position: Int): Int {
+                    return if (position == adapter.itemCount - 1) 2 else 1
+                }
+            }
+            binding.recyclerView.layoutManager = gridLayoutManager
         } else {
             binding.recyclerView.layoutManager = GridLayoutManager(this, 1)
         }
