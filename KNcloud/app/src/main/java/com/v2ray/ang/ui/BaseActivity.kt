@@ -10,20 +10,39 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.RecyclerView
+import com.v2ray.ang.AppConfig
+import com.v2ray.ang.dto.Language
+import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.helper.CustomDividerItemDecoration
 import com.v2ray.ang.util.MyContextWrapper
 import com.v2ray.ang.util.Utils
-
+import java.util.Locale
 
 abstract class BaseActivity : AppCompatActivity() {
+    protected var currentLanguageCode: String? = null
+    protected var currentLocale: Locale? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        currentLanguageCode = MmkvManager.decodeSettingsString(AppConfig.PREF_LANGUAGE) ?: Language.AUTO.code
+        currentLocale = SettingsManager.getLocale()
         super.onCreate(savedInstanceState)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         if (!Utils.getDarkModeStatus(this)) {
             WindowCompat.getInsetsController(window, window.decorView).apply {
                 isAppearanceLightStatusBars = true
             }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val latestLanguageCode = MmkvManager.decodeSettingsString(AppConfig.PREF_LANGUAGE) ?: Language.AUTO.code
+        val latestLocale = SettingsManager.getLocale()
+        if ((currentLanguageCode != null && currentLanguageCode != latestLanguageCode) ||
+            (currentLocale != null && currentLocale != latestLocale)) {
+            recreate()
+            return
         }
     }
 

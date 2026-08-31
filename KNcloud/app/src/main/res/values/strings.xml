@@ -444,6 +444,9 @@
     <string name="sub_status_no_traffic">No Data Available</string>
     <string name="sub_status_go_buy_hint">Please go to website to purchase a plan</string>
     <string name="sub_status_expired">Expired</string>
+    <string name="sub_expire_format">Plan Expiry: %1$s</string>
+    <string name="sub_expire_format_with_status">Plan Expiry: %1$s (%2$s)</string>
+    <string name="sub_reset_format">Next Reset: %1$s</string>
     <string name="title_settings_ui">Interface &amp; Appearance</string>
     <string name="summary_settings_ui">Simple mode, dark theme, language, display</string>
     <string name="title_settings_routing">Routing &amp; Proxy</string>

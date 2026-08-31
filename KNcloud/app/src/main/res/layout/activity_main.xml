@@ -107,7 +107,7 @@
                 android:layout_marginEnd="2dp"
                 android:background="@color/top_bar_capsule_stroke" />
 
-            <!-- Ping / Test Menu Button -->
+            <!-- One-click Speed Test Button -->
             <FrameLayout
                 android:id="@+id/btn_top_ping"
                 android:layout_width="36dp"
@@ -120,7 +120,7 @@
                     android:layout_width="20dp"
                     android:layout_height="20dp"
                     android:layout_gravity="center"
-                    android:src="@drawable/ic_bolt_24dp"
+                    android:src="@drawable/ic_speed_24dp"
                     app:tint="@color/top_bar_icon_tint" />
             </FrameLayout>
 
@@ -754,7 +754,7 @@
                             android:layout_width="22dp"
                             android:layout_height="22dp"
                             android:layout_marginEnd="12dp"
-                            android:src="@drawable/ic_bolt_24dp"
+                            android:src="@drawable/ic_speed_24dp"
                             app:tint="@color/color_fab_active" />
 
                         <TextView

@@ -159,39 +159,8 @@ class MainActivity : BaseActivity() {
             importConfigViaSub()
         }
 
-        binding.btnTopPing.setOnClickListener { view ->
-            val popup = PopupMenu(this, view)
-            popup.menu.add(0, 1, 0, R.string.title_real_ping_all_server)
-            popup.menu.add(0, 2, 1, R.string.title_ping_all_server)
-            popup.menu.add(0, 3, 2, R.string.title_sort_by_test_results)
-            popup.menu.add(0, 4, 3, R.string.title_del_invalid_config)
-            popup.setOnMenuItemClickListener { item ->
-                when (item.itemId) {
-                    1 -> {
-                        realPingAll()
-                        true
-                    }
-                    2 -> {
-                        pingAll()
-                        true
-                    }
-                    3 -> {
-                        sortByTestResults()
-                        true
-                    }
-                    4 -> {
-                        delInvalidConfig()
-                        true
-                    }
-                    else -> false
-                }
-            }
-            popup.show()
-        }
-
-        binding.btnTopPing.setOnLongClickListener {
+        binding.btnTopPing.setOnClickListener {
             realPingAll()
-            true
         }
 
         binding.btnTopLogout.setOnClickListener {
@@ -755,7 +724,7 @@ class MainActivity : BaseActivity() {
             binding.tvSubReset.isVisible = false
 
             val cleanExpireDate = info.getCleanExpireDate()
-            binding.tvSubExpire.text = "套餐到期：$cleanExpireDate (${getString(R.string.sub_status_expired)})"
+            binding.tvSubExpire.text = getString(R.string.sub_expire_format_with_status, cleanExpireDate, getString(R.string.sub_status_expired))
             binding.tvSubExpire.setTextColor(ContextCompat.getColor(this, R.color.colorPingRed))
             binding.tvSubExpire.isVisible = true
         } else {
@@ -787,14 +756,14 @@ class MainActivity : BaseActivity() {
             }
 
             if (cleanResetDay.isNotBlank()) {
-                binding.tvSubReset.text = "下次重置：$cleanResetDay"
+                binding.tvSubReset.text = getString(R.string.sub_reset_format, cleanResetDay)
                 binding.tvSubReset.isVisible = true
             } else {
                 binding.tvSubReset.isVisible = false
             }
 
             if (cleanExpireDate.isNotBlank()) {
-                binding.tvSubExpire.text = "套餐到期：$cleanExpireDate"
+                binding.tvSubExpire.text = getString(R.string.sub_expire_format, cleanExpireDate)
                 binding.tvSubExpire.setTextColor(ContextCompat.getColor(this, R.color.md_theme_onSurfaceVariant))
                 binding.tvSubExpire.isVisible = true
             } else {
@@ -826,7 +795,7 @@ class MainActivity : BaseActivity() {
                 binding.pbSubTrafficClassic.isVisible = true
                 binding.pbSubTrafficClassic.setIndicatorColor(ContextCompat.getColor(this, R.color.colorPingRed))
                 binding.pbSubTrafficClassic.progress = 100
-                binding.tvSubExpireClassic.text = "套餐到期：$cleanExpireDate (${getString(R.string.sub_status_expired)})"
+                binding.tvSubExpireClassic.text = getString(R.string.sub_expire_format_with_status, cleanExpireDate, getString(R.string.sub_status_expired))
                 binding.tvSubExpireClassic.setTextColor(ContextCompat.getColor(this, R.color.colorPingRed))
                 binding.tvSubExpireClassic.isVisible = true
                 binding.tvSubResetClassic.isVisible = false
@@ -838,14 +807,14 @@ class MainActivity : BaseActivity() {
                 binding.pbSubTrafficClassic.setIndicatorColor(ContextCompat.getColor(this, R.color.color_fab_active))
                 binding.pbSubTrafficClassic.progress = percent
                 if (cleanExpireDate.isNotBlank()) {
-                    binding.tvSubExpireClassic.text = "套餐到期：$cleanExpireDate"
+                    binding.tvSubExpireClassic.text = getString(R.string.sub_expire_format, cleanExpireDate)
                     binding.tvSubExpireClassic.setTextColor(ContextCompat.getColor(this, R.color.md_theme_onSurfaceVariant))
                     binding.tvSubExpireClassic.isVisible = true
                 } else {
                     binding.tvSubExpireClassic.isVisible = false
                 }
                 if (cleanResetDay.isNotBlank()) {
-                    binding.tvSubResetClassic.text = "下次重置：$cleanResetDay"
+                    binding.tvSubResetClassic.text = getString(R.string.sub_reset_format, cleanResetDay)
                     binding.tvSubResetClassic.isVisible = true
                 } else {
                     binding.tvSubResetClassic.isVisible = false
@@ -854,14 +823,14 @@ class MainActivity : BaseActivity() {
                 binding.tvSubPercentClassic.isVisible = false
                 binding.pbSubTrafficClassic.isVisible = false
                 if (cleanExpireDate.isNotBlank()) {
-                    binding.tvSubExpireClassic.text = "套餐到期：$cleanExpireDate"
+                    binding.tvSubExpireClassic.text = getString(R.string.sub_expire_format, cleanExpireDate)
                     binding.tvSubExpireClassic.setTextColor(ContextCompat.getColor(this, R.color.md_theme_onSurfaceVariant))
                     binding.tvSubExpireClassic.isVisible = true
                 } else {
                     binding.tvSubExpireClassic.isVisible = false
                 }
                 if (cleanResetDay.isNotBlank()) {
-                    binding.tvSubResetClassic.text = "下次重置：$cleanResetDay"
+                    binding.tvSubResetClassic.text = getString(R.string.sub_reset_format, cleanResetDay)
                     binding.tvSubResetClassic.isVisible = true
                 } else {
                     binding.tvSubResetClassic.isVisible = false

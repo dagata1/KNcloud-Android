@@ -56,6 +56,10 @@ class SettingsActivity : BaseActivity() {
         settingsViewModel.startListenPreferenceChange()
     }
 
+    fun setToolbarTitle(title: String) {
+        binding.toolbar.title = title
+    }
+
     fun openSubSettings(@XmlRes xmlRes: Int, @StringRes titleRes: Int) {
         val fragment = SubSettingsFragment.newInstance(xmlRes, titleRes)
         val titleText = getString(titleRes)
@@ -326,6 +330,13 @@ class SettingsActivity : BaseActivity() {
                 true
             }
 
+            findPreference<ListPreference>(AppConfig.PREF_LANGUAGE)?.setOnPreferenceChangeListener { _, newValue ->
+                val newLang = newValue.toString()
+                MmkvManager.encodeSettings(AppConfig.PREF_LANGUAGE, newLang)
+                activity?.recreate()
+                true
+            }
+
             hevTunRwTimeout?.setOnPreferenceChangeListener { _, any ->
                 val nval = any as String
                 hevTunRwTimeout?.summary = if (TextUtils.isEmpty(nval)) AppConfig.HEVTUN_RW_TIMEOUT else nval
@@ -335,6 +346,10 @@ class SettingsActivity : BaseActivity() {
 
         override fun onStart() {
             super.onStart()
+            val titleRes = arguments?.getInt(ARG_TITLE_RES) ?: 0
+            if (titleRes != 0) {
+                (activity as? SettingsActivity)?.setToolbarTitle(getString(titleRes))
+            }
             updateMode(MmkvManager.decodeSettingsString(AppConfig.PREF_MODE, VPN))
             localDns?.isChecked = MmkvManager.decodeSettingsBool(AppConfig.PREF_LOCAL_DNS_ENABLED, false)
             fakeDns?.isChecked = MmkvManager.decodeSettingsBool(AppConfig.PREF_FAKE_DNS_ENABLED, false)

@@ -430,6 +430,9 @@
     <string name="sub_status_no_traffic">暫無可用流量</string>
     <string name="sub_status_go_buy_hint">請前往網站購買訂閱套餐</string>
     <string name="sub_status_expired">已過期</string>
+    <string name="sub_expire_format">套餐到期：%1$s</string>
+    <string name="sub_expire_format_with_status">套餐到期：%1$s (%2$s)</string>
+    <string name="sub_reset_format">下次重置：%1$s</string>
     <string name="title_settings_ui">介面與外觀</string>
     <string name="summary_settings_ui">簡潔模式、深色模式、語言切換、雙列顯示等</string>
     <string name="title_settings_routing">分流與應用代理</string>
