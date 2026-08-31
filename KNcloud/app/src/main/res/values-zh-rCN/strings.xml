@@ -19,6 +19,7 @@
     <string name="toast_services_stop">关闭中</string>
     <string name="toast_services_success">启动服务成功</string>
     <string name="toast_services_failure">启动服务失败</string>
+    <string name="toast_node_connection_failed">节点连接失败，请更换节点</string>
 
     <!--ServerActivity-->
     <string name="title_server">节点</string>

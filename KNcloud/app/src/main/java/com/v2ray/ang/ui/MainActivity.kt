@@ -250,10 +250,24 @@ class MainActivity : BaseActivity() {
         connectingTimeoutJob = lifecycleScope.launch {
             delay(8000L)
             if (connectionState == ConnectionState.CONNECTING) {
-                if (mainViewModel.isRunning.value == true) {
-                    setConnectionState(ConnectionState.CONNECTED)
-                } else {
+                val isSimpleMode = MmkvManager.decodeSettingsBool(AppConfig.PREF_SIMPLE_MODE, true)
+                if (isSimpleMode) {
                     setConnectionState(ConnectionState.DISCONNECTED)
+                    if (mainViewModel.isRunning.value == true) {
+                        V2RayServiceManager.stopVService(this@MainActivity)
+                    }
+                    val selectServer = MmkvManager.getSelectServer().orEmpty()
+                    if (selectServer.isNotEmpty()) {
+                        MmkvManager.encodeServerTestDelayMillis(selectServer, -1L)
+                    }
+                    updateSelectedNodeUI()
+                    toastError(R.string.toast_node_connection_failed)
+                } else {
+                    if (mainViewModel.isRunning.value == true) {
+                        setConnectionState(ConnectionState.CONNECTED)
+                    } else {
+                        setConnectionState(ConnectionState.DISCONNECTED)
+                    }
                 }
             }
         }
@@ -285,8 +299,28 @@ class MainActivity : BaseActivity() {
             setTestState(testResult)
             updateSelectedNodeUI()
 
-            if (connectionState == ConnectionState.CONNECTING && mainViewModel.isRunning.value == true) {
-                setConnectionState(ConnectionState.CONNECTED)
+            val isSimpleMode = MmkvManager.decodeSettingsBool(AppConfig.PREF_SIMPLE_MODE, true)
+            if (connectionState == ConnectionState.CONNECTING) {
+                val selectServer = MmkvManager.getSelectServer().orEmpty()
+                val aff = MmkvManager.decodeServerAffiliationInfo(selectServer)
+                val isSuccess = (aff?.testDelayMillis ?: 0L) > 0L ||
+                        (testResult?.contains(getString(R.string.connection_test_available).substringBefore("%")) == true)
+
+                if (isSimpleMode) {
+                    if (isSuccess && mainViewModel.isRunning.value == true) {
+                        setConnectionState(ConnectionState.CONNECTED)
+                    } else {
+                        setConnectionState(ConnectionState.DISCONNECTED)
+                        if (mainViewModel.isRunning.value == true) {
+                            V2RayServiceManager.stopVService(this)
+                        }
+                        toastError(R.string.toast_node_connection_failed)
+                    }
+                } else {
+                    if (mainViewModel.isRunning.value == true) {
+                        setConnectionState(ConnectionState.CONNECTED)
+                    }
+                }
             }
         }
 
@@ -488,19 +522,21 @@ class MainActivity : BaseActivity() {
 
         if (delayStr.isNotBlank()) {
             binding.tvSelectedNodePing.isVisible = true
-            binding.tvSelectedNodePing.text = delayStr
-            when {
-                delayMillis < 0L -> {
-                    binding.tvSelectedNodePing.setTextColor(ContextCompat.getColor(this, R.color.colorPingRed))
-                }
-                delayMillis in 1..150 -> {
-                    binding.tvSelectedNodePing.setTextColor(ContextCompat.getColor(this, R.color.colorPingGreen))
-                }
-                delayMillis in 151..300 -> {
-                    binding.tvSelectedNodePing.setTextColor(ContextCompat.getColor(this, R.color.colorPingYellow))
-                }
-                else -> {
-                    binding.tvSelectedNodePing.setTextColor(ContextCompat.getColor(this, R.color.colorPingRed))
+            if (delayMillis < 0L) {
+                binding.tvSelectedNodePing.text = "error"
+                binding.tvSelectedNodePing.setTextColor(ContextCompat.getColor(this, R.color.colorPingRed))
+            } else {
+                binding.tvSelectedNodePing.text = delayStr
+                when (delayMillis) {
+                    in 1..150 -> {
+                        binding.tvSelectedNodePing.setTextColor(ContextCompat.getColor(this, R.color.colorPingGreen))
+                    }
+                    in 151..300 -> {
+                        binding.tvSelectedNodePing.setTextColor(ContextCompat.getColor(this, R.color.colorPingYellow))
+                    }
+                    else -> {
+                        binding.tvSelectedNodePing.setTextColor(ContextCompat.getColor(this, R.color.colorPingRed))
+                    }
                 }
             }
         } else {

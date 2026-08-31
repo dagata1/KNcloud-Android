@@ -112,19 +112,21 @@ class NodeSelectorBottomSheet : BottomSheetDialogFragment() {
 
             if (delayStr.isNotBlank()) {
                 holder.binding.tvPing.isVisible = true
-                holder.binding.tvPing.text = delayStr
-                when {
-                    delayMillis < 0L -> {
-                        holder.binding.tvPing.setTextColor(ContextCompat.getColor(requireContext(), R.color.colorPingRed))
-                    }
-                    delayMillis in 1..150 -> {
-                        holder.binding.tvPing.setTextColor(ContextCompat.getColor(requireContext(), R.color.colorPingGreen))
-                    }
-                    delayMillis in 151..300 -> {
-                        holder.binding.tvPing.setTextColor(ContextCompat.getColor(requireContext(), R.color.colorPingYellow))
-                    }
-                    else -> {
-                        holder.binding.tvPing.setTextColor(ContextCompat.getColor(requireContext(), R.color.colorPingRed))
+                if (delayMillis < 0L) {
+                    holder.binding.tvPing.text = "error"
+                    holder.binding.tvPing.setTextColor(ContextCompat.getColor(requireContext(), R.color.colorPingRed))
+                } else {
+                    holder.binding.tvPing.text = delayStr
+                    when {
+                        delayMillis in 1..150 -> {
+                            holder.binding.tvPing.setTextColor(ContextCompat.getColor(requireContext(), R.color.colorPingGreen))
+                        }
+                        delayMillis in 151..300 -> {
+                            holder.binding.tvPing.setTextColor(ContextCompat.getColor(requireContext(), R.color.colorPingYellow))
+                        }
+                        else -> {
+                            holder.binding.tvPing.setTextColor(ContextCompat.getColor(requireContext(), R.color.colorPingRed))
+                        }
                     }
                 }
             } else {

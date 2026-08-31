@@ -260,6 +260,11 @@ object V2RayServiceManager {
                 }
             }
 
+            val selectServer = MmkvManager.getSelectServer().orEmpty()
+            if (selectServer.isNotEmpty()) {
+                MmkvManager.encodeServerTestDelayMillis(selectServer, time)
+            }
+
             val result = if (time >= 0) {
                 service.getString(R.string.connection_test_available, time)
             } else {

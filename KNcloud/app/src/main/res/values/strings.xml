@@ -20,6 +20,7 @@
     <string name="toast_services_stop">Stop Services</string>
     <string name="toast_services_success">Start Services Success</string>
     <string name="toast_services_failure">Start Services Failure</string>
+    <string name="toast_node_connection_failed">Node connection failed, please switch node</string>
 
     <!--ServerActivity-->
     <string name="title_server">Configuration</string>
