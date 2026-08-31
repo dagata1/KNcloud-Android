@@ -87,7 +87,7 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
                             MmkvManager.encodeServerTestDelayMillis(guid, res)
                             val pos = mActivity.mainViewModel.getPosition(guid)
                             if (pos >= 0) {
-                                mActivity.adapter.notifyItemChanged(pos)
+                                notifyItemChanged(pos)
                             }
                         }
                     }
