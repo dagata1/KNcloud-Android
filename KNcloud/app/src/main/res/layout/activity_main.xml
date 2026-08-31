@@ -309,6 +309,20 @@
                                 android:layout_height="120dp"
                                 android:background="@drawable/bg_connect_outer_circle">
 
+                                <!-- Spinning Circular Indicator for Connecting State -->
+                                <com.google.android.material.progressindicator.CircularProgressIndicator
+                                    android:id="@+id/cp_connecting"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_gravity="center"
+                                    android:indeterminate="true"
+                                    android:visibility="invisible"
+                                    app:indicatorColor="@color/color_fab_active"
+                                    app:indicatorSize="114dp"
+                                    app:trackThickness="3.5dp"
+                                    app:trackColor="@android:color/transparent"
+                                    app:trackCornerRadius="2dp" />
+
                                 <!-- Main Interactive Connect Button -->
                                 <FrameLayout
                                     android:id="@+id/btn_connect_toggle"

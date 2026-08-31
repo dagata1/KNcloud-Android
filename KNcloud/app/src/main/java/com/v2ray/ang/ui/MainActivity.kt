@@ -31,6 +31,7 @@ import android.animation.ObjectAnimator
 import android.animation.PropertyValuesHolder
 import android.animation.ValueAnimator
 import android.view.animation.AccelerateDecelerateInterpolator
+import android.view.animation.OvershootInterpolator
 import kotlinx.coroutines.Job
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.AppConfig.VPN
@@ -62,7 +63,7 @@ class MainActivity : BaseActivity() {
 
     private val requestVpnPermission = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
         if (it.resultCode == RESULT_OK) {
-            startV2Ray()
+            startV2RayWithConnectingState()
         }
     }
 
@@ -76,8 +77,10 @@ class MainActivity : BaseActivity() {
 
     private var connectionState: ConnectionState = ConnectionState.DISCONNECTED
     private var connectingPulseAnimator: ObjectAnimator? = null
+    private var connectingInnerAnimator: ObjectAnimator? = null
     private var connectingAlphaAnimator: ObjectAnimator? = null
     private var connectingTimeoutJob: Job? = null
+    private var isSwitchingServer: Boolean = false
 
     // register activity result for requesting permission
     private val requestPermissionLauncher =
@@ -224,6 +227,7 @@ class MainActivity : BaseActivity() {
     }
 
     private fun toggleV2RayConnection() {
+        isSwitchingServer = false
         if (connectionState == ConnectionState.CONNECTING || connectionState == ConnectionState.CONNECTED || mainViewModel.isRunning.value == true) {
             setConnectionState(ConnectionState.DISCONNECTED)
             V2RayServiceManager.stopVService(this)
@@ -241,25 +245,28 @@ class MainActivity : BaseActivity() {
         }
     }
 
+    private fun startConnectingTimeout() {
+        connectingTimeoutJob?.cancel()
+        connectingTimeoutJob = lifecycleScope.launch {
+            delay(8000L)
+            if (connectionState == ConnectionState.CONNECTING) {
+                if (mainViewModel.isRunning.value == true) {
+                    setConnectionState(ConnectionState.CONNECTED)
+                } else {
+                    setConnectionState(ConnectionState.DISCONNECTED)
+                }
+            }
+        }
+    }
+
     private fun startV2RayWithConnectingState() {
         if (MmkvManager.getSelectServer().isNullOrEmpty()) {
             toast(R.string.title_file_chooser)
             return
         }
         setConnectionState(ConnectionState.CONNECTING)
+        startConnectingTimeout()
         V2RayServiceManager.startVService(this)
-
-        connectingTimeoutJob?.cancel()
-        connectingTimeoutJob = lifecycleScope.launch {
-            delay(15000L)
-            if (connectionState == ConnectionState.CONNECTING) {
-                if (mainViewModel.isRunning.value == true) {
-                    mainViewModel.testCurrentServerRealPing()
-                } else {
-                    setConnectionState(ConnectionState.DISCONNECTED)
-                }
-            }
-        }
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -279,27 +286,23 @@ class MainActivity : BaseActivity() {
             updateSelectedNodeUI()
 
             if (connectionState == ConnectionState.CONNECTING && mainViewModel.isRunning.value == true) {
-                val selectServerGuid = MmkvManager.getSelectServer()
-                val aff = if (!selectServerGuid.isNullOrEmpty()) MmkvManager.decodeServerAffiliationInfo(selectServerGuid) else null
-                val delayMillis = aff?.testDelayMillis ?: -1L
-                val isSuccess = delayMillis > 0 || (testResult != null && !testResult.contains("失败") && !testResult.contains("Fail") && !testResult.contains("无互联网连接"))
-
-                if (isSuccess) {
-                    setConnectionState(ConnectionState.CONNECTED)
-                }
+                setConnectionState(ConnectionState.CONNECTED)
             }
         }
 
         mainViewModel.isRunning.observe(this) { isRunning ->
             adapter.isRunning = isRunning
             if (isRunning) {
+                isSwitchingServer = false
                 if (connectionState == ConnectionState.CONNECTING) {
                     mainViewModel.testCurrentServerRealPing()
                 } else {
                     setConnectionState(ConnectionState.CONNECTED)
                 }
             } else {
-                setConnectionState(ConnectionState.DISCONNECTED)
+                if (!isSwitchingServer) {
+                    setConnectionState(ConnectionState.DISCONNECTED)
+                }
             }
             updateClassicConnectionUI(isRunning)
         }
@@ -332,18 +335,19 @@ class MainActivity : BaseActivity() {
         val isRunning = mainViewModel.isRunning.value == true
         if (isRunning && connectionState != ConnectionState.CONNECTING) {
             setConnectionState(ConnectionState.CONNECTED)
-        } else if (!isRunning) {
+        } else if (!isRunning && !isSwitchingServer) {
             setConnectionState(ConnectionState.DISCONNECTED)
         }
         updateClassicConnectionUI(isRunning)
     }
 
     private fun setConnectionState(state: ConnectionState) {
+        val previousState = connectionState
         connectionState = state
         when (state) {
             ConnectionState.CONNECTING -> {
                 binding.tvConnectionStatus.text = getString(R.string.connect_state_connecting)
-                binding.flConnectOuter.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_active_ring))
+                binding.flConnectOuter.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_idle_ring))
                 binding.btnConnectToggle.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_active_bg))
                 binding.ivConnectIcon.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_active_icon))
                 startConnectingAnimation()
@@ -355,6 +359,9 @@ class MainActivity : BaseActivity() {
                 binding.flConnectOuter.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_active_ring))
                 binding.btnConnectToggle.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_active_bg))
                 binding.ivConnectIcon.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_active_icon))
+                if (previousState == ConnectionState.CONNECTING) {
+                    playConnectedSuccessAnimation()
+                }
             }
             ConnectionState.DISCONNECTED -> {
                 stopConnectingAnimation()
@@ -370,21 +377,28 @@ class MainActivity : BaseActivity() {
     private fun startConnectingAnimation() {
         stopConnectingAnimation()
 
-        val scaleX = PropertyValuesHolder.ofFloat(View.SCALE_X, 1.0f, 1.08f)
-        val scaleY = PropertyValuesHolder.ofFloat(View.SCALE_Y, 1.0f, 1.08f)
-        val alpha = PropertyValuesHolder.ofFloat(View.ALPHA, 1.0f, 0.7f)
+        // 1. Show and spin the circular progress indicator around the button
+        binding.cpConnecting.isVisible = true
 
-        connectingPulseAnimator = ObjectAnimator.ofPropertyValuesHolder(binding.flConnectOuter, scaleX, scaleY, alpha).apply {
-            duration = 850
+        // 2. Inner Button subtle breathing pulse
+        val innerScaleX = PropertyValuesHolder.ofFloat(View.SCALE_X, 1.0f, 0.95f)
+        val innerScaleY = PropertyValuesHolder.ofFloat(View.SCALE_Y, 1.0f, 0.95f)
+
+        connectingInnerAnimator = ObjectAnimator.ofPropertyValuesHolder(binding.btnConnectToggle, innerScaleX, innerScaleY).apply {
+            duration = 900
             repeatCount = ValueAnimator.INFINITE
             repeatMode = ValueAnimator.REVERSE
             interpolator = AccelerateDecelerateInterpolator()
             start()
         }
 
-        val iconAlpha = PropertyValuesHolder.ofFloat(View.ALPHA, 1.0f, 0.4f)
-        connectingAlphaAnimator = ObjectAnimator.ofPropertyValuesHolder(binding.ivConnectIcon, iconAlpha).apply {
-            duration = 850
+        // 3. Center Icon breathing transparency and subtle scale
+        val iconAlpha = PropertyValuesHolder.ofFloat(View.ALPHA, 1.0f, 0.6f)
+        val iconScaleX = PropertyValuesHolder.ofFloat(View.SCALE_X, 1.0f, 0.92f)
+        val iconScaleY = PropertyValuesHolder.ofFloat(View.SCALE_Y, 1.0f, 0.92f)
+
+        connectingAlphaAnimator = ObjectAnimator.ofPropertyValuesHolder(binding.ivConnectIcon, iconAlpha, iconScaleX, iconScaleY).apply {
+            duration = 900
             repeatCount = ValueAnimator.INFINITE
             repeatMode = ValueAnimator.REVERSE
             interpolator = AccelerateDecelerateInterpolator()
@@ -393,15 +407,35 @@ class MainActivity : BaseActivity() {
     }
 
     private fun stopConnectingAnimation() {
+        binding.cpConnecting.isVisible = false
+
         connectingPulseAnimator?.cancel()
         connectingPulseAnimator = null
+        connectingInnerAnimator?.cancel()
+        connectingInnerAnimator = null
         connectingAlphaAnimator?.cancel()
         connectingAlphaAnimator = null
 
         binding.flConnectOuter.scaleX = 1.0f
         binding.flConnectOuter.scaleY = 1.0f
         binding.flConnectOuter.alpha = 1.0f
+
+        binding.btnConnectToggle.scaleX = 1.0f
+        binding.btnConnectToggle.scaleY = 1.0f
+
+        binding.ivConnectIcon.scaleX = 1.0f
+        binding.ivConnectIcon.scaleY = 1.0f
         binding.ivConnectIcon.alpha = 1.0f
+    }
+
+    private fun playConnectedSuccessAnimation() {
+        val scaleX = PropertyValuesHolder.ofFloat(View.SCALE_X, 0.92f, 1.06f, 1.0f)
+        val scaleY = PropertyValuesHolder.ofFloat(View.SCALE_Y, 0.92f, 1.06f, 1.0f)
+        ObjectAnimator.ofPropertyValuesHolder(binding.btnConnectToggle, scaleX, scaleY).apply {
+            duration = 380
+            interpolator = OvershootInterpolator(2.0f)
+            start()
+        }
     }
 
     private fun updateClassicConnectionUI(isRunning: Boolean) {
@@ -521,6 +555,9 @@ class MainActivity : BaseActivity() {
     }
 
     private fun restartV2Ray() {
+        isSwitchingServer = true
+        setConnectionState(ConnectionState.CONNECTING)
+        startConnectingTimeout()
         if (mainViewModel.isRunning.value == true) {
             V2RayServiceManager.stopVService(this)
         }

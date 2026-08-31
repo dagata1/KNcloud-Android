@@ -296,26 +296,7 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
      * @param guid The server unique identifier to select
      */
     private fun setSelectServer(guid: String) {
-        val selected = MmkvManager.getSelectServer()
-        if (guid != selected) {
-            MmkvManager.setSelectServer(guid)
-            if (!TextUtils.isEmpty(selected)) {
-                notifyItemChanged(mActivity.mainViewModel.getPosition(selected.orEmpty()))
-            }
-            notifyItemChanged(mActivity.mainViewModel.getPosition(guid))
-            mActivity.updateSelectedNodeUI()
-            if (isRunning) {
-                V2RayServiceManager.stopVService(mActivity)
-                mActivity.lifecycleScope.launch {
-                    try {
-                        delay(500)
-                        V2RayServiceManager.startVService(mActivity)
-                    } catch (e: Exception) {
-                        Log.e(AppConfig.TAG, "Failed to restart V2Ray service", e)
-                    }
-                }
-            }
-        }
+        mActivity.onNodeSelected(guid)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder {
