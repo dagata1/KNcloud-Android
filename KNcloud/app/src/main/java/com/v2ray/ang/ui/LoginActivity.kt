@@ -70,7 +70,7 @@ class LoginActivity : BaseActivity() {
         // Official website authorization login button: opens default external browser
         binding.btnWebAuth.setOnClickListener {
             val domain = MmkvManager.getApiDomain()
-            val authUrl = "$domain/#/login"
+            val authUrl = "$domain/#/login?from=app_auth"
             Utils.openUri(this, authUrl)
         }
 
