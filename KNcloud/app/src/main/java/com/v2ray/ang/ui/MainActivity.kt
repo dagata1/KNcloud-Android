@@ -22,6 +22,8 @@ import android.view.View
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
@@ -157,6 +159,41 @@ class MainActivity : BaseActivity() {
             importConfigViaSub()
         }
 
+        binding.btnTopPing.setOnClickListener { view ->
+            val popup = PopupMenu(this, view)
+            popup.menu.add(0, 1, 0, R.string.title_real_ping_all_server)
+            popup.menu.add(0, 2, 1, R.string.title_ping_all_server)
+            popup.menu.add(0, 3, 2, R.string.title_sort_by_test_results)
+            popup.menu.add(0, 4, 3, R.string.title_del_invalid_config)
+            popup.setOnMenuItemClickListener { item ->
+                when (item.itemId) {
+                    1 -> {
+                        realPingAll()
+                        true
+                    }
+                    2 -> {
+                        pingAll()
+                        true
+                    }
+                    3 -> {
+                        sortByTestResults()
+                        true
+                    }
+                    4 -> {
+                        delInvalidConfig()
+                        true
+                    }
+                    else -> false
+                }
+            }
+            popup.show()
+        }
+
+        binding.btnTopPing.setOnLongClickListener {
+            realPingAll()
+            true
+        }
+
         binding.btnTopLogout.setOnClickListener {
             showLogoutDialog()
         }
@@ -192,6 +229,8 @@ class MainActivity : BaseActivity() {
             if (mainViewModel.isRunning.value == true) {
                 setTestState(getString(R.string.connection_test_testing))
                 mainViewModel.testCurrentServerRealPing()
+            } else {
+                realPingAll()
             }
         }
 
@@ -478,14 +517,16 @@ class MainActivity : BaseActivity() {
             binding.fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_fab_active))
             binding.fab.contentDescription = getString(R.string.action_stop_service)
             setTestState(getString(R.string.connection_connected))
-            binding.layoutTest.isFocusable = true
+            binding.ivTestIcon.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_fab_active))
         } else {
             binding.fab.setImageResource(R.drawable.ic_play_24dp)
             binding.fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_fab_inactive))
             binding.fab.contentDescription = getString(R.string.tasker_start_service)
             setTestState(getString(R.string.connection_not_connected))
-            binding.layoutTest.isFocusable = false
+            binding.ivTestIcon.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.md_theme_onSurfaceVariant))
         }
+        binding.layoutTest.isClickable = true
+        binding.layoutTest.isFocusable = true
     }
 
     /**

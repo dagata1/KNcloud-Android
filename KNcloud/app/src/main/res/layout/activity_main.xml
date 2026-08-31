@@ -67,7 +67,7 @@
                 app:tint="@color/top_bar_icon_tint" />
         </FrameLayout>
 
-        <!-- Right Capsule (Refresh & Logout for Classic Mode) -->
+        <!-- Right Capsule (Refresh, Ping & Logout for Classic Mode) -->
         <LinearLayout
             android:id="@+id/layout_top_capsule"
             android:layout_width="wrap_content"
@@ -100,7 +100,33 @@
 
             <!-- Small Divider -->
             <View
-                android:id="@+id/top_capsule_divider"
+                android:id="@+id/top_capsule_divider1"
+                android:layout_width="1dp"
+                android:layout_height="16dp"
+                android:layout_marginStart="2dp"
+                android:layout_marginEnd="2dp"
+                android:background="@color/top_bar_capsule_stroke" />
+
+            <!-- Ping / Test Menu Button -->
+            <FrameLayout
+                android:id="@+id/btn_top_ping"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_bolt_24dp"
+                    app:tint="@color/top_bar_icon_tint" />
+            </FrameLayout>
+
+            <!-- Small Divider -->
+            <View
+                android:id="@+id/top_capsule_divider2"
                 android:layout_width="1dp"
                 android:layout_height="16dp"
                 android:layout_marginStart="2dp"
@@ -722,6 +748,14 @@
                         android:orientation="horizontal"
                         android:paddingStart="@dimen/padding_spacing_dp16"
                         android:paddingEnd="72dp">
+
+                        <ImageView
+                            android:id="@+id/iv_test_icon"
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:layout_marginEnd="12dp"
+                            android:src="@drawable/ic_bolt_24dp"
+                            app:tint="@color/color_fab_active" />
 
                         <TextView
                             android:id="@+id/tv_test_state"

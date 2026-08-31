@@ -24,6 +24,7 @@ import com.v2ray.ang.extension.toastError
 import com.v2ray.ang.extension.toastSuccess
 import com.v2ray.ang.handler.AngConfigManager
 import com.v2ray.ang.handler.MmkvManager
+import com.v2ray.ang.handler.SpeedtestManager
 import com.v2ray.ang.helper.ItemTouchHelperAdapter
 import com.v2ray.ang.helper.ItemTouchHelperViewHolder
 import com.v2ray.ang.handler.V2RayServiceManager
@@ -73,6 +74,24 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
                 holder.itemMainBinding.tvTestResult.setTextColor(ContextCompat.getColor(mActivity, R.color.colorPingRed))
             } else {
                 holder.itemMainBinding.tvTestResult.setTextColor(ContextCompat.getColor(mActivity, R.color.colorPing))
+            }
+
+            holder.itemMainBinding.tvTestResult.setOnClickListener {
+                holder.itemMainBinding.tvTestResult.text = "..."
+                mActivity.lifecycleScope.launch(Dispatchers.IO) {
+                    val server = profile.server
+                    val port = profile.serverPort
+                    if (server != null && port != null) {
+                        val res = SpeedtestManager.tcping(server, port.toInt())
+                        launch(Dispatchers.Main) {
+                            MmkvManager.encodeServerTestDelayMillis(guid, res)
+                            val pos = mActivity.mainViewModel.getPosition(guid)
+                            if (pos >= 0) {
+                                mActivity.adapter.notifyItemChanged(pos)
+                            }
+                        }
+                    }
+                }
             }
 
             // Active / Selected Node State Highlight
