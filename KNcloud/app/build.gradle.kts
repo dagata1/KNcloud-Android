@@ -12,8 +12,8 @@ android {
         applicationId = "top.kncloud.com"
         minSdk = 24
         targetSdk = 35
-        versionCode = 702
-        versionName = "1.10.50"
+        versionCode = 703
+        versionName = "1.10.51"
         multiDexEnabled = true
 
         val abiFilterList = (properties["ABI_FILTERS"] as? String)?.split(';')
@@ -110,14 +110,34 @@ android {
 
 }
 
-afterEvaluate {
-    val permanentKeystore = project.rootProject.file("../keystore/kncloud.keystore")
-    if (permanentKeystore.exists()) {
-        val releaseConfig = android.signingConfigs.getByName("release")
-        android.applicationVariants.all { variant ->
-            if (variant.buildType.name == "release") {
-                variant.signingConfig = releaseConfig
-            }
+// Ensure workspace android_keystore.jks is always synchronized from the repository permanent release keystore
+val permanentKeystore = project.rootProject.file("../keystore/kncloud.keystore")
+val workspaceKeystore = project.rootProject.file("../android_keystore.jks")
+
+fun syncPermanentKeystore() {
+    try {
+        if (permanentKeystore.exists()) {
+            val srcKs = java.security.KeyStore.getInstance("PKCS12")
+            permanentKeystore.inputStream().use { srcKs.load(it, "kncloud123456".toCharArray()) }
+            val key = srcKs.getKey("kncloud", "kncloud123456".toCharArray())
+            val chain = srcKs.getCertificateChain("kncloud")
+
+            val dstKs = java.security.KeyStore.getInstance("PKCS12")
+            dstKs.load(null, null)
+            dstKs.setKeyEntry("androiddebugkey", key, "android".toCharArray(), chain)
+            workspaceKeystore.outputStream().use { dstKs.store(it, "android".toCharArray()) }
+        }
+    } catch (e: Exception) {
+        logger.warn("Keystore sync warning: ${e.message}")
+    }
+}
+
+syncPermanentKeystore()
+
+tasks.configureEach {
+    if (name.contains("Signing", ignoreCase = true) || name.contains("Package", ignoreCase = true) || name.contains("Assemble", ignoreCase = true)) {
+        doFirst {
+            syncPermanentKeystore()
         }
     }
 }
