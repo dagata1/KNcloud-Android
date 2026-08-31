@@ -223,13 +223,11 @@
 
     <!-- AboutActivity -->
     <string name="title_pref_feedback">反馈</string>
-    <string name="summary_pref_feedback">反馈改进或漏洞至 GitHub</string>
+    <string name="summary_pref_feedback">反馈与建议</string>
     <string name="summary_pref_tg_group">加入 Telegram Group</string>
     <string name="toast_tg_app_not_found">未找到 Telegram app</string>
     <string name="title_privacy_policy">隐私权政策</string>
     <string name="title_about">关于</string>
-    <string name="title_source_code">源代码</string>
-    <string name="title_oss_license">Open Source licenses</string>
     <string name="title_tg_channel">Telegram 频道</string>
     <string name="title_configuration_backup">备份配置</string>
     <string name="summary_configuration_backup">存储位置: [%s], 卸载 App 或清除存储后备份将被清除</string>

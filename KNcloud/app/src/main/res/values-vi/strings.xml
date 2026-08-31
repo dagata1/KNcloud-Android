@@ -224,14 +224,12 @@
 
     <!-- AboutActivity -->
     <string name="title_pref_feedback">Phản hồi lỗi</string>
-    <string name="summary_pref_feedback">Phản hồi cải tiến hoặc lỗi lên GitHub</string>
+    <string name="summary_pref_feedback">Phản hồi cải tiến hoặc lỗi</string>
     <string name="summary_pref_tg_group">Tham gia nhóm Telegram</string>
     <string name="toast_tg_app_not_found">Không tìm thấy ứng dụng Telegram!</string>
 
     <string name="title_privacy_policy">Chính sách bảo mật</string>
     <string name="title_about">Giới thiệu</string>
-    <string name="title_source_code">Mã nguồn</string>
-    <string name="title_oss_license">Open Source licenses</string>
     <string name="title_tg_channel">Kênh Telegram</string>
     <string name="title_configuration_backup">Sao lưu cấu hình</string>
     <string name="summary_configuration_backup">Nơi lưu trữ: [%s], bản backup sẽ được dọn dẹp sau khi xóa ứng dụng hoặc xóa bộ nhớ.</string>
