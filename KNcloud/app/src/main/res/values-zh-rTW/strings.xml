@@ -406,7 +406,7 @@
     <string name="empty_subscribe_keyword">訂閱</string>
     <string name="empty_subscribe_btn">前往網站</string>
     <string name="btn_go_website">前往官網</string>
-    <string name="btn_speed_test">一鍵測速</string>
+    <string name="btn_speed_test">一鍵測試</string>
     <string name="btn_refresh_sub">刷新訂閱</string>
     <string name="node_selector_title">切換節點</string>
     <string name="node_selector_current_hint">當前節點</string>

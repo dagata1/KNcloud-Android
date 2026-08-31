@@ -537,33 +537,29 @@
         <!-- ======================================================== -->
         <!-- 2. CLASSIC LIST MODE (经典列表模式)                       -->
         <!-- ======================================================== -->
-        <androidx.coordinatorlayout.widget.CoordinatorLayout
+        <LinearLayout
             android:id="@+id/layout_classic_mode"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:orientation="vertical"
             android:visibility="gone">
 
-            <LinearLayout
+            <!-- Polished Subscription Info Dashboard Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_sub_info_classic"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical">
-
-                <!-- Polished Subscription Info Dashboard Card -->
-                <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/card_sub_info_classic"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/margin_spacing_dp16"
-                    android:layout_marginEnd="@dimen/margin_spacing_dp16"
-                    android:layout_marginTop="@dimen/margin_spacing_dp8"
-                    android:layout_marginBottom="@dimen/margin_spacing_dp8"
-                    android:visibility="gone"
-                    app:cardBackgroundColor="@color/card_sub_bg"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="0dp"
-                    app:strokeColor="@color/card_sub_stroke"
-                    app:strokeWidth="1dp"
-                    tools:visibility="visible">
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/margin_spacing_dp16"
+                android:layout_marginEnd="@dimen/margin_spacing_dp16"
+                android:layout_marginTop="@dimen/margin_spacing_dp8"
+                android:layout_marginBottom="@dimen/margin_spacing_dp8"
+                android:visibility="visible"
+                app:cardBackgroundColor="@color/card_sub_bg"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:strokeColor="@color/card_sub_stroke"
+                app:strokeWidth="1dp"
+                tools:visibility="visible">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -666,138 +662,118 @@
                             android:textAppearance="@style/TextAppearance.AppCompat.Caption"
                             android:textColor="@color/md_theme_onSurfaceVariant"
                             tools:text="套餐到期：长期有效" />
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
 
-                <!-- Node List RecyclerView -->
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/recycler_view"
-                    android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:layout_weight="1"
-                    android:clipToPadding="false"
-                    android:paddingStart="@dimen/margin_spacing_dp12"
-                    android:paddingEnd="@dimen/margin_spacing_dp12"
-                    android:paddingBottom="@dimen/padding_spacing_dp8"
-                    android:nextFocusRight="@+id/fab"
-                    android:scrollbars="vertical" />
-
-                <!-- Empty State Layout in Classic Mode -->
-                <LinearLayout
-                    android:id="@+id/layout_empty_nodes_classic"
-                    android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:orientation="vertical"
-                    android:paddingStart="@dimen/padding_spacing_dp16"
-                    android:paddingEnd="@dimen/padding_spacing_dp16"
-                    android:visibility="gone"
-                    tools:visibility="visible">
-
-                    <ImageView
-                        android:layout_width="56dp"
-                        android:layout_height="56dp"
-                        android:src="@drawable/ic_cloud_download_24dp"
-                        app:tint="@color/colorAccent" />
-
-                    <TextView
-                        android:id="@+id/tv_empty_prompt_classic"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/margin_spacing_dp16"
-                        android:gravity="center"
-                        android:lineSpacingExtra="4dp"
-                        android:text="@string/empty_no_nodes_full_text"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
-                        android:textColor="@color/md_theme_onSurface" />
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btn_go_subscribe_classic"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/margin_spacing_dp16"
-                        android:backgroundTint="@color/color_fab_active"
-                        android:text="@string/empty_subscribe_btn"
-                        android:textColor="@color/colorWhite"
-                        app:cornerRadius="20dp"
-                        app:icon="@drawable/ic_subscriptions_24dp"
-                        app:iconTint="@color/colorWhite" />
-                </LinearLayout>
-
-                <!-- Bottom Connection & Test Bar in Classic Mode -->
-                <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/card_bottom_bar"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/margin_spacing_dp16"
-                    android:layout_marginEnd="@dimen/margin_spacing_dp16"
-                    android:layout_marginBottom="@dimen/margin_spacing_dp12"
-                    app:cardBackgroundColor="@color/bottom_bar_bg"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="3dp"
-                    app:strokeColor="@color/bottom_bar_stroke"
-                    app:strokeWidth="1dp">
-
-                    <LinearLayout
-                        android:id="@+id/layout_test"
-                        android:layout_width="match_parent"
-                        android:layout_height="@dimen/view_height_dp64"
-                        android:background="?attr/selectableItemBackground"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:paddingStart="@dimen/padding_spacing_dp16"
-                        android:paddingEnd="72dp">
-
-                        <ImageView
-                            android:id="@+id/iv_test_icon"
-                            android:layout_width="22dp"
-                            android:layout_height="22dp"
-                            android:layout_marginEnd="12dp"
-                            android:src="@drawable/ic_speed_24dp"
-                            app:tint="@color/color_fab_active" />
-
-                        <TextView
-                            android:id="@+id/tv_test_state"
+                        <!-- Action Buttons in Classic Mode Traffic Panel -->
+                        <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:ellipsize="end"
-                            android:maxLines="2"
-                            android:text="@string/connection_test_pending"
-                            android:textAppearance="@style/TextAppearance.AppCompat.Small"
-                            android:textColor="@color/md_theme_onSurface" />
+                            android:layout_marginTop="14dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
 
+                            <!-- Start/Stop Connection Button -->
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btn_connect_classic"
+                                android:layout_width="0dp"
+                                android:layout_height="44dp"
+                                android:layout_marginEnd="6dp"
+                                android:layout_weight="1"
+                                android:backgroundTint="@color/color_fab_active"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                android:text="@string/tasker_start_service"
+                                android:textColor="@color/colorWhite"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                app:cornerRadius="12dp"
+                                app:icon="@drawable/ic_play_24dp"
+                                app:iconGravity="textStart"
+                                app:iconPadding="6dp"
+                                app:iconSize="18dp"
+                                app:iconTint="@color/colorWhite" />
+
+                            <!-- Go to Website Button -->
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btn_go_website_classic"
+                                style="@style/Widget.Material3.Button.OutlinedButton"
+                                android:layout_width="0dp"
+                                android:layout_height="44dp"
+                                android:layout_marginStart="6dp"
+                                android:layout_weight="1"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                android:text="@string/btn_go_website"
+                                android:textColor="@color/md_theme_onSurface"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                app:cornerRadius="12dp"
+                                app:icon="@drawable/ic_language_24dp"
+                                app:iconGravity="textStart"
+                                app:iconPadding="6dp"
+                                app:iconSize="18dp"
+                                app:iconTint="@color/color_fab_active"
+                                app:strokeColor="@color/card_sub_stroke"
+                                app:strokeWidth="1.2dp" />
+                        </LinearLayout>
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
-            </LinearLayout>
+            <!-- Node List RecyclerView -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:clipToPadding="false"
+                android:paddingStart="@dimen/margin_spacing_dp12"
+                android:paddingEnd="@dimen/margin_spacing_dp12"
+                android:paddingBottom="@dimen/padding_spacing_dp8"
+                android:scrollbars="vertical" />
 
-            <!-- Floating Action Button in Classic Mode -->
-            <FrameLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom|end"
-                android:layout_marginEnd="24dp"
-                android:layout_marginBottom="16dp">
+            <!-- Empty State Layout in Classic Mode -->
+            <LinearLayout
+                android:id="@+id/layout_empty_nodes_classic"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:paddingStart="@dimen/padding_spacing_dp16"
+                android:paddingEnd="@dimen/padding_spacing_dp16"
+                android:visibility="gone"
+                tools:visibility="visible">
 
-                <com.google.android.material.floatingactionbutton.FloatingActionButton
-                    android:id="@+id/fab"
+                <ImageView
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:src="@drawable/ic_cloud_download_24dp"
+                    app:tint="@color/colorAccent" />
+
+                <TextView
+                    android:id="@+id/tv_empty_prompt_classic"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:clickable="true"
-                    android:contentDescription="@string/tasker_start_service"
-                    android:focusable="true"
-                    android:src="@drawable/ic_play_24dp"
-                    app:backgroundTint="@color/color_fab_active"
-                    app:elevation="6dp"
-                    app:fabCustomSize="56dp"
-                    app:maxImageSize="28dp"
-                    app:tint="@color/colorWhite" />
+                    android:layout_marginTop="@dimen/margin_spacing_dp16"
+                    android:gravity="center"
+                    android:lineSpacingExtra="4dp"
+                    android:text="@string/empty_no_nodes_full_text"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
+                    android:textColor="@color/md_theme_onSurface" />
 
-            </FrameLayout>
-        </androidx.coordinatorlayout.widget.CoordinatorLayout>
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_go_subscribe_classic"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/margin_spacing_dp16"
+                    android:backgroundTint="@color/color_fab_active"
+                    android:text="@string/empty_subscribe_btn"
+                    android:textColor="@color/colorWhite"
+                    app:cornerRadius="20dp"
+                    app:icon="@drawable/ic_subscriptions_24dp"
+                    app:iconTint="@color/colorWhite" />
+            </LinearLayout>
+
+        </LinearLayout>
     </FrameLayout>
 
 </LinearLayout>

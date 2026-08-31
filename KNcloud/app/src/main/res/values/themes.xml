@@ -54,6 +54,11 @@
         <item name="android:statusBarColor">@color/md_theme_surface</item>
         <item name="android:navigationBarColor">@color/md_theme_surface</item>
 
+        <!-- Android 12+ Splash Screen attributes -->
+        <item name="android:windowSplashScreenBackground" tools:targetApi="31">@color/md_theme_background</item>
+        <item name="android:windowSplashScreenAnimatedIcon" tools:targetApi="31">@drawable/ic_splash_logo</item>
+        <item name="android:windowSplashScreenIconBackgroundColor" tools:targetApi="31">@android:color/transparent</item>
+
         <!-- Unified Material 3 Dialog Theme -->
         <item name="materialAlertDialogTheme">@style/KNcloudMaterialAlertDialogTheme</item>
         <item name="alertDialogTheme">@style/KNcloudMaterialAlertDialogTheme</item>

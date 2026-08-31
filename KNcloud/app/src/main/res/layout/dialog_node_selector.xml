@@ -71,7 +71,7 @@
                 android:textSize="12sp"
                 app:backgroundTint="@color/node_selector_bg"
                 app:cornerRadius="18dp"
-                app:icon="@drawable/ic_bolt_24dp"
+                app:icon="@drawable/ic_speed_24dp"
                 app:iconGravity="textStart"
                 app:iconPadding="4dp"
                 app:iconSize="14dp"

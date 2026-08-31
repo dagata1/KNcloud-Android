@@ -410,7 +410,7 @@
     <string name="empty_subscribe_keyword">订阅</string>
     <string name="empty_subscribe_btn">前往网站</string>
     <string name="btn_go_website">前往官网</string>
-    <string name="btn_speed_test">一键测速</string>
+    <string name="btn_speed_test">一键测试</string>
     <string name="btn_refresh_sub">刷新订阅</string>
     <string name="node_selector_title">切换节点</string>
     <string name="node_selector_current_hint">当前节点</string>

@@ -190,17 +190,12 @@ class MainActivity : BaseActivity() {
         // ==========================================
         // Classic Mode Click Listeners & RecyclerView
         // ==========================================
-        binding.fab.setOnClickListener {
+        binding.btnConnectClassic.setOnClickListener {
             toggleV2RayConnection()
         }
 
-        binding.layoutTest.setOnClickListener {
-            if (mainViewModel.isRunning.value == true) {
-                setTestState(getString(R.string.connection_test_testing))
-                mainViewModel.testCurrentServerRealPing()
-            } else {
-                realPingAll()
-            }
+        binding.btnGoWebsiteClassic.setOnClickListener {
+            openSubscribeWebPage()
         }
 
         binding.recyclerView.setHasFixedSize(true)
@@ -310,7 +305,6 @@ class MainActivity : BaseActivity() {
         }
 
         mainViewModel.updateTestResultAction.observe(this) { testResult ->
-            setTestState(testResult)
             updateSelectedNodeUI()
 
             val isSimpleMode = MmkvManager.decodeSettingsBool(AppConfig.PREF_SIMPLE_MODE, true)
@@ -398,6 +392,11 @@ class MainActivity : BaseActivity() {
                 binding.flConnectOuter.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_idle_ring))
                 binding.btnConnectToggle.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_active_bg))
                 binding.ivConnectIcon.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_active_icon))
+
+                binding.btnConnectClassic.text = getString(R.string.connect_state_connecting)
+                binding.btnConnectClassic.setIconResource(R.drawable.ic_play_24dp)
+                binding.btnConnectClassic.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_fab_active))
+
                 startConnectingAnimation()
             }
             ConnectionState.CONNECTED -> {
@@ -407,6 +406,11 @@ class MainActivity : BaseActivity() {
                 binding.flConnectOuter.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_active_ring))
                 binding.btnConnectToggle.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_active_bg))
                 binding.ivConnectIcon.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_active_icon))
+
+                binding.btnConnectClassic.text = getString(R.string.action_stop_service)
+                binding.btnConnectClassic.setIconResource(R.drawable.ic_stop_24dp)
+                binding.btnConnectClassic.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.colorPingRed))
+
                 if (previousState == ConnectionState.CONNECTING) {
                     playConnectedSuccessAnimation()
                 }
@@ -418,6 +422,10 @@ class MainActivity : BaseActivity() {
                 binding.flConnectOuter.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_idle_ring))
                 binding.btnConnectToggle.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_idle_bg))
                 binding.ivConnectIcon.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_idle_icon))
+
+                binding.btnConnectClassic.text = getString(R.string.tasker_start_service)
+                binding.btnConnectClassic.setIconResource(R.drawable.ic_play_24dp)
+                binding.btnConnectClassic.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_fab_active))
             }
         }
     }
@@ -488,20 +496,16 @@ class MainActivity : BaseActivity() {
 
     private fun updateClassicConnectionUI(isRunning: Boolean) {
         if (isRunning) {
-            binding.fab.setImageResource(R.drawable.ic_stop_24dp)
-            binding.fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_fab_active))
-            binding.fab.contentDescription = getString(R.string.action_stop_service)
-            setTestState(getString(R.string.connection_connected))
-            binding.ivTestIcon.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_fab_active))
+            binding.btnConnectClassic.text = getString(R.string.action_stop_service)
+            binding.btnConnectClassic.setIconResource(R.drawable.ic_stop_24dp)
+            binding.btnConnectClassic.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.colorPingRed))
+            binding.btnConnectClassic.contentDescription = getString(R.string.action_stop_service)
         } else {
-            binding.fab.setImageResource(R.drawable.ic_play_24dp)
-            binding.fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_fab_inactive))
-            binding.fab.contentDescription = getString(R.string.tasker_start_service)
-            setTestState(getString(R.string.connection_not_connected))
-            binding.ivTestIcon.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.md_theme_onSurfaceVariant))
+            binding.btnConnectClassic.text = getString(R.string.tasker_start_service)
+            binding.btnConnectClassic.setIconResource(R.drawable.ic_play_24dp)
+            binding.btnConnectClassic.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_fab_active))
+            binding.btnConnectClassic.contentDescription = getString(R.string.tasker_start_service)
         }
-        binding.layoutTest.isClickable = true
-        binding.layoutTest.isFocusable = true
     }
 
     /**
@@ -777,15 +781,55 @@ class MainActivity : BaseActivity() {
             }
         }
 
-        // 2. Classic Mode
-        if (hasData) {
+        // 2. Classic Mode: Dashboard card is always displayed in classic mode
+        binding.cardSubInfoClassic.isVisible = true
+
+        if (!hasData) {
+            // Case A: No subscription
+            binding.tvSubTitleClassic.text = getString(R.string.sub_title_empty)
+            binding.tvSubPercentClassic.isVisible = false
+
+            binding.tvSubTrafficClassic.text = getString(R.string.sub_traffic_empty)
+            binding.tvSubTrafficClassic.isVisible = true
+
+            binding.pbSubTrafficClassic.isVisible = true
+            binding.pbSubTrafficClassic.setIndicatorColor(ContextCompat.getColor(this, R.color.color_fab_active))
+            binding.pbSubTrafficClassic.progress = 0
+            binding.tvSubResetClassic.isVisible = false
+
+            binding.tvSubExpireClassic.text = getString(R.string.sub_expire_empty)
+            binding.tvSubExpireClassic.setTextColor(ContextCompat.getColor(this, R.color.md_theme_onSurfaceVariant))
+            binding.tvSubExpireClassic.isVisible = true
+        } else if (isExpired) {
+            // Case B: Expired subscription
+            val title = if (info!!.subName.isNotBlank()) info.subName else getString(R.string.app_name)
+            val cleanExpireDate = info.getCleanExpireDate()
+            val formattedTraffic = info.getFormattedTraffic()
+
+            binding.tvSubTitleClassic.text = title
+            binding.tvSubPercentClassic.text = getString(R.string.sub_status_expired)
+            binding.tvSubPercentClassic.setTextColor(ContextCompat.getColor(this, R.color.colorPingRed))
+            binding.tvSubPercentClassic.isVisible = true
+
+            binding.tvSubTrafficClassic.text = formattedTraffic.ifBlank { "0 B / 0 B" }
+            binding.tvSubTrafficClassic.isVisible = true
+
+            binding.pbSubTrafficClassic.isVisible = true
+            binding.pbSubTrafficClassic.setIndicatorColor(ContextCompat.getColor(this, R.color.colorPingRed))
+            binding.pbSubTrafficClassic.progress = 100
+
+            binding.tvSubExpireClassic.text = getString(R.string.sub_expire_format_with_status, cleanExpireDate, getString(R.string.sub_status_expired))
+            binding.tvSubExpireClassic.setTextColor(ContextCompat.getColor(this, R.color.colorPingRed))
+            binding.tvSubExpireClassic.isVisible = true
+            binding.tvSubResetClassic.isVisible = false
+        } else {
+            // Case C: Active valid subscription
             val title = if (info!!.subName.isNotBlank()) info.subName else getString(R.string.app_name)
             val formattedTraffic = info.getFormattedTraffic()
             val percent = info.calculateUsagePercent()
             val cleanResetDay = info.getCleanResetDay()
             val cleanExpireDate = info.getCleanExpireDate()
 
-            binding.cardSubInfoClassic.isVisible = true
             binding.tvSubTitleClassic.text = title
             if (formattedTraffic.isNotBlank()) {
                 binding.tvSubTrafficClassic.text = formattedTraffic
@@ -794,56 +838,32 @@ class MainActivity : BaseActivity() {
                 binding.tvSubTrafficClassic.isVisible = false
             }
 
-            if (isExpired) {
-                binding.tvSubPercentClassic.text = getString(R.string.sub_status_expired)
-                binding.tvSubPercentClassic.setTextColor(ContextCompat.getColor(this, R.color.colorPingRed))
-                binding.tvSubPercentClassic.isVisible = true
-                binding.pbSubTrafficClassic.isVisible = true
-                binding.pbSubTrafficClassic.setIndicatorColor(ContextCompat.getColor(this, R.color.colorPingRed))
-                binding.pbSubTrafficClassic.progress = 100
-                binding.tvSubExpireClassic.text = getString(R.string.sub_expire_format_with_status, cleanExpireDate, getString(R.string.sub_status_expired))
-                binding.tvSubExpireClassic.setTextColor(ContextCompat.getColor(this, R.color.colorPingRed))
-                binding.tvSubExpireClassic.isVisible = true
-                binding.tvSubResetClassic.isVisible = false
-            } else if (percent >= 0) {
+            if (percent >= 0) {
                 binding.tvSubPercentClassic.text = "${percent}%"
                 binding.tvSubPercentClassic.setTextColor(ContextCompat.getColor(this, R.color.color_fab_active))
                 binding.tvSubPercentClassic.isVisible = true
                 binding.pbSubTrafficClassic.isVisible = true
                 binding.pbSubTrafficClassic.setIndicatorColor(ContextCompat.getColor(this, R.color.color_fab_active))
                 binding.pbSubTrafficClassic.progress = percent
-                if (cleanExpireDate.isNotBlank()) {
-                    binding.tvSubExpireClassic.text = getString(R.string.sub_expire_format, cleanExpireDate)
-                    binding.tvSubExpireClassic.setTextColor(ContextCompat.getColor(this, R.color.md_theme_onSurfaceVariant))
-                    binding.tvSubExpireClassic.isVisible = true
-                } else {
-                    binding.tvSubExpireClassic.isVisible = false
-                }
-                if (cleanResetDay.isNotBlank()) {
-                    binding.tvSubResetClassic.text = getString(R.string.sub_reset_format, cleanResetDay)
-                    binding.tvSubResetClassic.isVisible = true
-                } else {
-                    binding.tvSubResetClassic.isVisible = false
-                }
             } else {
                 binding.tvSubPercentClassic.isVisible = false
                 binding.pbSubTrafficClassic.isVisible = false
-                if (cleanExpireDate.isNotBlank()) {
-                    binding.tvSubExpireClassic.text = getString(R.string.sub_expire_format, cleanExpireDate)
-                    binding.tvSubExpireClassic.setTextColor(ContextCompat.getColor(this, R.color.md_theme_onSurfaceVariant))
-                    binding.tvSubExpireClassic.isVisible = true
-                } else {
-                    binding.tvSubExpireClassic.isVisible = false
-                }
-                if (cleanResetDay.isNotBlank()) {
-                    binding.tvSubResetClassic.text = getString(R.string.sub_reset_format, cleanResetDay)
-                    binding.tvSubResetClassic.isVisible = true
-                } else {
-                    binding.tvSubResetClassic.isVisible = false
-                }
             }
-        } else {
-            binding.cardSubInfoClassic.isVisible = false
+
+            if (cleanResetDay.isNotBlank()) {
+                binding.tvSubResetClassic.text = getString(R.string.sub_reset_format, cleanResetDay)
+                binding.tvSubResetClassic.isVisible = true
+            } else {
+                binding.tvSubResetClassic.isVisible = false
+            }
+
+            if (cleanExpireDate.isNotBlank()) {
+                binding.tvSubExpireClassic.text = getString(R.string.sub_expire_format, cleanExpireDate)
+                binding.tvSubExpireClassic.setTextColor(ContextCompat.getColor(this, R.color.md_theme_onSurfaceVariant))
+                binding.tvSubExpireClassic.isVisible = true
+            } else {
+                binding.tvSubExpireClassic.isVisible = false
+            }
         }
     }
 
@@ -1158,10 +1178,6 @@ class MainActivity : BaseActivity() {
         } else {
             requestPermissionLauncher.launch(permission)
         }
-    }
-
-    private fun setTestState(content: String?) {
-        binding.tvTestState.text = content
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
