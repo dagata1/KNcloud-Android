@@ -405,6 +405,8 @@
     <string name="login_email_hint">Email / Username</string>
     <string name="login_password_hint">Password</string>
     <string name="login_btn">Sign In</string>
+    <string name="login_divider_or">OR</string>
+    <string name="login_btn_web_auth">Sign in via Website</string>
     <string name="login_no_account">Don\'t have an account?</string>
     <string name="login_btn_register">Register Now</string>
     <string name="login_empty_email">Please enter your email</string>

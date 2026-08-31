@@ -103,6 +103,54 @@
                     app:backgroundTint="@color/color_fab_active"
                     app:cornerRadius="16dp" />
 
+                <!-- Divider with OR text -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="18dp"
+                    android:layout_marginBottom="18dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="1dp"
+                        android:layout_weight="1"
+                        android:background="@color/card_node_stroke" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="14dp"
+                        android:layout_marginEnd="14dp"
+                        android:text="@string/login_divider_or"
+                        android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                        android:textColor="?attr/colorOutline" />
+
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="1dp"
+                        android:layout_weight="1"
+                        android:background="@color/card_node_stroke" />
+                </LinearLayout>
+
+                <!-- Web Auth Login Button -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_web_auth"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:text="@string/login_btn_web_auth"
+                    android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
+                    android:textColor="?attr/colorOnSurface"
+                    app:cornerRadius="16dp"
+                    app:icon="@drawable/ic_open_in_browser_24dp"
+                    app:iconGravity="textStart"
+                    app:iconPadding="10dp"
+                    app:iconTint="@color/color_fab_active"
+                    app:strokeColor="@color/card_node_stroke"
+                    app:strokeWidth="1dp" />
+
             </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>

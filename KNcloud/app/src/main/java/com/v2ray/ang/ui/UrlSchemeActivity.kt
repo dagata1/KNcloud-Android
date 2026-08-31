@@ -35,33 +35,26 @@ class UrlSchemeActivity : BaseActivity() {
                     }
                 } else if (action == Intent.ACTION_VIEW) {
                     val uri: Uri? = intent.data
-                    val host = uri?.host?.lowercase()
+                    val host = uri?.host?.lowercase().orEmpty()
+                    val path = uri?.path?.lowercase().orEmpty()
 
-                    when (host) {
-                        "install-config" -> {
-                            val shareUrl = uri.getQueryParameter("url").orEmpty()
-                            parseUri(shareUrl, uri.fragment)
-                        }
+                    val hasToken = uri?.getQueryParameter("token") != null
+                            || uri?.getQueryParameter("auth_data") != null
+                            || uri?.getQueryParameter("auth_token") != null
+                            || uri?.getQueryParameter("auth") != null
 
-                        "auth", "login", "register", "oneclick", "quick-login" -> {
-                            handleOneClickLogin(uri)
-                            return
-                        }
-
-                        "install-sub" -> {
-                            // Subscriptions are strictly bound to KNcloud login account
-                            toastError(R.string.toast_failure)
-                        }
-
-                        else -> {
-                            // Check if uri path contains login / auth
-                            val path = uri?.path?.lowercase().orEmpty()
-                            if (path.contains("login") || path.contains("auth") || uri?.getQueryParameter("token") != null) {
-                                handleOneClickLogin(uri)
-                                return
-                            }
-                            toastError(R.string.toast_failure)
-                        }
+                    if (host == "install-config" || path.contains("install-config")) {
+                        val shareUrl = uri?.getQueryParameter("url").orEmpty()
+                        parseUri(shareUrl, uri?.fragment)
+                    } else if (hasToken || host in listOf("auth", "login", "register", "oneclick", "quick-login", "oauth", "callback", "sso")
+                        || path.contains("login") || path.contains("auth") || path.contains("oauth")) {
+                        handleOneClickLogin(uri)
+                        return
+                    } else if (host == "install-sub") {
+                        // Subscriptions are strictly bound to KNcloud login account
+                        toastError(R.string.toast_failure)
+                    } else {
+                        toastError(R.string.toast_failure)
                     }
                 }
             }

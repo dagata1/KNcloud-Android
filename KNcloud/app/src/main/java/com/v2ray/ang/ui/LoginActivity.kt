@@ -13,6 +13,7 @@ import com.v2ray.ang.extension.toastError
 import com.v2ray.ang.extension.toastSuccess
 import com.v2ray.ang.handler.KNcloudAuthService
 import com.v2ray.ang.handler.MmkvManager
+import com.v2ray.ang.util.Utils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -64,6 +65,13 @@ class LoginActivity : BaseActivity() {
         // Login button
         binding.btnLogin.setOnClickListener {
             performLogin()
+        }
+
+        // Official website authorization login button: opens default external browser
+        binding.btnWebAuth.setOnClickListener {
+            val domain = MmkvManager.getApiDomain()
+            val authUrl = "$domain/#/login"
+            Utils.openUri(this, authUrl)
         }
 
         // Register button: opens in-app web registration
@@ -134,6 +142,7 @@ class LoginActivity : BaseActivity() {
     private fun setLoading(isLoading: Boolean) {
         binding.pbLoading.visibility = if (isLoading) View.VISIBLE else View.INVISIBLE
         binding.btnLogin.isEnabled = !isLoading
+        binding.btnWebAuth.isEnabled = !isLoading
         binding.btnRegister.isEnabled = !isLoading
         binding.etEmail.isEnabled = !isLoading
         binding.etPassword.isEnabled = !isLoading
