@@ -442,7 +442,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
 
                 AppConfig.MSG_STATE_START_SUCCESS -> {
-                    getApplication<KNApplication>().toastSuccess(R.string.toast_services_success)
                     isRunning.postValue(true)
                 }
 
