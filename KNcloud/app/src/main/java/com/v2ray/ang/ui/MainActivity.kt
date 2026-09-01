@@ -33,6 +33,8 @@ import android.animation.ObjectAnimator
 import android.animation.PropertyValuesHolder
 import android.animation.ValueAnimator
 import android.view.animation.AccelerateDecelerateInterpolator
+import android.view.animation.AccelerateInterpolator
+import android.view.animation.DecelerateInterpolator
 import android.view.animation.OvershootInterpolator
 import kotlinx.coroutines.Job
 import com.v2ray.ang.AppConfig
@@ -154,7 +156,7 @@ class MainActivity : BaseActivity() {
         binding.btnTopModeSwitch.setOnClickListener {
             val currentMode = MmkvManager.decodeSettingsBool(AppConfig.PREF_SIMPLE_MODE, true)
             MmkvManager.encodeSettings(AppConfig.PREF_SIMPLE_MODE, !currentMode)
-            updateModeVisibility()
+            updateModeVisibility(animate = true)
         }
 
         binding.btnTopLogout.setOnClickListener {
@@ -366,25 +368,60 @@ class MainActivity : BaseActivity() {
     }
 
     /**
-     * Toggles between Simple Card Dashboard Mode and Classic List Mode
+     * Toggles between Simple Card Dashboard Mode and Classic List Mode with an optional sleek animation
      */
-    private fun updateModeVisibility() {
+    private fun updateModeVisibility(animate: Boolean = false) {
         val isSimpleMode = MmkvManager.decodeSettingsBool(AppConfig.PREF_SIMPLE_MODE, true)
-        binding.scrollSimpleMode.isVisible = isSimpleMode
-        binding.layoutClassicMode.isVisible = !isSimpleMode
+        val incomingView = if (isSimpleMode) binding.scrollSimpleMode else binding.layoutClassicMode
+        val outgoingView = if (isSimpleMode) binding.layoutClassicMode else binding.scrollSimpleMode
 
         binding.ivTopLogo.isVisible = true
         binding.layoutTopCapsule.isVisible = true
 
+        if (animate) {
+            // Animate mode switch button icon (subtle rotation + scale bounce)
+            binding.ivTopModeSwitch.animate().cancel()
+            binding.ivTopModeSwitch.animate()
+                .rotationBy(180f)
+                .scaleX(0.65f)
+                .scaleY(0.65f)
+                .setDuration(110)
+                .setInterpolator(AccelerateInterpolator())
+                .withEndAction {
+                    if (isSimpleMode) {
+                        binding.ivTopModeSwitch.setImageResource(R.drawable.ic_view_list_24dp)
+                    } else {
+                        binding.ivTopModeSwitch.setImageResource(R.drawable.ic_dashboard_24dp)
+                    }
+                    binding.ivTopModeSwitch.rotation = 0f
+                    binding.ivTopModeSwitch.animate()
+                        .scaleX(1.0f)
+                        .scaleY(1.0f)
+                        .setDuration(150)
+                        .setInterpolator(OvershootInterpolator(1.6f))
+                        .start()
+                }
+                .start()
+        } else {
+            binding.ivTopModeSwitch.animate().cancel()
+            binding.ivTopModeSwitch.rotation = 0f
+            binding.ivTopModeSwitch.scaleX = 1.0f
+            binding.ivTopModeSwitch.scaleY = 1.0f
+            if (isSimpleMode) {
+                binding.ivTopModeSwitch.setImageResource(R.drawable.ic_view_list_24dp)
+            } else {
+                binding.ivTopModeSwitch.setImageResource(R.drawable.ic_dashboard_24dp)
+            }
+        }
+
         if (isSimpleMode) {
-            binding.ivTopModeSwitch.setImageResource(R.drawable.ic_view_list_24dp)
             updateSelectedNodeUI()
         } else {
-            binding.ivTopModeSwitch.setImageResource(R.drawable.ic_dashboard_24dp)
             adapter.notifyDataSetChanged()
         }
         updateSubscriptionInfo()
         updateEmptyState()
+
         val isRunning = mainViewModel.isRunning.value == true
         if (isRunning && connectionState != ConnectionState.CONNECTING) {
             setConnectionState(ConnectionState.CONNECTED)
@@ -392,6 +429,56 @@ class MainActivity : BaseActivity() {
             setConnectionState(ConnectionState.DISCONNECTED)
         }
         updateClassicConnectionUI(isRunning)
+
+        if (animate && outgoingView.isVisible) {
+            // Clean Material 3 Fade-Through transition between the two modes
+            outgoingView.animate().cancel()
+            incomingView.animate().cancel()
+
+            outgoingView.alpha = 1f
+            outgoingView.scaleX = 1f
+            outgoingView.scaleY = 1f
+
+            outgoingView.animate()
+                .alpha(0f)
+                .scaleX(0.96f)
+                .scaleY(0.96f)
+                .setDuration(110)
+                .setInterpolator(AccelerateInterpolator())
+                .withEndAction {
+                    outgoingView.isVisible = false
+                    outgoingView.alpha = 1f
+                    outgoingView.scaleX = 1f
+                    outgoingView.scaleY = 1f
+
+                    incomingView.alpha = 0f
+                    incomingView.scaleX = 0.96f
+                    incomingView.scaleY = 0.96f
+                    incomingView.isVisible = true
+
+                    incomingView.animate()
+                        .alpha(1f)
+                        .scaleX(1f)
+                        .scaleY(1f)
+                        .setDuration(160)
+                        .setInterpolator(DecelerateInterpolator())
+                        .start()
+                }
+                .start()
+        } else {
+            outgoingView.animate().cancel()
+            incomingView.animate().cancel()
+
+            outgoingView.isVisible = false
+            outgoingView.alpha = 1f
+            outgoingView.scaleX = 1f
+            outgoingView.scaleY = 1f
+
+            incomingView.isVisible = true
+            incomingView.alpha = 1f
+            incomingView.scaleX = 1f
+            incomingView.scaleY = 1f
+        }
     }
 
     private fun setConnectionState(state: ConnectionState) {
