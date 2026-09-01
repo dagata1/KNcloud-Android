@@ -45,6 +45,10 @@ object DialogUtil {
             dialog.dismiss()
         }
 
+        binding.btnDialogClose.setOnClickListener {
+            dialog.dismiss()
+        }
+
         binding.btnDialogConfirm.setOnClickListener {
             dialog.dismiss()
             onConfirm()
@@ -73,17 +77,20 @@ object DialogUtil {
     }
 
     /**
-     * Displays a styled dialog for editing server address and port in classic mode.
+     * Displays a styled dialog for editing node remarks, server address and port in classic mode.
      */
     fun showEditNodeDialog(
         context: Context,
         profile: ProfileItem,
-        onConfirm: (address: String, port: String) -> Boolean
+        onConfirm: (remarks: String, address: String, port: String) -> Boolean
     ): AlertDialog {
         val binding = DialogNodeEditBinding.inflate(LayoutInflater.from(context))
-        binding.tvNodeName.text = profile.remarks
+        val currentRemarks = profile.remarks
         val currentServer = profile.server.orEmpty()
         val currentPort = profile.serverPort.orEmpty()
+
+        binding.etNodeName.setText(currentRemarks)
+        binding.etNodeName.setSelection(binding.etNodeName.text?.length ?: 0)
 
         binding.etServerAddress.setText(currentServer)
         binding.etServerAddress.setSelection(binding.etServerAddress.text?.length ?: 0)
@@ -91,6 +98,9 @@ object DialogUtil {
         binding.etServerPort.setText(currentPort)
         binding.etServerPort.setSelection(binding.etServerPort.text?.length ?: 0)
 
+        binding.etNodeName.doAfterTextChanged {
+            binding.tilNodeName.error = null
+        }
         binding.etServerAddress.doAfterTextChanged {
             binding.tilServerAddress.error = null
         }
@@ -122,21 +132,27 @@ object DialogUtil {
         }
 
         binding.btnDialogConfirm.setOnClickListener {
+            val remarks = binding.etNodeName.text?.toString()?.trim().orEmpty()
             val address = binding.etServerAddress.text?.toString()?.trim().orEmpty()
             val port = binding.etServerPort.text?.toString()?.trim().orEmpty()
 
+            if (remarks.isEmpty()) {
+                binding.tilNodeName.error = context.getString(R.string.server_lab_remarks3)
+                return@setOnClickListener
+            }
+
             if (address.isEmpty()) {
-                binding.tilServerAddress.error = context.getString(R.string.server_lab_address)
+                binding.tilServerAddress.error = context.getString(R.string.server_lab_address3)
                 return@setOnClickListener
             }
 
             val portInt = Utils.parseInt(port)
             if (portInt <= 0 || portInt > 65535) {
-                binding.tilServerPort.error = context.getString(R.string.server_lab_port)
+                binding.tilServerPort.error = context.getString(R.string.server_lab_port3)
                 return@setOnClickListener
             }
 
-            if (onConfirm(address, port)) {
+            if (onConfirm(remarks, address, port)) {
                 dialog.dismiss()
             }
         }

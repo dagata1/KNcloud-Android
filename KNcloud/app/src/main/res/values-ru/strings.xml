@@ -69,6 +69,7 @@
     <string name="server_lab_stream_alpn">ALPN</string>
     <string name="server_lab_allow_insecure">Разрешать небезопасные</string>
     <string name="server_lab_sni">SNI</string>
+    <string name="server_lab_remarks3">Название узла</string>
     <string name="server_lab_address3">Адрес</string>
     <string name="server_lab_port3">Порт</string>
     <string name="server_lab_id3">Пароль</string>

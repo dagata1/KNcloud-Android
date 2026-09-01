@@ -259,7 +259,7 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
 
     /**
      * Edits server configuration
-     * Displays a unified dialog with server address and port in classic mode
+     * Displays a unified dialog with node remarks, server address and port in classic mode
      * @param guid The server unique identifier
      * @param profile The server configuration
      */
@@ -267,8 +267,9 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
         DialogUtil.showEditNodeDialog(
             mActivity,
             profile
-        ) { address, port ->
+        ) { remarks, address, port ->
             val config = MmkvManager.decodeServerConfig(guid) ?: return@showEditNodeDialog false
+            config.remarks = remarks
             config.server = address
             config.serverPort = port
             MmkvManager.encodeServerConfig(guid, config)

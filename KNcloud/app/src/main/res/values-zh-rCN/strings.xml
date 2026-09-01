@@ -72,6 +72,7 @@
     <string name="server_lab_stream_alpn">Alpn</string>
     <string name="server_lab_allow_insecure">跳过证书验证 (allowInsecure)</string>
     <string name="server_lab_sni">SNI</string>
+    <string name="server_lab_remarks3">节点名称</string>
     <string name="server_lab_address3">服务器地址</string>
     <string name="server_lab_port3">服务器端口</string>
     <string name="server_lab_id3">密码</string>

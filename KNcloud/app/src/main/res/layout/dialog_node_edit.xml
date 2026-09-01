@@ -22,7 +22,7 @@
             android:orientation="vertical"
             android:padding="20dp">
 
-            <!-- Top Header: Icon + Title & Subtitle + Close Button -->
+            <!-- Top Header: Icon + Title + Close Button -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -45,37 +45,18 @@
                         app:tint="@color/color_fab_active" />
                 </FrameLayout>
 
-                <!-- Title & Node Name Stack -->
-                <LinearLayout
+                <!-- Title -->
+                <TextView
+                    android:id="@+id/tv_dialog_title"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="14dp"
                     android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:id="@+id/tv_dialog_title"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/menu_item_edit_config"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Headline"
-                        android:textColor="@color/md_theme_onSurface"
-                        android:textSize="17sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/tv_node_name"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:ellipsize="end"
-                        android:maxLines="1"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Caption"
-                        android:textColor="@color/color_fab_active"
-                        android:textSize="13sp"
-                        android:textStyle="bold"
-                        tools:text="日本 [V6]" />
-                </LinearLayout>
+                    android:text="@string/menu_item_edit_config"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Headline"
+                    android:textColor="@color/md_theme_onSurface"
+                    android:textSize="17sp"
+                    android:textStyle="bold" />
 
                 <!-- Close Button -->
                 <FrameLayout
@@ -95,6 +76,7 @@
                 </FrameLayout>
             </LinearLayout>
 
+            <!-- Subtle Divider -->
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
@@ -102,28 +84,26 @@
                 android:layout_marginBottom="16dp"
                 android:background="@color/card_main_stroke" />
 
-            <!-- Server Address Input -->
+            <!-- Row 1: Node Name Input (节点名称) -->
             <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/til_server_address"
+                android:id="@+id/til_node_name"
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="@string/server_lab_address3"
+                android:hint="@string/server_lab_remarks3"
                 app:boxCornerRadiusBottomEnd="14dp"
                 app:boxCornerRadiusBottomStart="14dp"
                 app:boxCornerRadiusTopEnd="14dp"
                 app:boxCornerRadiusTopStart="14dp"
                 app:boxStrokeColor="@color/color_fab_active"
-                app:endIconMode="clear_text"
-                app:startIconDrawable="@drawable/ic_language_24dp"
-                app:startIconTint="@color/md_theme_onSurfaceVariant">
+                app:endIconMode="clear_text">
 
                 <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/et_server_address"
+                    android:id="@+id/et_node_name"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:imeOptions="actionNext"
-                    android:inputType="textUri|textNoSuggestions"
+                    android:inputType="text"
                     android:maxLines="1"
                     android:paddingTop="14dp"
                     android:paddingBottom="14dp"
@@ -131,36 +111,72 @@
                     android:textSize="14sp" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Server Port Input -->
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/til_server_port"
-                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            <!-- Row 2: Server Address (Left) & Server Port (Right) in One Line (地址和端口一起放在第二行) -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:hint="@string/server_lab_port3"
-                app:boxCornerRadiusBottomEnd="14dp"
-                app:boxCornerRadiusBottomStart="14dp"
-                app:boxCornerRadiusTopEnd="14dp"
-                app:boxCornerRadiusTopStart="14dp"
-                app:boxStrokeColor="@color/color_fab_active"
-                app:endIconMode="clear_text"
-                app:startIconDrawable="@drawable/ic_routing_24dp"
-                app:startIconTint="@color/md_theme_onSurfaceVariant">
+                android:layout_marginTop="12dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/et_server_port"
-                    android:layout_width="match_parent"
+                <!-- Server Address Input (Left) -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/til_server_address"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:imeOptions="actionDone"
-                    android:inputType="number"
-                    android:maxLength="5"
-                    android:maxLines="1"
-                    android:paddingTop="14dp"
-                    android:paddingBottom="14dp"
-                    android:textColor="@color/md_theme_onSurface"
-                    android:textSize="14sp" />
-            </com.google.android.material.textfield.TextInputLayout>
+                    android:layout_marginEnd="8dp"
+                    android:layout_weight="65"
+                    android:hint="@string/server_lab_address3"
+                    app:boxCornerRadiusBottomEnd="14dp"
+                    app:boxCornerRadiusBottomStart="14dp"
+                    app:boxCornerRadiusTopEnd="14dp"
+                    app:boxCornerRadiusTopStart="14dp"
+                    app:boxStrokeColor="@color/color_fab_active"
+                    app:endIconMode="clear_text">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/et_server_address"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:imeOptions="actionNext"
+                        android:inputType="textUri|textNoSuggestions"
+                        android:maxLines="1"
+                        android:paddingTop="14dp"
+                        android:paddingBottom="14dp"
+                        android:textColor="@color/md_theme_onSurface"
+                        android:textSize="14sp" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- Server Port Input (Right) -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/til_server_port"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="35"
+                    android:hint="@string/server_lab_port3"
+                    app:boxCornerRadiusBottomEnd="14dp"
+                    app:boxCornerRadiusBottomStart="14dp"
+                    app:boxCornerRadiusTopEnd="14dp"
+                    app:boxCornerRadiusTopStart="14dp"
+                    app:boxStrokeColor="@color/color_fab_active"
+                    app:endIconMode="clear_text">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/et_server_port"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:imeOptions="actionDone"
+                        android:inputType="number"
+                        android:maxLength="5"
+                        android:maxLines="1"
+                        android:paddingTop="14dp"
+                        android:paddingBottom="14dp"
+                        android:textColor="@color/md_theme_onSurface"
+                        android:textSize="14sp" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </LinearLayout>
 
             <!-- Action Buttons -->
             <LinearLayout
