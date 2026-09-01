@@ -7,7 +7,7 @@ import android.content.IntentFilter
 import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
-import com.v2ray.ang.KNApplication
+import top.kncloud.com.KNApplication
 import es.dmoral.toasty.Toasty
 import org.json.JSONObject
 import java.io.Serializable

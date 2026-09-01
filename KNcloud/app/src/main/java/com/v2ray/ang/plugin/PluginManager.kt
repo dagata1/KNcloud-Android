@@ -33,7 +33,7 @@ import android.net.Uri
 import android.os.Build
 import android.system.Os
 import androidx.core.os.bundleOf
-import com.v2ray.ang.KNApplication
+import top.kncloud.com.KNApplication
 import com.v2ray.ang.extension.listenForPackageChanges
 import com.v2ray.ang.extension.toast
 import com.v2ray.ang.plugin.PluginContract.METADATA_KEY_ID

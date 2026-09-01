@@ -154,11 +154,12 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:gravity="center"
                 android:orientation="vertical"
                 android:paddingStart="@dimen/padding_spacing_dp16"
                 android:paddingEnd="@dimen/padding_spacing_dp16"
-                android:paddingTop="@dimen/padding_spacing_dp8"
-                android:paddingBottom="36dp">
+                android:paddingTop="20dp"
+                android:paddingBottom="28dp">
 
                 <!-- Hero Unified Dashboard Card -->
                 <com.google.android.material.card.MaterialCardView
@@ -166,7 +167,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     app:cardBackgroundColor="@color/card_main_bg"
-                    app:cardCornerRadius="22dp"
+                    app:cardCornerRadius="24dp"
                     app:cardElevation="2dp"
                     app:strokeColor="@color/card_main_stroke"
                     app:strokeWidth="1dp">

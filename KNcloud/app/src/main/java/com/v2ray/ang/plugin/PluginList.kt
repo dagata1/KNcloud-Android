@@ -23,7 +23,7 @@ package com.v2ray.ang.plugin
 
 import android.content.Intent
 import android.content.pm.PackageManager
-import com.v2ray.ang.KNApplication
+import top.kncloud.com.KNApplication
 
 class PluginList : ArrayList<Plugin>() {
     init {

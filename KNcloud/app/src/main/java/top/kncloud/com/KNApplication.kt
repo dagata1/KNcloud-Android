@@ -1,4 +1,4 @@
-package com.v2ray.ang
+package top.kncloud.com
 
 import android.content.Context
 import androidx.multidex.MultiDexApplication
