@@ -623,7 +623,7 @@
                             android:textColor="@color/md_theme_onSurfaceVariant"
                             tools:text="套餐到期：长期有效" />
 
-                        <!-- Action Buttons in Classic Mode Traffic Panel (更新订阅 & 前往官网 & 一键测试) -->
+                        <!-- Action Buttons in Classic Mode Traffic Panel (前往官网 & 更新订阅 & 一键测试) -->
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -631,12 +631,36 @@
                             android:gravity="center_vertical"
                             android:orientation="horizontal">
 
-                            <!-- Refresh Subscription Button (Left) -->
+                            <!-- Go to Website Button (Left) -->
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btn_go_website_classic"
+                                android:layout_width="0dp"
+                                android:layout_height="42dp"
+                                android:layout_marginEnd="4dp"
+                                android:layout_weight="1"
+                                android:backgroundTint="@color/color_fab_active"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                android:paddingStart="4dp"
+                                android:paddingEnd="4dp"
+                                android:text="@string/btn_go_website"
+                                android:textColor="@color/colorWhite"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                app:cornerRadius="12dp"
+                                app:icon="@drawable/ic_language_24dp"
+                                app:iconGravity="textStart"
+                                app:iconPadding="4dp"
+                                app:iconSize="16dp"
+                                app:iconTint="@color/colorWhite" />
+
+                            <!-- Refresh Subscription Button (Middle) -->
                             <com.google.android.material.button.MaterialButton
                                 android:id="@+id/btn_refresh_sub_classic"
                                 style="@style/Widget.Material3.Button.OutlinedButton"
                                 android:layout_width="0dp"
                                 android:layout_height="42dp"
+                                android:layout_marginStart="4dp"
                                 android:layout_marginEnd="4dp"
                                 android:layout_weight="1"
                                 android:insetTop="0dp"
@@ -655,30 +679,6 @@
                                 app:iconTint="@color/color_fab_active"
                                 app:strokeColor="@color/card_sub_stroke"
                                 app:strokeWidth="1.2dp" />
-
-                            <!-- Go to Website Button (Middle) -->
-                            <com.google.android.material.button.MaterialButton
-                                android:id="@+id/btn_go_website_classic"
-                                android:layout_width="0dp"
-                                android:layout_height="42dp"
-                                android:layout_marginStart="4dp"
-                                android:layout_marginEnd="4dp"
-                                android:layout_weight="1"
-                                android:backgroundTint="@color/color_fab_active"
-                                android:insetTop="0dp"
-                                android:insetBottom="0dp"
-                                android:paddingStart="4dp"
-                                android:paddingEnd="4dp"
-                                android:text="@string/btn_go_website"
-                                android:textColor="@color/colorWhite"
-                                android:textSize="12sp"
-                                android:textStyle="bold"
-                                app:cornerRadius="12dp"
-                                app:icon="@drawable/ic_language_24dp"
-                                app:iconGravity="textStart"
-                                app:iconPadding="4dp"
-                                app:iconSize="16dp"
-                                app:iconTint="@color/colorWhite" />
 
                             <!-- Speed Test Button (Right) -->
                             <com.google.android.material.button.MaterialButton
