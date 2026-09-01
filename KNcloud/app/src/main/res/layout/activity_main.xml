@@ -67,88 +67,91 @@
                 app:tint="@color/top_bar_icon_tint" />
         </FrameLayout>
 
-        <!-- Right Capsule (Refresh, Ping & Logout for Classic Mode) -->
+        <!-- Right Action Group (for Classic Mode: Square Start Button + Capsule) -->
         <LinearLayout
-            android:id="@+id/layout_top_capsule"
+            android:id="@+id/layout_top_classic_actions"
             android:layout_width="wrap_content"
-            android:layout_height="40dp"
+            android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
-            android:background="@drawable/bg_top_bar_capsule"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingStart="4dp"
-            android:paddingEnd="4dp"
             android:visibility="gone">
 
-            <!-- Refresh Button -->
+            <!-- Square Start/Stop Connection Button in Classic Mode (做方形，不用文字只需要图标) -->
             <FrameLayout
-                android:id="@+id/btn_top_refresh"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
+                android:id="@+id/btn_connect_classic_square"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/bg_connect_square"
                 android:clickable="true"
+                android:contentDescription="@string/tasker_start_service"
                 android:focusable="true">
 
                 <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
+                    android:id="@+id/iv_connect_classic_square"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
                     android:layout_gravity="center"
-                    android:src="@drawable/ic_refresh_24dp"
-                    app:tint="@color/top_bar_icon_tint" />
+                    android:src="@drawable/ic_play_24dp"
+                    app:tint="@color/colorWhite" />
             </FrameLayout>
 
-            <!-- Small Divider -->
-            <View
-                android:id="@+id/top_capsule_divider1"
-                android:layout_width="1dp"
-                android:layout_height="16dp"
-                android:layout_marginStart="2dp"
-                android:layout_marginEnd="2dp"
-                android:background="@color/top_bar_capsule_stroke" />
+            <!-- Capsule (Refresh & Logout for Classic Mode) -->
+            <LinearLayout
+                android:id="@+id/layout_top_capsule"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_top_bar_capsule"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="4dp"
+                android:paddingEnd="4dp">
 
-            <!-- One-click Speed Test Button -->
-            <FrameLayout
-                android:id="@+id/btn_top_ping"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:clickable="true"
-                android:focusable="true">
+                <!-- Refresh Button -->
+                <FrameLayout
+                    android:id="@+id/btn_top_refresh"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:focusable="true">
 
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_speed_24dp"
-                    app:tint="@color/top_bar_icon_tint" />
-            </FrameLayout>
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_refresh_24dp"
+                        app:tint="@color/top_bar_icon_tint" />
+                </FrameLayout>
 
-            <!-- Small Divider -->
-            <View
-                android:id="@+id/top_capsule_divider2"
-                android:layout_width="1dp"
-                android:layout_height="16dp"
-                android:layout_marginStart="2dp"
-                android:layout_marginEnd="2dp"
-                android:background="@color/top_bar_capsule_stroke" />
+                <!-- Small Divider -->
+                <View
+                    android:id="@+id/top_capsule_divider1"
+                    android:layout_width="1dp"
+                    android:layout_height="16dp"
+                    android:layout_marginStart="2dp"
+                    android:layout_marginEnd="2dp"
+                    android:background="@color/top_bar_capsule_stroke" />
 
-            <!-- Logout Button -->
-            <FrameLayout
-                android:id="@+id/btn_top_logout"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:clickable="true"
-                android:focusable="true">
+                <!-- Logout Button -->
+                <FrameLayout
+                    android:id="@+id/btn_top_logout"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:focusable="true">
 
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_logout_24dp"
-                    app:tint="@color/top_bar_icon_tint" />
-            </FrameLayout>
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_logout_24dp"
+                        app:tint="@color/top_bar_icon_tint" />
+                </FrameLayout>
+            </LinearLayout>
         </LinearLayout>
     </RelativeLayout>
 
@@ -671,9 +674,9 @@
                             android:gravity="center_vertical"
                             android:orientation="horizontal">
 
-                            <!-- Start/Stop Connection Button -->
+                            <!-- Speed Test Button (老的启动按钮改为一键测试) -->
                             <com.google.android.material.button.MaterialButton
-                                android:id="@+id/btn_connect_classic"
+                                android:id="@+id/btn_test_classic"
                                 android:layout_width="0dp"
                                 android:layout_height="44dp"
                                 android:layout_marginEnd="6dp"
@@ -681,12 +684,12 @@
                                 android:backgroundTint="@color/color_fab_active"
                                 android:insetTop="0dp"
                                 android:insetBottom="0dp"
-                                android:text="@string/tasker_start_service"
+                                android:text="@string/btn_speed_test"
                                 android:textColor="@color/colorWhite"
                                 android:textSize="13sp"
                                 android:textStyle="bold"
                                 app:cornerRadius="12dp"
-                                app:icon="@drawable/ic_play_24dp"
+                                app:icon="@drawable/ic_speed_24dp"
                                 app:iconGravity="textStart"
                                 app:iconPadding="6dp"
                                 app:iconSize="18dp"

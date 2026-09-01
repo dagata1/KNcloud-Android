@@ -159,10 +159,6 @@ class MainActivity : BaseActivity() {
             importConfigViaSub()
         }
 
-        binding.btnTopPing.setOnClickListener {
-            realPingAll()
-        }
-
         binding.btnTopLogout.setOnClickListener {
             showLogoutDialog()
         }
@@ -190,8 +186,12 @@ class MainActivity : BaseActivity() {
         // ==========================================
         // Classic Mode Click Listeners & RecyclerView
         // ==========================================
-        binding.btnConnectClassic.setOnClickListener {
+        binding.btnConnectClassicSquare.setOnClickListener {
             toggleV2RayConnection()
+        }
+
+        binding.btnTestClassic.setOnClickListener {
+            realPingAll()
         }
 
         binding.btnGoWebsiteClassic.setOnClickListener {
@@ -364,12 +364,12 @@ class MainActivity : BaseActivity() {
         if (isSimpleMode) {
             binding.ivTopLogo.isVisible = true
             binding.btnTopLogoutCircle.isVisible = true
-            binding.layoutTopCapsule.isVisible = false
+            binding.layoutTopClassicActions.isVisible = false
             updateSelectedNodeUI()
         } else {
-            binding.ivTopLogo.isVisible = false
+            binding.ivTopLogo.isVisible = true
             binding.btnTopLogoutCircle.isVisible = false
-            binding.layoutTopCapsule.isVisible = true
+            binding.layoutTopClassicActions.isVisible = true
             adapter.notifyDataSetChanged()
         }
         updateSubscriptionInfo()
@@ -393,9 +393,7 @@ class MainActivity : BaseActivity() {
                 binding.btnConnectToggle.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_active_bg))
                 binding.ivConnectIcon.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_active_icon))
 
-                binding.btnConnectClassic.text = getString(R.string.connect_state_connecting)
-                binding.btnConnectClassic.setIconResource(R.drawable.ic_play_24dp)
-                binding.btnConnectClassic.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_fab_active))
+                binding.ivConnectClassicSquare.setImageResource(R.drawable.ic_play_24dp)
 
                 startConnectingAnimation()
             }
@@ -407,9 +405,8 @@ class MainActivity : BaseActivity() {
                 binding.btnConnectToggle.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_active_bg))
                 binding.ivConnectIcon.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_active_icon))
 
-                binding.btnConnectClassic.text = getString(R.string.action_stop_service)
-                binding.btnConnectClassic.setIconResource(R.drawable.ic_stop_24dp)
-                binding.btnConnectClassic.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_fab_active))
+                binding.ivConnectClassicSquare.setImageResource(R.drawable.ic_stop_24dp)
+                binding.btnConnectClassicSquare.contentDescription = getString(R.string.action_stop_service)
 
                 if (previousState == ConnectionState.CONNECTING) {
                     playConnectedSuccessAnimation()
@@ -423,9 +420,8 @@ class MainActivity : BaseActivity() {
                 binding.btnConnectToggle.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_idle_bg))
                 binding.ivConnectIcon.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_idle_icon))
 
-                binding.btnConnectClassic.text = getString(R.string.tasker_start_service)
-                binding.btnConnectClassic.setIconResource(R.drawable.ic_play_24dp)
-                binding.btnConnectClassic.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_fab_active))
+                binding.ivConnectClassicSquare.setImageResource(R.drawable.ic_play_24dp)
+                binding.btnConnectClassicSquare.contentDescription = getString(R.string.tasker_start_service)
             }
         }
     }
@@ -496,15 +492,11 @@ class MainActivity : BaseActivity() {
 
     private fun updateClassicConnectionUI(isRunning: Boolean) {
         if (isRunning) {
-            binding.btnConnectClassic.text = getString(R.string.action_stop_service)
-            binding.btnConnectClassic.setIconResource(R.drawable.ic_stop_24dp)
-            binding.btnConnectClassic.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_fab_active))
-            binding.btnConnectClassic.contentDescription = getString(R.string.action_stop_service)
+            binding.ivConnectClassicSquare.setImageResource(R.drawable.ic_stop_24dp)
+            binding.btnConnectClassicSquare.contentDescription = getString(R.string.action_stop_service)
         } else {
-            binding.btnConnectClassic.text = getString(R.string.tasker_start_service)
-            binding.btnConnectClassic.setIconResource(R.drawable.ic_play_24dp)
-            binding.btnConnectClassic.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_fab_active))
-            binding.btnConnectClassic.contentDescription = getString(R.string.tasker_start_service)
+            binding.ivConnectClassicSquare.setImageResource(R.drawable.ic_play_24dp)
+            binding.btnConnectClassicSquare.contentDescription = getString(R.string.tasker_start_service)
         }
     }
 
