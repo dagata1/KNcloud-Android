@@ -16,8 +16,8 @@ android {
         applicationId = "top.kncloud.com"
         minSdk = 24
         targetSdk = 35
-        versionCode = 707
-        versionName = "1.10.55"
+        versionCode = 708
+        versionName = "1.10.56"
         multiDexEnabled = true
 
         val abiFilterList = (properties["ABI_FILTERS"] as? String)?.split(';')

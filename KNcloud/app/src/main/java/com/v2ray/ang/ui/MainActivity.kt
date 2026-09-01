@@ -159,10 +159,6 @@ class MainActivity : BaseActivity() {
             importConfigViaSub()
         }
 
-        binding.btnTopPing.setOnClickListener {
-            realPingAll()
-        }
-
         binding.btnTopLogout.setOnClickListener {
             showLogoutDialog()
         }
@@ -425,7 +421,6 @@ class MainActivity : BaseActivity() {
                 binding.fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_fab_active))
                 binding.fab.contentDescription = getString(R.string.action_stop_service)
                 setTestState(getString(R.string.connection_connected))
-                binding.ivTestIcon.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_fab_active))
 
                 if (previousState == ConnectionState.CONNECTING) {
                     playConnectedSuccessAnimation()
@@ -443,7 +438,6 @@ class MainActivity : BaseActivity() {
                 binding.fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_fab_inactive))
                 binding.fab.contentDescription = getString(R.string.tasker_start_service)
                 setTestState(getString(R.string.connection_not_connected))
-                binding.ivTestIcon.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.md_theme_onSurfaceVariant))
             }
         }
     }
@@ -518,13 +512,11 @@ class MainActivity : BaseActivity() {
             binding.fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_fab_active))
             binding.fab.contentDescription = getString(R.string.action_stop_service)
             setTestState(getString(R.string.connection_connected))
-            binding.ivTestIcon.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_fab_active))
         } else {
             binding.fab.setImageResource(R.drawable.ic_play_24dp)
             binding.fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_fab_inactive))
             binding.fab.contentDescription = getString(R.string.tasker_start_service)
             setTestState(getString(R.string.connection_not_connected))
-            binding.ivTestIcon.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.md_theme_onSurfaceVariant))
         }
         binding.layoutTest.isClickable = true
         binding.layoutTest.isFocusable = true

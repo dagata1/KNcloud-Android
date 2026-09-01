@@ -100,33 +100,7 @@
 
             <!-- Small Divider -->
             <View
-                android:id="@+id/top_capsule_divider1"
-                android:layout_width="1dp"
-                android:layout_height="16dp"
-                android:layout_marginStart="2dp"
-                android:layout_marginEnd="2dp"
-                android:background="@color/top_bar_capsule_stroke" />
-
-            <!-- One-click Speed Test Button -->
-            <FrameLayout
-                android:id="@+id/btn_top_ping"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:clickable="true"
-                android:focusable="true">
-
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_speed_24dp"
-                    app:tint="@color/top_bar_icon_tint" />
-            </FrameLayout>
-
-            <!-- Small Divider -->
-            <View
-                android:id="@+id/top_capsule_divider2"
+                android:id="@+id/top_capsule_divider"
                 android:layout_width="1dp"
                 android:layout_height="16dp"
                 android:layout_marginStart="2dp"
@@ -803,14 +777,6 @@
                         android:orientation="horizontal"
                         android:paddingStart="@dimen/padding_spacing_dp16"
                         android:paddingEnd="72dp">
-
-                        <ImageView
-                            android:id="@+id/iv_test_icon"
-                            android:layout_width="22dp"
-                            android:layout_height="22dp"
-                            android:layout_marginEnd="12dp"
-                            android:src="@drawable/ic_speed_24dp"
-                            app:tint="@color/color_fab_active" />
 
                         <TextView
                             android:id="@+id/tv_test_state"
