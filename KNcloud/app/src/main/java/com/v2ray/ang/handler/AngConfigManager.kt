@@ -329,12 +329,24 @@ object AngConfigManager {
                 trimmed.startsWith("流量信息") ||
                 trimmed.startsWith("剩余流量") ||
                 trimmed.startsWith("已用流量") ||
+                trimmed.startsWith("可用流量") ||
                 trimmed.startsWith("下次重置") ||
                 trimmed.startsWith("下次充值") ||
+                trimmed.startsWith("重置时间") ||
                 trimmed.startsWith("套餐到期") ||
                 trimmed.startsWith("到期时间") ||
                 trimmed.startsWith("过期时间") ||
-                trimmed.startsWith("账户信息")
+                trimmed.startsWith("有效期至") ||
+                trimmed.startsWith("账户信息") ||
+                trimmed.startsWith("套餐名称") ||
+                trimmed.startsWith("订阅名称") ||
+                trimmed.startsWith("套餐：") ||
+                trimmed.startsWith("套餐:") ||
+                trimmed.startsWith("订阅：") ||
+                trimmed.startsWith("订阅:") ||
+                trimmed.startsWith("会员套餐") ||
+                trimmed.startsWith("会员等级") ||
+                trimmed.startsWith("用户等级")
     }
 
     /**
@@ -385,29 +397,54 @@ object AngConfigManager {
             val remarks = config.remarks.trim()
             if (isSubscriptionInfoNode(remarks)) {
                 if (subInfo != null) {
+                    val contentAfterColon = if (remarks.contains("：")) {
+                        remarks.substringAfter("：").trim()
+                    } else if (remarks.contains(":")) {
+                        remarks.substringAfter(":").trim()
+                    } else {
+                        remarks
+                    }
+
                     when {
-                        remarks.startsWith("下次重置") || remarks.startsWith("下次充值") -> {
+                        remarks.startsWith("套餐名称") || remarks.startsWith("订阅名称") ||
+                        remarks.startsWith("套餐：") || remarks.startsWith("套餐:") ||
+                        remarks.startsWith("订阅：") || remarks.startsWith("订阅:") ||
+                        remarks.startsWith("会员套餐") || remarks.startsWith("会员等级") ||
+                        remarks.startsWith("用户等级") -> {
+                            if (contentAfterColon.isNotBlank()) {
+                                subInfo.subName = contentAfterColon
+                            }
+                        }
+                        remarks.startsWith("下次重置") || remarks.startsWith("下次充值") ||
+                        remarks.startsWith("重置时间") -> {
                             subInfo.resetDay = remarks
                         }
-                        remarks.startsWith("套餐到期") || remarks.startsWith("到期时间") || remarks.startsWith("过期时间") -> {
+                        remarks.startsWith("套餐到期") || remarks.startsWith("到期时间") ||
+                        remarks.startsWith("过期时间") || remarks.startsWith("有效期至") -> {
                             subInfo.expireDate = remarks
+                        }
+                        remarks.startsWith("剩余流量") || remarks.startsWith("可用流量") -> {
+                            subInfo.traffic = remarks
+                        }
+                        remarks.startsWith("已用流量") || remarks.startsWith("使用流量") -> {
+                            subInfo.traffic = remarks
                         }
                         else -> {
                             // Traffic node: "订阅名称：已用/总量" or "流量信息：已用/总量"
-                            if (remarks.contains("：")) {
-                                val namePart = remarks.substringBefore("：").trim()
-                                val trafficPart = remarks.substringAfter("：").trim()
-                                if (namePart != "流量信息" && namePart != "已用流量" && namePart != "剩余流量") {
+                            if (remarks.contains("：") || remarks.contains(":")) {
+                                val namePart = if (remarks.contains("：")) remarks.substringBefore("：").trim() else remarks.substringBefore(":").trim()
+                                val trafficPart = contentAfterColon
+                                val isGeneric = namePart in listOf("流量信息", "已用流量", "剩余流量", "可用流量", "流量", "账户信息", "订阅信息")
+                                if (!isGeneric && namePart.isNotBlank()) {
                                     subInfo.subName = namePart
                                 }
-                                subInfo.traffic = trafficPart
-                            } else if (remarks.contains(":")) {
-                                val namePart = remarks.substringBefore(":").trim()
-                                val trafficPart = remarks.substringAfter(":").trim()
-                                if (namePart != "流量信息" && namePart != "已用流量" && namePart != "剩余流量") {
-                                    subInfo.subName = namePart
+                                if (trafficPart.isNotBlank()) {
+                                    if (namePart in listOf("剩余流量", "可用流量", "已用流量", "使用流量")) {
+                                        subInfo.traffic = remarks
+                                    } else {
+                                        subInfo.traffic = trafficPart
+                                    }
                                 }
-                                subInfo.traffic = trafficPart
                             } else {
                                 subInfo.traffic = remarks
                             }
@@ -463,6 +500,44 @@ object AngConfigManager {
     }
 
     /**
+     * Parses standard Subscription-Userinfo HTTP header into SubscriptionInfo.
+     */
+    fun parseSubscriptionUserinfo(header: String?, subInfo: SubscriptionInfo) {
+        if (header.isNullOrBlank()) return
+        try {
+            val parts = header.split(";")
+            var upload = 0L
+            var download = 0L
+            var total = 0L
+            var expire = 0L
+            for (part in parts) {
+                val kv = part.trim().split("=")
+                if (kv.size == 2) {
+                    val k = kv[0].trim().lowercase()
+                    val v = kv[1].trim().toLongOrNull() ?: 0L
+                    when (k) {
+                        "upload" -> upload = v
+                        "download" -> download = v
+                        "total" -> total = v
+                        "expire" -> expire = v
+                    }
+                }
+            }
+            if (total > 0L) {
+                val used = upload + download
+                subInfo.traffic = "${SubscriptionInfo.formatBytes(used.toDouble())} / ${SubscriptionInfo.formatBytes(total.toDouble())}"
+            }
+            if (expire > 0L) {
+                val sdf = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+                val millis = if (expire < 10000000000L) expire * 1000L else expire
+                subInfo.expireDate = "套餐到期：${sdf.format(java.util.Date(millis))}"
+            }
+        } catch (e: Exception) {
+            Log.e(AppConfig.TAG, "Failed to parse Subscription-Userinfo", e)
+        }
+    }
+
+    /**
      * Updates the configuration via a subscription.
      *
      * @param it The subscription item.
@@ -491,25 +566,36 @@ object AngConfigManager {
             Log.i(AppConfig.TAG, url)
             val userAgent = it.second.userAgent
 
-            var configText = try {
+            var response = try {
                 val httpPort = SettingsManager.getHttpPort()
-                HttpUtil.getUrlContentWithUserAgent(url, userAgent, 15000, httpPort)
+                HttpUtil.getUrlResponseWithUserAgent(url, userAgent, 15000, httpPort)
             } catch (e: Exception) {
                 Log.e(AppConfig.ANG_PACKAGE, "Update subscription: proxy not ready or other error", e)
-                ""
+                null
             }
-            if (configText.isEmpty()) {
-                configText = try {
-                    HttpUtil.getUrlContentWithUserAgent(url, userAgent)
+            if (response == null || response.content.isEmpty()) {
+                response = try {
+                    HttpUtil.getUrlResponseWithUserAgent(url, userAgent)
                 } catch (e: Exception) {
                     Log.e(AppConfig.TAG, "Update subscription: Failed to get URL content with user agent", e)
-                    ""
+                    null
                 }
             }
-            if (configText.isEmpty()) {
+            if (response == null || response.content.isEmpty()) {
                 return 0
             }
-            return parseConfigViaSub(configText, it.first, false)
+
+            val userInfoHeader = response.getHeader("Subscription-Userinfo")
+                ?: response.getHeader("subscription-userinfo")
+            if (!userInfoHeader.isNullOrBlank()) {
+                val subInfo = MmkvManager.getSubscriptionInfo() ?: SubscriptionInfo()
+                parseSubscriptionUserinfo(userInfoHeader, subInfo)
+                if (subInfo.hasData()) {
+                    MmkvManager.saveSubscriptionInfo(subInfo)
+                }
+            }
+
+            return parseConfigViaSub(response.content, it.first, false)
         } catch (e: Exception) {
             Log.e(AppConfig.TAG, "Failed to update config via subscription", e)
             return 0

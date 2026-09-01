@@ -124,8 +124,11 @@ class LoginActivity : BaseActivity() {
                 toast(R.string.login_fetching_sub)
             }
 
-            // 2. Fetch Subscription URL
+            // 2. Fetch Subscription URL & Metadata
             val subResult = KNcloudAuthService.getSubscribeUrl(loginResult.domain, loginResult.token)
+            if (subResult.planName.isNullOrBlank()) {
+                KNcloudAuthService.fetchUserInfo(loginResult.domain, loginResult.token)
+            }
             if (subResult.success && !subResult.subscribeUrl.isNullOrBlank()) {
                 // 3. Import & sync subscription nodes
                 KNcloudAuthService.importAndSyncSubscription(subResult.subscribeUrl)

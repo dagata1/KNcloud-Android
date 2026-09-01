@@ -118,6 +118,15 @@ object HttpUtil {
         return null
     }
 
+    data class HttpResponse(
+        val content: String,
+        val headers: Map<String, List<String>> = emptyMap()
+    ) {
+        fun getHeader(name: String): String? {
+            return headers.entries.firstOrNull { it.key.equals(name, ignoreCase = true) }?.value?.firstOrNull()
+        }
+    }
+
     /**
      * Retrieves the content of a URL as a string with a custom User-Agent header.
      *
@@ -128,7 +137,21 @@ object HttpUtil {
      * @throws IOException If an I/O error occurs.
      */
     @Throws(IOException::class)
-    fun getUrlContentWithUserAgent(url: String?, userAgent: String?,  timeout: Int = 15000, httpPort: Int = 0): String {
+    fun getUrlContentWithUserAgent(url: String?, userAgent: String?, timeout: Int = 15000, httpPort: Int = 0): String {
+        return getUrlResponseWithUserAgent(url, userAgent, timeout, httpPort).content
+    }
+
+    /**
+     * Retrieves the response of a URL including headers with a custom User-Agent header.
+     *
+     * @param url The URL to fetch content from.
+     * @param timeout The timeout value in milliseconds.
+     * @param httpPort The HTTP port to use.
+     * @return The HttpResponse containing content and response headers.
+     * @throws IOException If an I/O error occurs.
+     */
+    @Throws(IOException::class)
+    fun getUrlResponseWithUserAgent(url: String?, userAgent: String?, timeout: Int = 15000, httpPort: Int = 0): HttpResponse {
         var currentUrl = url
         var redirects = 0
         val maxRedirects = 3
@@ -157,7 +180,9 @@ object HttpUtil {
                 }
 
                 else -> try {
-                    return conn.inputStream.use { it.bufferedReader().readText() }
+                    val headers = conn.headerFields ?: emptyMap()
+                    val text = conn.inputStream.use { it.bufferedReader().readText() }
+                    return HttpResponse(content = text, headers = headers)
                 } finally {
                     conn.disconnect()
                 }

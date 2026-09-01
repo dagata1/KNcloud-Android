@@ -78,9 +78,13 @@ class UrlSchemeActivity : BaseActivity() {
             ?: uri?.getQueryParameter("auth_token")
             ?: uri?.getQueryParameter("auth")
 
-        val email = uri?.getQueryParameter("email")
+        var email = uri?.getQueryParameter("email")
             ?: uri?.getQueryParameter("user")
             ?: uri?.getQueryParameter("account").orEmpty()
+
+        if (email.isBlank() && !token.isNullOrBlank()) {
+            email = KNcloudAuthService.extractEmailFromJwt(token).orEmpty()
+        }
 
         val domainParam = uri?.getQueryParameter("domain")
             ?: uri?.getQueryParameter("api_domain")
@@ -102,17 +106,26 @@ class UrlSchemeActivity : BaseActivity() {
                     domain = MmkvManager.getApiDomain()
                 }
 
-                // Save user login state
+                // Save initial user login state
                 MmkvManager.saveUserLogin(email, token, domain)
 
-                // Sync subscription
-                if (!directSubUrl.isNullOrBlank()) {
-                    KNcloudAuthService.importAndSyncSubscription(directSubUrl)
-                } else {
-                    val sub = KNcloudAuthService.getSubscribeUrl(domain, token)
-                    if (sub.success && !sub.subscribeUrl.isNullOrBlank()) {
-                        KNcloudAuthService.importAndSyncSubscription(sub.subscribeUrl)
+                // Fetch subscription & user info
+                val subResult = KNcloudAuthService.getSubscribeUrl(domain, token)
+                if (subResult.success) {
+                    if (!subResult.email.isNullOrBlank() && (email.isBlank() || MmkvManager.getUserEmail().isNullOrBlank())) {
+                        MmkvManager.encodeSettings(AppConfig.PREF_USER_EMAIL, subResult.email)
                     }
+                    if (subResult.planName.isNullOrBlank()) {
+                        KNcloudAuthService.fetchUserInfo(domain, token)
+                    }
+                    if (!subResult.subscribeUrl.isNullOrBlank()) {
+                        KNcloudAuthService.importAndSyncSubscription(subResult.subscribeUrl)
+                    } else if (!directSubUrl.isNullOrBlank()) {
+                        KNcloudAuthService.importAndSyncSubscription(directSubUrl)
+                    }
+                } else if (!directSubUrl.isNullOrBlank()) {
+                    KNcloudAuthService.fetchUserInfo(domain, token)
+                    KNcloudAuthService.importAndSyncSubscription(directSubUrl)
                 }
 
                 withContext(Dispatchers.Main) {
