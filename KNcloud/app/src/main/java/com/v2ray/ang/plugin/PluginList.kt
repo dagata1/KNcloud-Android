@@ -23,12 +23,12 @@ package com.v2ray.ang.plugin
 
 import android.content.Intent
 import android.content.pm.PackageManager
-import com.v2ray.ang.AngApplication
+import com.v2ray.ang.KNApplication
 
 class PluginList : ArrayList<Plugin>() {
     init {
         addAll(
-            AngApplication.application.packageManager.queryIntentContentProviders(
+            KNApplication.application.packageManager.queryIntentContentProviders(
                 Intent(PluginContract.ACTION_NATIVE_PLUGIN), PackageManager.GET_META_DATA
             )
                 .filter { it.providerInfo.exported }.map { NativePlugin(it) })

@@ -16,7 +16,7 @@ import androidx.preference.PreferenceFragmentCompat
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequest
 import androidx.work.multiprocess.RemoteWorkManager
-import com.v2ray.ang.AngApplication
+import com.v2ray.ang.KNApplication
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.AppConfig.VPN
 import com.v2ray.ang.R
@@ -477,7 +477,7 @@ class SettingsActivity : BaseActivity() {
         }
 
         private fun configureUpdateTask(interval: Long) {
-            val rw = RemoteWorkManager.getInstance(AngApplication.application)
+            val rw = RemoteWorkManager.getInstance(KNApplication.application)
             rw.cancelUniqueWork(AppConfig.SUBSCRIPTION_UPDATE_TASK_NAME)
             rw.enqueueUniquePeriodicWork(
                 AppConfig.SUBSCRIPTION_UPDATE_TASK_NAME,
@@ -495,7 +495,7 @@ class SettingsActivity : BaseActivity() {
         }
 
         private fun cancelUpdateTask() {
-            val rw = RemoteWorkManager.getInstance(AngApplication.application)
+            val rw = RemoteWorkManager.getInstance(KNApplication.application)
             rw.cancelUniqueWork(AppConfig.SUBSCRIPTION_UPDATE_TASK_NAME)
         }
 
