@@ -4,64 +4,103 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingStart="24dp"
-    android:paddingEnd="24dp">
+    android:paddingStart="20dp"
+    android:paddingEnd="20dp">
 
     <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:cardBackgroundColor="@color/card_main_bg"
-        app:cardCornerRadius="22dp"
-        app:cardElevation="6dp"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="8dp"
         app:strokeColor="@color/card_main_stroke"
-        app:strokeWidth="1dp">
+        app:strokeWidth="1.2dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="22dp">
+            android:padding="20dp">
 
-            <!-- Top Icon Badge -->
-            <FrameLayout
-                android:id="@+id/fl_dialog_icon_container"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:background="@drawable/bg_top_bar_circle">
-
-                <ImageView
-                    android:id="@+id/iv_dialog_icon"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_edit_24dp"
-                    app:tint="@color/color_fab_active" />
-            </FrameLayout>
-
-            <!-- Dialog Title -->
-            <TextView
-                android:id="@+id/tv_dialog_title"
+            <!-- Top Header: Icon + Title & Subtitle + Close Button -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:textAppearance="@style/TextAppearance.AppCompat.Headline"
-                android:textColor="@color/md_theme_onSurface"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:text="@string/menu_item_edit_config" />
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-            <!-- Node Name / Remark Subtitle -->
-            <TextView
-                android:id="@+id/tv_node_name"
+                <!-- Icon Badge -->
+                <FrameLayout
+                    android:id="@+id/fl_dialog_icon_container"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:background="@drawable/bg_top_bar_circle">
+
+                    <ImageView
+                        android:id="@+id/iv_dialog_icon"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_edit_24dp"
+                        app:tint="@color/color_fab_active" />
+                </FrameLayout>
+
+                <!-- Title & Node Name Stack -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="14dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/tv_dialog_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/menu_item_edit_config"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Headline"
+                        android:textColor="@color/md_theme_onSurface"
+                        android:textSize="17sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tv_node_name"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Caption"
+                        android:textColor="@color/color_fab_active"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        tools:text="日本 [V6]" />
+                </LinearLayout>
+
+                <!-- Close Button -->
+                <FrameLayout
+                    android:id="@+id/btn_dialog_close"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_close_24dp"
+                        app:tint="@color/md_theme_onSurfaceVariant" />
+                </FrameLayout>
+            </LinearLayout>
+
+            <View
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:textAppearance="@style/TextAppearance.AppCompat.Body2"
-                android:textColor="@color/md_theme_onSurfaceVariant"
-                android:textSize="13sp"
-                android:maxLines="1"
-                android:ellipsize="end"
-                tools:text="香港 01 节点" />
+                android:layout_height="1dp"
+                android:layout_marginTop="14dp"
+                android:layout_marginBottom="16dp"
+                android:background="@color/card_main_stroke" />
 
             <!-- Server Address Input -->
             <com.google.android.material.textfield.TextInputLayout
@@ -69,13 +108,15 @@
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
                 android:hint="@string/server_lab_address3"
-                app:boxCornerRadiusBottomEnd="12dp"
-                app:boxCornerRadiusBottomStart="12dp"
-                app:boxCornerRadiusTopEnd="12dp"
-                app:boxCornerRadiusTopStart="12dp"
-                app:endIconMode="clear_text">
+                app:boxCornerRadiusBottomEnd="14dp"
+                app:boxCornerRadiusBottomStart="14dp"
+                app:boxCornerRadiusTopEnd="14dp"
+                app:boxCornerRadiusTopStart="14dp"
+                app:boxStrokeColor="@color/color_fab_active"
+                app:endIconMode="clear_text"
+                app:startIconDrawable="@drawable/ic_language_24dp"
+                app:startIconTint="@color/md_theme_onSurfaceVariant">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/et_server_address"
@@ -84,6 +125,8 @@
                     android:imeOptions="actionNext"
                     android:inputType="textUri|textNoSuggestions"
                     android:maxLines="1"
+                    android:paddingTop="14dp"
+                    android:paddingBottom="14dp"
                     android:textColor="@color/md_theme_onSurface"
                     android:textSize="14sp" />
             </com.google.android.material.textfield.TextInputLayout>
@@ -94,13 +137,16 @@
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="14dp"
                 android:hint="@string/server_lab_port3"
-                app:boxCornerRadiusBottomEnd="12dp"
-                app:boxCornerRadiusBottomStart="12dp"
-                app:boxCornerRadiusTopEnd="12dp"
-                app:boxCornerRadiusTopStart="12dp"
-                app:endIconMode="clear_text">
+                app:boxCornerRadiusBottomEnd="14dp"
+                app:boxCornerRadiusBottomStart="14dp"
+                app:boxCornerRadiusTopEnd="14dp"
+                app:boxCornerRadiusTopStart="14dp"
+                app:boxStrokeColor="@color/color_fab_active"
+                app:endIconMode="clear_text"
+                app:startIconDrawable="@drawable/ic_routing_24dp"
+                app:startIconTint="@color/md_theme_onSurfaceVariant">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/et_server_port"
@@ -110,6 +156,8 @@
                     android:inputType="number"
                     android:maxLength="5"
                     android:maxLines="1"
+                    android:paddingTop="14dp"
+                    android:paddingBottom="14dp"
                     android:textColor="@color/md_theme_onSurface"
                     android:textSize="14sp" />
             </com.google.android.material.textfield.TextInputLayout>
@@ -118,7 +166,7 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="22dp"
+                android:layout_marginTop="20dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
@@ -127,7 +175,7 @@
                     android:id="@+id/btn_dialog_cancel"
                     style="@style/Widget.Material3.Button.OutlinedButton"
                     android:layout_width="0dp"
-                    android:layout_height="44dp"
+                    android:layout_height="46dp"
                     android:layout_marginEnd="6dp"
                     android:layout_weight="1"
                     android:insetTop="0dp"
@@ -144,7 +192,7 @@
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_dialog_confirm"
                     android:layout_width="0dp"
-                    android:layout_height="44dp"
+                    android:layout_height="46dp"
                     android:layout_marginStart="6dp"
                     android:layout_weight="1"
                     android:backgroundTint="@color/color_fab_active"

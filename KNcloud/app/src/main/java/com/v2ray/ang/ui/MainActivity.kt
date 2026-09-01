@@ -205,6 +205,10 @@ class MainActivity : BaseActivity() {
             openSubscribeWebPage()
         }
 
+        binding.btnTestClassic.setOnClickListener {
+            realPingAll()
+        }
+
         binding.recyclerView.setHasFixedSize(true)
         if (MmkvManager.decodeSettingsBool(AppConfig.PREF_DOUBLE_COLUMN_DISPLAY, false)) {
             val gridLayoutManager = GridLayoutManager(this, 2)

@@ -108,6 +108,10 @@ object DialogUtil {
             dialog.dismiss()
         }
 
+        binding.btnDialogClose.setOnClickListener {
+            dialog.dismiss()
+        }
+
         binding.etServerPort.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
                 binding.btnDialogConfirm.performClick()
