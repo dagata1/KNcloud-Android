@@ -151,12 +151,10 @@ class MainActivity : BaseActivity() {
             )
         }
 
-        binding.btnTopLogoutCircle.setOnClickListener {
-            showLogoutDialog()
-        }
-
-        binding.btnTopRefresh.setOnClickListener {
-            importConfigViaSub()
+        binding.btnTopModeSwitch.setOnClickListener {
+            val currentMode = MmkvManager.decodeSettingsBool(AppConfig.PREF_SIMPLE_MODE, true)
+            MmkvManager.encodeSettings(AppConfig.PREF_SIMPLE_MODE, !currentMode)
+            updateModeVisibility()
         }
 
         binding.btnTopLogout.setOnClickListener {
@@ -199,12 +197,12 @@ class MainActivity : BaseActivity() {
             }
         }
 
-        binding.btnGoWebsiteClassic.setOnClickListener {
-            openSubscribeWebPage()
+        binding.btnRefreshSubClassic.setOnClickListener {
+            importConfigViaSub()
         }
 
-        binding.btnTestClassic.setOnClickListener {
-            realPingAll()
+        binding.btnGoWebsiteClassic.setOnClickListener {
+            openSubscribeWebPage()
         }
 
         binding.recyclerView.setHasFixedSize(true)
@@ -371,15 +369,14 @@ class MainActivity : BaseActivity() {
         binding.scrollSimpleMode.isVisible = isSimpleMode
         binding.layoutClassicMode.isVisible = !isSimpleMode
 
+        binding.ivTopLogo.isVisible = true
+        binding.layoutTopCapsule.isVisible = true
+
         if (isSimpleMode) {
-            binding.ivTopLogo.isVisible = true
-            binding.btnTopLogoutCircle.isVisible = true
-            binding.layoutTopCapsule.isVisible = false
+            binding.ivTopModeSwitch.setImageResource(R.drawable.ic_view_list_24dp)
             updateSelectedNodeUI()
         } else {
-            binding.ivTopLogo.isVisible = false
-            binding.btnTopLogoutCircle.isVisible = false
-            binding.layoutTopCapsule.isVisible = true
+            binding.ivTopModeSwitch.setImageResource(R.drawable.ic_dashboard_24dp)
             adapter.notifyDataSetChanged()
         }
         updateSubscriptionInfo()
@@ -628,7 +625,7 @@ class MainActivity : BaseActivity() {
         V2RayServiceManager.startVService(this)
     }
 
-    private fun restartV2Ray() {
+    fun restartV2Ray() {
         isSwitchingServer = true
         setConnectionState(ConnectionState.CONNECTING)
         startConnectingTimeout()

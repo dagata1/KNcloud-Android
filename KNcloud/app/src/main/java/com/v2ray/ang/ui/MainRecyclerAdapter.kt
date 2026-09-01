@@ -28,6 +28,7 @@ import com.v2ray.ang.handler.SpeedtestManager
 import com.v2ray.ang.helper.ItemTouchHelperAdapter
 import com.v2ray.ang.helper.ItemTouchHelperViewHolder
 import com.v2ray.ang.handler.V2RayServiceManager
+import com.v2ray.ang.util.DialogUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -258,18 +259,25 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
 
     /**
      * Edits server configuration
-     * Opens appropriate editing interface based on configuration type
+     * Displays a unified dialog with server address and port in classic mode
      * @param guid The server unique identifier
      * @param profile The server configuration
      */
     private fun editServer(guid: String, profile: ProfileItem) {
-        val intent = Intent().putExtra("guid", guid)
-            .putExtra("isRunning", isRunning)
-            .putExtra("createConfigType", profile.configType.value)
-        if (profile.configType == EConfigType.CUSTOM) {
-            mActivity.startActivity(intent.setClass(mActivity, ServerCustomConfigActivity::class.java))
-        } else {
-            mActivity.startActivity(intent.setClass(mActivity, ServerActivity::class.java))
+        DialogUtil.showEditNodeDialog(
+            mActivity,
+            profile
+        ) { address, port ->
+            val config = MmkvManager.decodeServerConfig(guid) ?: return@showEditNodeDialog false
+            config.server = address
+            config.serverPort = port
+            MmkvManager.encodeServerConfig(guid, config)
+            mActivity.toastSuccess(R.string.toast_success)
+            mActivity.mainViewModel.reloadServerList()
+            if (guid == MmkvManager.getSelectServer() && mActivity.mainViewModel.isRunning.value == true) {
+                mActivity.restartV2Ray()
+            }
+            true
         }
     }
 
