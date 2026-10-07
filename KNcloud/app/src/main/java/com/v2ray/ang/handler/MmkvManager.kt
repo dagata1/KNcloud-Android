@@ -642,7 +642,20 @@ object MmkvManager {
      */
     fun getApiDomain(): String {
         val domain = decodeSettingsString(com.v2ray.ang.AppConfig.PREF_API_DOMAIN)
-        return if (domain.isNullOrBlank()) com.v2ray.ang.AppConfig.DEFAULT_WEB_DOMAIN else domain
+        // Never hand out a stored domain that is no longer trusted (e.g. written by an old deep link)
+        return if (domain.isNullOrBlank() || !TrustedDomain.isTrustedUrl(domain, getTrustedExtraHosts())) {
+            com.v2ray.ang.AppConfig.DEFAULT_WEB_DOMAIN
+        } else {
+            domain
+        }
+    }
+
+    /**
+     * Hosts handed out by the official domain-discovery endpoint, trusted in addition to kncloud.top.
+     */
+    fun getTrustedExtraHosts(): List<String> {
+        val discovered = decodeSettingsString(com.v2ray.ang.AppConfig.PREF_DISCOVERED_DOMAIN)
+        return listOfNotNull(TrustedDomain.hostOf(discovered))
     }
 
     /**

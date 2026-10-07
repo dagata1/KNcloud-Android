@@ -1,6 +1,6 @@
 # KNcloud 官网授权登录与 Android 客户端唤起对接完整文档
 
-本文档为 **KNcloud 官网前端（V2Board / Xboard / 自定义 Web 平台）** 对接 **Android 客户端一键授权登录** 的完整技术指南。
+本文档为 **KNcloud 官网前端** 对接 **Android 客户端一键授权登录** 的完整技术指南。
 
 ---
 
@@ -43,13 +43,15 @@ Android 客户端已注册并监听以下 Scheme：
 kncloud://login?token={TOKEN}&email={EMAIL}&domain={DOMAIN}&sub_url={SUB_URL}
 ```
 
+> 安全说明：App 收到链接后会弹窗让用户确认登录账号和域名；`sub_url` 也只接受可信域名上的 https 地址。
+
 ### 3. 参数说明表
 
 | 参数名 | 必填 | 类型 | 说明 | 示例 |
 | :--- | :---: | :---: | :--- | :--- |
-| `token` | **是** | String | 用户登录凭据（V2Board/Xboard 登录接口返回的 `auth_data` 或 `token`） | `eyJhbGciOi...` |
+| `token` | **是** | String | 用户登录凭据（KNcloud 登录接口返回的 `auth_data` 或 `token`） | `eyJhbGciOi...` |
 | `email` | 否 | String | 用户邮箱账号（用于客户端界面展示与自动填充） | `user@kncloud.top` |
-| `domain` | 否 | String | 网站 API 域名（不填则默认使用 App 动态获取的 API 域名） | `https://www.kncloud.top` |
+| `domain` | 否 | String | 网站 API 域名（不填则默认使用 App 动态获取的 API 域名）。必须是 https，且为 `kncloud.top` 及其子域名或 App 动态获取到的域名，否则 App 拒绝登录 | `https://www.kncloud.top` |
 | `sub_url`| 否 | String | 订阅直连地址（不填时 App 会自动调用 `/api/v1/user/getSubscribe` 拉取） | `https://www.kncloud.top/api/v1/client/subscribe?token=...` |
 
 > ⚠️ **编码注意**：所有参数值必须使用 `encodeURIComponent()` 进行转义。

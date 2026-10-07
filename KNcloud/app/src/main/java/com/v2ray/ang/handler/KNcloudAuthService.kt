@@ -106,7 +106,8 @@ object KNcloudAuthService {
                         if (domain.endsWith("/")) {
                             domain = domain.dropLast(1)
                         }
-                        if (domain.isNotEmpty() && (domain.startsWith("http://") || domain.startsWith("https://"))) {
+                        if (domain.isNotEmpty() && domain.startsWith("https://")) {
+                            MmkvManager.encodeSettings(AppConfig.PREF_DISCOVERED_DOMAIN, domain)
                             MmkvManager.encodeSettings(AppConfig.PREF_API_DOMAIN, domain)
                             return domain
                         }
@@ -121,7 +122,7 @@ object KNcloudAuthService {
     }
 
     /**
-     * Performs login request to V2Board API.
+     * Performs login request to the KNcloud panel API.
      */
     fun login(email: String, password: String): LoginResult {
         val domain = fetchDynamicDomain()
@@ -187,7 +188,7 @@ object KNcloudAuthService {
     }
 
     /**
-     * Retrieves user subscription URL and metadata from V2Board API.
+     * Retrieves user subscription URL and metadata from the KNcloud panel API.
      */
     fun getSubscribeUrl(domain: String, token: String): SubscribeResult {
         val subscribeEndpoint = "$domain/api/v1/user/getSubscribe"

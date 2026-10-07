@@ -36,5 +36,5 @@ KNcloud 软件中可能包含需要通过 IAP 支付解锁的功能，您的支�
 
 **联系我们**
 
-如果您对我的隐私政策有任何疑问或建议，请随时通过 CaptainIronng@protonmail.com 与我联系。
+如果您对我的隐私政策有任何疑问或建议，请通过 KNcloud 官网 https://www.kncloud.top 与我们联系。
 

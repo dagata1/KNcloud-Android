@@ -67,3 +67,9 @@ KNcloud/app/google-services.json
 Thumbs.db
 .DS_Store
 .claude/
+
+# signing keys never go in the repo
+*.jks
+*.keystore
+*.p12
+android_keystore.jks

@@ -452,4 +452,10 @@
     <string name="title_settings_tools">工具与日志维护</string>
     <string name="summary_settings_tools">Geo 资源文件更新、运行日志查看、日志等级</string>
 
+    <string name="login_untrusted_domain">已拒绝登录链接：域名不是 KNcloud 官方域名</string>
+    <string name="login_confirm_title">确认登录</string>
+    <string name="login_confirm_message">使用 %1$s 登录 %2$s 并同步订阅？</string>
+    <string name="login_confirm_unknown_account">该账号</string>
+    <string name="import_config_confirm_title">导入配置</string>
+    <string name="import_config_confirm_message">有链接请求向 KNcloud 导入节点配置。仅在你信任来源时继续。</string>
 </resources>

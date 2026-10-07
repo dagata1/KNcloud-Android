@@ -70,6 +70,7 @@ object AppConfig {
     const val PREF_USER_TOKEN = "pref_user_token"
     const val PREF_USER_EMAIL = "pref_user_email"
     const val PREF_API_DOMAIN = "pref_api_domain"
+    const val PREF_DISCOVERED_DOMAIN = "pref_discovered_domain"
     const val API_DOMAIN_QUERY_URL = "https://aws.kncloud.top/api/domain/cloud"
     const val DEFAULT_WEB_DOMAIN = "https://www.kncloud.top"
     const val DEFAULT_SUB_REMARKS = "KNcloud"

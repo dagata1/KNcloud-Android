@@ -24,6 +24,7 @@ import com.v2ray.ang.extension.toast
 import com.v2ray.ang.extension.toastSuccess
 import com.v2ray.ang.handler.KNcloudAuthService
 import com.v2ray.ang.handler.MmkvManager
+import com.v2ray.ang.handler.TrustedDomain
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -39,6 +40,13 @@ class RegisterWebActivity : BaseActivity() {
     private val binding by lazy { ActivityRegisterWebBinding.inflate(layoutInflater) }
     private val isHandlingAuth = AtomicBoolean(false)
 
+    /** Updated on every page load; the JS bridge only accepts calls while a trusted KNcloud page is shown. */
+    @Volatile
+    private var isTrustedPage = false
+
+    private fun isTrusted(url: String?): Boolean =
+        TrustedDomain.isTrustedUrl(url, MmkvManager.getTrustedExtraHosts())
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
@@ -51,7 +59,7 @@ class RegisterWebActivity : BaseActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         val domain = MmkvManager.getApiDomain()
-        val targetUrl = extraUrl?.takeIf { it.isNotBlank() } ?: "$domain/#/register"
+        val targetUrl = extraUrl?.takeIf { it.isNotBlank() && isTrusted(it) } ?: "$domain/#/register"
 
         try {
             setupWebView()
@@ -88,7 +96,7 @@ class RegisterWebActivity : BaseActivity() {
             useWideViewPort = true
             loadWithOverviewMode = true
             cacheMode = WebSettings.LOAD_DEFAULT
-            mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+            mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
         }
 
         binding.webView.addJavascriptInterface(WebAppInterface(), "KNcloudBridge")
@@ -114,19 +122,26 @@ class RegisterWebActivity : BaseActivity() {
         binding.webView.webViewClient = object : WebViewClient() {
             override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
                 super.onPageStarted(view, url, favicon)
-                injectAuthInterceptor(view)
+                isTrustedPage = isTrusted(url)
+                if (isTrustedPage) injectAuthInterceptor(view)
             }
 
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
-                injectAuthInterceptor(view)
+                isTrustedPage = isTrusted(url)
+                if (isTrustedPage) injectAuthInterceptor(view)
             }
 
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                 val uri = request?.url ?: return false
                 val scheme = uri.scheme?.lowercase()
                 if (scheme == "kncloud" || scheme == "v2rayng") {
-                    handleCustomScheme(uri)
+                    if (isTrustedPage) handleCustomScheme(uri)
+                    return true
+                }
+                // Anything outside KNcloud opens in the system browser, never inside this WebView
+                if (!isTrusted(uri.toString())) {
+                    com.v2ray.ang.util.Utils.openUri(this@RegisterWebActivity, uri.toString())
                     return true
                 }
                 return false
@@ -135,15 +150,17 @@ class RegisterWebActivity : BaseActivity() {
     }
 
     private fun injectAuthInterceptor(view: WebView?) {
-        val storedToken = MmkvManager.getUserToken().orEmpty()
-        val tokenInitJs = if (storedToken.isNotEmpty()) {
+        if (view?.url?.let { isTrusted(it) } == false) return
+        // JSON-quote the token so it can never break out of the JS string
+        val storedToken = MmkvManager.getUserToken().orEmpty().let { org.json.JSONObject.quote(it) }
+        val tokenInitJs = if (storedToken != "\"\"") {
             """
             try {
                 if (!localStorage.getItem('auth_data')) {
-                    localStorage.setItem('auth_data', '$storedToken');
+                    localStorage.setItem('auth_data', $storedToken);
                 }
                 if (!localStorage.getItem('token')) {
-                    localStorage.setItem('token', '$storedToken');
+                    localStorage.setItem('token', $storedToken);
                 }
             } catch(e) {}
             """.trimIndent()
@@ -243,7 +260,7 @@ class RegisterWebActivity : BaseActivity() {
     inner class WebAppInterface {
         @JavascriptInterface
         fun onAuthSuccess(token: String?, email: String?) {
-            if (token.isNullOrBlank()) return
+            if (token.isNullOrBlank() || !isTrustedPage) return
             handleLoginWithToken(token, email.orEmpty())
         }
     }

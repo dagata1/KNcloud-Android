@@ -448,4 +448,10 @@
     <string name="title_settings_tools">工具與日誌維護</string>
     <string name="summary_settings_tools">Geo 資源檔案更新、運行日誌查看、日誌等級</string>
 
+    <string name="login_untrusted_domain">已拒絕登入連結：網域不是 KNcloud 官方網域</string>
+    <string name="login_confirm_title">確認登入</string>
+    <string name="login_confirm_message">使用 %1$s 登入 %2$s 並同步訂閱？</string>
+    <string name="login_confirm_unknown_account">此帳號</string>
+    <string name="import_config_confirm_title">匯入設定</string>
+    <string name="import_config_confirm_message">有連結要求向 KNcloud 匯入節點設定。僅在你信任來源時繼續。</string>
 </resources>

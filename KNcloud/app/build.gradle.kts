@@ -1,7 +1,3 @@
-import java.io.InputStream
-import java.io.OutputStream
-import java.security.KeyStore
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -16,8 +12,8 @@ android {
         applicationId = "top.kncloud.com"
         minSdk = 24
         targetSdk = 35
-        versionCode = 716
-        versionName = "1.10.64"
+        versionCode = 717
+        versionName = "1.10.65"
         multiDexEnabled = true
 
         val abiFilterList = (properties["ABI_FILTERS"] as? String)?.split(';')
@@ -42,24 +38,12 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    signingConfigs {
-        create("release") {
-            val keystoreFile = project.rootProject.file("../keystore/kncloud.keystore")
-            if (keystoreFile.exists()) {
-                storeFile = keystoreFile
-                storePassword = "kncloud123456"
-                keyAlias = "kncloud"
-                keyPassword = "kncloud123456"
-            }
-            enableV1Signing = true
-            enableV2Signing = true
-        }
-    }
+    // Release signing is done in CI with apksigner (key rotation lineage in /signing).
+    // Keys live only in GitHub Actions secrets, never in this repository.
 
     buildTypes {
         release {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -112,43 +96,6 @@ android {
         }
     }
 
-}
-
-// Ensure workspace android_keystore.jks is always synchronized from the repository permanent release keystore
-val permanentKeystore = project.rootProject.file("../keystore/kncloud.keystore")
-val workspaceKeystore = project.rootProject.file("../android_keystore.jks")
-
-fun syncPermanentKeystore() {
-    try {
-        if (permanentKeystore.exists()) {
-            val srcKs = KeyStore.getInstance("PKCS12")
-            val srcPass = "kncloud123456".toCharArray()
-            permanentKeystore.inputStream().use { inputStream ->
-                srcKs.load(inputStream, srcPass)
-            }
-            val key = srcKs.getKey("kncloud", srcPass)
-            val chain = srcKs.getCertificateChain("kncloud")
-
-            val dstKs = KeyStore.getInstance("PKCS12")
-            dstKs.load(null, null)
-            dstKs.setKeyEntry("androiddebugkey", key, "android".toCharArray(), chain)
-            workspaceKeystore.outputStream().use { outputStream ->
-                dstKs.store(outputStream, "android".toCharArray())
-            }
-        }
-    } catch (e: Exception) {
-        logger.warn("Keystore sync warning: ${e.message}")
-    }
-}
-
-syncPermanentKeystore()
-
-tasks.configureEach {
-    if (name.contains("Signing", ignoreCase = true) || name.contains("Package", ignoreCase = true) || name.contains("Assemble", ignoreCase = true)) {
-        doFirst {
-            syncPermanentKeystore()
-        }
-    }
 }
 
 dependencies {
