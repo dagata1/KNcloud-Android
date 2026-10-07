@@ -4,7 +4,10 @@ data class SubscriptionInfo(
     var subName: String = "",       // e.g. "KNcloud 专属套餐" or extracted from "订阅名称：已用/总量"
     var traffic: String = "",       // e.g. "23041.3G/99999G", "剩余流量：76932.34 GB", "23.0 GB / 100.0 GB"
     var resetDay: String = "",      // e.g. "下次重置：15 天"
-    var expireDate: String = ""     // e.g. "套餐到期：长期有效" or "套餐到期：2026-12-31"
+    var expireDate: String = "",    // e.g. "套餐到期：长期有效" or "套餐到期：2026-12-31"
+    // Exact expiry time in epoch millis when known (from expired_at or the
+    // Subscription-Userinfo "expire" field); 0 = unknown or no expiry.
+    var expireAtMillis: Long = 0L
 ) {
     fun hasData(): Boolean = subName.isNotBlank() || traffic.isNotBlank() || resetDay.isNotBlank() || expireDate.isNotBlank()
 
@@ -100,19 +103,46 @@ data class SubscriptionInfo(
     }
 
     /**
-     * Checks whether the subscription is expired.
+     * Sets the expiry from an exact timestamp (unix seconds or millis).
+     * null or 0 means the plan never expires.
      */
-    fun isExpired(): Boolean {
+    fun applyExpiry(expire: Long?) {
+        if (expire == null || expire == 0L) {
+            expireDate = "套餐到期：长期有效"
+            expireAtMillis = 0L
+            return
+        }
+        val millis = if (expire < 10000000000L) expire * 1000L else expire
+        expireAtMillis = millis
+        val sdf = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+        expireDate = "套餐到期：${sdf.format(java.util.Date(millis))}"
+    }
+
+    /**
+     * Checks whether the subscription is expired.
+     *
+     * When the exact expiry time is known (and still matches the displayed
+     * date), the plan counts as expired only once that moment has passed, so
+     * on the expiry day it is not shown as expired too early or too late.
+     */
+    fun isExpired(nowMillis: Long = System.currentTimeMillis()): Boolean {
         val clean = getCleanExpireDate().trim()
         if (clean.isBlank()) return false
         if (clean.contains("长期") || clean.contains("无限") || clean.contains("永久") || clean.contains("不限")) return false
         if (clean.contains("过期") || clean.contains("已到期")) return true
 
+        if (expireAtMillis > 0L) {
+            val sdf = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+            if (sdf.format(java.util.Date(expireAtMillis)) == clean) {
+                return expireAtMillis <= nowMillis
+            }
+        }
+
         // Try timestamp (seconds or milliseconds)
         val timestamp = clean.toLongOrNull()
         if (timestamp != null) {
             val millis = if (timestamp < 10000000000L) timestamp * 1000L else timestamp
-            return millis < System.currentTimeMillis()
+            return millis < nowMillis
         }
 
         // Try standard date formats
@@ -135,7 +165,7 @@ data class SubscriptionInfo(
                     } else {
                         date.time
                     }
-                    return expiryMillis < System.currentTimeMillis()
+                    return expiryMillis < nowMillis
                 }
             } catch (_: Exception) {}
         }

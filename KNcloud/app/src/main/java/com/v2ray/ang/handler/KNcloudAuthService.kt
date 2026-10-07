@@ -12,9 +12,6 @@ import com.v2ray.ang.util.Utils
 import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 object KNcloudAuthService {
 
@@ -280,13 +277,7 @@ object KNcloudAuthService {
                     // without this branch a stale date from an earlier plan stayed on screen.
                     val expiredAtIsNull = dataObj.has("expired_at") && dataObj.get("expired_at").isJsonNull
                     if (expiredAt != null || expiredAtIsNull) {
-                        if (expiredAt == null || expiredAt == 0L) {
-                            subInfo.expireDate = "套餐到期：长期有效"
-                        } else {
-                            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                            val millis = if (expiredAt < 10000000000L) expiredAt * 1000L else expiredAt
-                            subInfo.expireDate = "套餐到期：${sdf.format(Date(millis))}"
-                        }
+                        subInfo.applyExpiry(expiredAt)
                     }
                     if (resetDay != null && resetDay > 0) {
                         subInfo.resetDay = "下次重置：${resetDay} 天"
@@ -399,13 +390,7 @@ object KNcloudAuthService {
                 // without this branch a stale date from an earlier plan stayed on screen.
                 val expiredAtIsNull = dataObj.has("expired_at") && dataObj.get("expired_at").isJsonNull
                 if (expiredAt != null || expiredAtIsNull) {
-                    if (expiredAt == null || expiredAt == 0L) {
-                        subInfo.expireDate = "套餐到期：长期有效"
-                    } else {
-                        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                        val millis = if (expiredAt < 10000000000L) expiredAt * 1000L else expiredAt
-                        subInfo.expireDate = "套餐到期：${sdf.format(Date(millis))}"
-                    }
+                    subInfo.applyExpiry(expiredAt)
                 }
                 if (resetDay != null && resetDay > 0) {
                     subInfo.resetDay = "下次重置：${resetDay} 天"
