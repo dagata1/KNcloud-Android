@@ -103,29 +103,24 @@ jobs:
 
     - name: Sign APK (key rotation)
       env:
-        KN_OLD_KEYSTORE_BASE64: ${{ secrets.KN_OLD_KEYSTORE_BASE64 }}
-        KN_OLD_KEYSTORE_PASSWORD: ${{ secrets.KN_OLD_KEYSTORE_PASSWORD }}
-        KN_NEW_KEYSTORE_BASE64: ${{ secrets.KN_NEW_KEYSTORE_BASE64 }}
-        KN_NEW_KEYSTORE_PASSWORD: ${{ secrets.KN_NEW_KEYSTORE_PASSWORD }}
+        KN_SIGNING_PASSPHRASE: ${{ secrets.KN_SIGNING_PASSPHRASE }}
       run: |
         set -euo pipefail
         # No fallback key: an APK signed with anything else could not update existing installs
-        for v in KN_OLD_KEYSTORE_BASE64 KN_OLD_KEYSTORE_PASSWORD KN_NEW_KEYSTORE_BASE64 KN_NEW_KEYSTORE_PASSWORD; do
-          if [ -z "${!v}" ]; then echo "::error::Missing secret $v"; exit 1; fi
-        done
+        if [ -z "$KN_SIGNING_PASSPHRASE" ]; then echo "::error::Missing secret KN_SIGNING_PASSPHRASE"; exit 1; fi
         KEYDIR="$RUNNER_TEMP/keys"
         mkdir -p "$KEYDIR" && chmod 700 "$KEYDIR"
-        echo "$KN_OLD_KEYSTORE_BASE64" | base64 -d > "$KEYDIR/old.p12"
-        echo "$KN_NEW_KEYSTORE_BASE64" | base64 -d > "$KEYDIR/new.p12"
+        openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 -pass env:KN_SIGNING_PASSPHRASE \
+          -in signing/keys.tar.gz.enc | tar -xzf - -C "$KEYDIR"
         APKSIGNER="$ANDROID_HOME/build-tools/35.0.0/apksigner"
         shopt -s globstar nullglob
         APKS=(KNcloud/app/build/outputs/apk/**/release/*.apk)
         [ ${#APKS[@]} -gt 0 ] || { echo "::error::No APK found"; exit 1; }
         for apk in "${APKS[@]}"; do
           "$APKSIGNER" sign \
-            --ks "$KEYDIR/old.p12" --ks-key-alias kncloud --ks-pass env:KN_OLD_KEYSTORE_PASSWORD \
+            --ks "$KEYDIR/old.p12" --ks-key-alias kncloud --ks-pass "file:$KEYDIR/old.pass" \
             --next-signer \
-            --ks "$KEYDIR/new.p12" --ks-key-alias kncloud2026 --ks-pass env:KN_NEW_KEYSTORE_PASSWORD \
+            --ks "$KEYDIR/new.p12" --ks-key-alias kncloud2026 --ks-pass "file:$KEYDIR/new.pass" \
             --lineage signing/lineage.bin --rotation-min-sdk-version 28 \
             --out "$apk.signed" "$apk"
           mv "$apk.signed" "$apk"
