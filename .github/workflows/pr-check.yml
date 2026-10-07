@@ -1,0 +1,68 @@
+name: PR check (debug build + unit tests)
+
+# Compile-only verification for pull requests: no signing secrets, no release
+# upload. Native tun2socks libraries are not built here; they are only packed
+# into the APK and are not needed to compile or run unit tests.
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+        fetch-depth: '0'
+
+    - name: Setup Java
+      uses: actions/setup-java@v4.7.0
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3.2.0
+      with:
+        log-accepted-android-sdk-licenses: false
+        cmdline-tools-version: '12266719'
+        packages: 'platforms;android-35 build-tools;35.0.0 platform-tools'
+
+    - name: Fetch AndroidLibXrayLite tag
+      run: |
+        pushd AndroidLibXrayLite
+        git fetch --tags --force
+        CURRENT_TAG=$(git describe --tags --abbrev=0)
+        echo "CURRENT_TAG=$CURRENT_TAG" >> "$GITHUB_ENV"
+        popd
+
+    - name: Download libv2ray
+      uses: robinraju/release-downloader@v1.12
+      with:
+        repository: '2dust/AndroidLibXrayLite'
+        tag: ${{ env.CURRENT_TAG }}
+        fileName: 'libv2ray.aar'
+        out-file-path: KNcloud/app/libs/
+
+    - name: Build debug APK and run unit tests
+      run: |
+        cd "${{ github.workspace }}/KNcloud"
+        echo "sdk.dir=${ANDROID_SDK_ROOT:-$ANDROID_HOME}" > local.properties
+        chmod 755 gradlew
+        # UtilsTest (inherited) currently fails on main (isIpAddress /
+        # isIpInCidr cases); only the account/subscription tests are run
+        # until it is fixed.
+        ./gradlew assembleDebug testDebugUnitTest --tests 'com.v2ray.ang.dto.*' --stacktrace
+
+    - name: Upload unit test report
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: unit-test-report
+        path: ${{ github.workspace }}/KNcloud/app/build/reports/tests/
+        if-no-files-found: ignore

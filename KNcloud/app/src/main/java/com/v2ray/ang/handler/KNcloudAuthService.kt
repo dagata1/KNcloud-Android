@@ -12,9 +12,6 @@ import com.v2ray.ang.util.Utils
 import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 object KNcloudAuthService {
 
@@ -277,17 +274,21 @@ object KNcloudAuthService {
                         val used = u + d
                         subInfo.traffic = "${SubscriptionInfo.formatBytes(used.toDouble())} / ${SubscriptionInfo.formatBytes(transferEnable.toDouble())}"
                     }
-                    if (expiredAt != null) {
-                        if (expiredAt == 0L) {
-                            subInfo.expireDate = "套餐到期：长期有效"
-                        } else {
-                            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                            val millis = if (expiredAt < 10000000000L) expiredAt * 1000L else expiredAt
-                            subInfo.expireDate = "套餐到期：${sdf.format(Date(millis))}"
-                        }
+                    // expired_at null means the plan never expires (one-time/lifetime plan);
+                    // without this branch a stale date from an earlier plan stayed on screen.
+                    val expiredAtIsNull = dataObj.has("expired_at") && dataObj.get("expired_at").isJsonNull
+                    if (expiredAt != null || expiredAtIsNull) {
+                        subInfo.applyExpiry(expiredAt)
                     }
                     if (resetDay != null && resetDay > 0) {
                         subInfo.resetDay = "下次重置：${resetDay} 天"
+                    } else if (resetDay == 0) {
+                        // 0 = traffic resets at the coming midnight (last day of the cycle)
+                        subInfo.resetDay = "下次重置：今天"
+                    } else if (dataObj.has("reset_day") && dataObj.get("reset_day").isJsonNull) {
+                        // null = no reset for this plan (lifetime / never-reset / expired);
+                        // clear the value cached from a previous plan or subscription.
+                        subInfo.resetDay = ""
                     }
                     if (subInfo.hasData()) {
                         MmkvManager.saveSubscriptionInfo(subInfo)
@@ -386,17 +387,21 @@ object KNcloudAuthService {
                     val used = u + d
                     subInfo.traffic = "${SubscriptionInfo.formatBytes(used.toDouble())} / ${SubscriptionInfo.formatBytes(transferEnable.toDouble())}"
                 }
-                if (expiredAt != null) {
-                    if (expiredAt == 0L) {
-                        subInfo.expireDate = "套餐到期：长期有效"
-                    } else {
-                        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                        val millis = if (expiredAt < 10000000000L) expiredAt * 1000L else expiredAt
-                        subInfo.expireDate = "套餐到期：${sdf.format(Date(millis))}"
-                    }
+                // expired_at null means the plan never expires (one-time/lifetime plan);
+                // without this branch a stale date from an earlier plan stayed on screen.
+                val expiredAtIsNull = dataObj.has("expired_at") && dataObj.get("expired_at").isJsonNull
+                if (expiredAt != null || expiredAtIsNull) {
+                    subInfo.applyExpiry(expiredAt)
                 }
                 if (resetDay != null && resetDay > 0) {
                     subInfo.resetDay = "下次重置：${resetDay} 天"
+                } else if (resetDay == 0) {
+                    // 0 = traffic resets at the coming midnight (last day of the cycle)
+                    subInfo.resetDay = "下次重置：今天"
+                } else if (dataObj.has("reset_day") && dataObj.get("reset_day").isJsonNull) {
+                    // null = no reset for this plan (lifetime / never-reset / expired);
+                    // clear the value cached from a previous plan or subscription.
+                    subInfo.resetDay = ""
                 }
                 if (subInfo.hasData()) {
                     MmkvManager.saveSubscriptionInfo(subInfo)

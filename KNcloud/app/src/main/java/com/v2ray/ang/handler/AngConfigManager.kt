@@ -528,9 +528,7 @@ object AngConfigManager {
                 subInfo.traffic = "${SubscriptionInfo.formatBytes(used.toDouble())} / ${SubscriptionInfo.formatBytes(total.toDouble())}"
             }
             if (expire > 0L) {
-                val sdf = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
-                val millis = if (expire < 10000000000L) expire * 1000L else expire
-                subInfo.expireDate = "套餐到期：${sdf.format(java.util.Date(millis))}"
+                subInfo.applyExpiry(expire)
             }
         } catch (e: Exception) {
             Log.e(AppConfig.TAG, "Failed to parse Subscription-Userinfo", e)
