@@ -47,6 +47,7 @@ import com.v2ray.ang.extension.toastError
 import com.v2ray.ang.handler.AngConfigManager
 import com.v2ray.ang.handler.MigrateManager
 import com.v2ray.ang.handler.MmkvManager
+import com.v2ray.ang.handler.UpdateCheckerManager
 import com.v2ray.ang.handler.V2RayServiceManager
 import com.v2ray.ang.helper.SimpleItemTouchHelperCallback
 import com.v2ray.ang.util.DialogUtil
@@ -144,6 +145,7 @@ class MainActivity : BaseActivity() {
         }
 
         setContentView(binding.root)
+        autoCheckForUpdate()
 
         // Top bar buttons
         binding.btnTopSettings.setOnClickListener {
@@ -1292,5 +1294,39 @@ class MainActivity : BaseActivity() {
             return true
         }
         return super.onKeyDown(keyCode, event)
+    }
+
+    /**
+     * Silent update check on launch, at most once every 24 hours.
+     * Errors are ignored; the manual check in Settings still reports them.
+     */
+    private fun autoCheckForUpdate() {
+        val now = System.currentTimeMillis()
+        val last = MmkvManager.decodeSettingsString(AppConfig.PREF_LAST_AUTO_UPDATE_CHECK)?.toLongOrNull() ?: 0L
+        if (now - last < 24L * 60 * 60 * 1000) return
+
+        lifecycleScope.launch {
+            try {
+                val includePreRelease = MmkvManager.decodeSettingsBool(AppConfig.PREF_CHECK_UPDATE_PRE_RELEASE, false)
+                val result = UpdateCheckerManager.checkForUpdate(includePreRelease)
+                MmkvManager.encodeSettings(AppConfig.PREF_LAST_AUTO_UPDATE_CHECK, now.toString())
+                val skipped = MmkvManager.decodeSettingsString(AppConfig.PREF_SKIPPED_UPDATE_VERSION)
+                if (!result.hasUpdate || result.latestVersion == skipped || isFinishing || isDestroyed) return@launch
+
+                AlertDialog.Builder(this@MainActivity)
+                    .setTitle(getString(R.string.update_new_version_found, result.latestVersion))
+                    .setMessage(result.releaseNotes.orEmpty())
+                    .setPositiveButton(R.string.update_now) { _, _ ->
+                        result.downloadUrl?.let { Utils.openUri(this@MainActivity, it) }
+                    }
+                    .setNeutralButton(R.string.update_skip_version) { _, _ ->
+                        MmkvManager.encodeSettings(AppConfig.PREF_SKIPPED_UPDATE_VERSION, result.latestVersion)
+                    }
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .show()
+            } catch (e: Exception) {
+                Log.w(AppConfig.TAG, "Auto update check failed: ${e.message}")
+            }
+        }
     }
 }

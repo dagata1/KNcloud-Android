@@ -458,4 +458,5 @@
     <string name="login_confirm_unknown_account">该账号</string>
     <string name="import_config_confirm_title">导入配置</string>
     <string name="import_config_confirm_message">有链接请求向 KNcloud 导入节点配置。仅在你信任来源时继续。</string>
+    <string name="update_skip_version">跳过此版本</string>
 </resources>

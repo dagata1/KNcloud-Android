@@ -469,4 +469,5 @@
     <string name="login_confirm_unknown_account">this account</string>
     <string name="import_config_confirm_title">Import config</string>
     <string name="import_config_confirm_message">A link wants to import server configs into KNcloud. Only continue if you trust where it came from.</string>
+    <string name="update_skip_version">Skip this version</string>
 </resources>

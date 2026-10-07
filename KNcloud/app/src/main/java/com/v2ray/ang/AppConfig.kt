@@ -63,6 +63,8 @@ object AppConfig {
     const val PREF_MODE = "pref_mode"
     const val PREF_IS_BOOTED = "pref_is_booted"
     const val PREF_CHECK_UPDATE_PRE_RELEASE = "pref_check_update_pre_release"
+    const val PREF_LAST_AUTO_UPDATE_CHECK = "pref_last_auto_update_check"
+    const val PREF_SKIPPED_UPDATE_VERSION = "pref_skipped_update_version"
     const val PREF_GEO_FILES_SOURCES = "pref_geo_files_sources"
     const val PREF_USE_HEV_TUNNEL = "pref_use_hev_tunnel"
     const val PREF_HEV_TUNNEL_LOGLEVEL = "pref_hev_tunnel_loglevel"

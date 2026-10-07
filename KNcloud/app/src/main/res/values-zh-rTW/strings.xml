@@ -454,4 +454,5 @@
     <string name="login_confirm_unknown_account">此帳號</string>
     <string name="import_config_confirm_title">匯入設定</string>
     <string name="import_config_confirm_message">有連結要求向 KNcloud 匯入節點設定。僅在你信任來源時繼續。</string>
+    <string name="update_skip_version">略過此版本</string>
 </resources>
