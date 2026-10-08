@@ -455,4 +455,10 @@
     <string name="import_config_confirm_title">匯入設定</string>
     <string name="import_config_confirm_message">有連結要求向 KNcloud 匯入節點設定。僅在你信任來源時繼續。</string>
     <string name="update_skip_version">略過此版本</string>
+    <string name="sub_expire_lifetime">長期有效</string>
+    <string name="sub_reset_today">今天</string>
+    <plurals name="sub_reset_days">
+        <item quantity="one">%d 天</item>
+        <item quantity="other">%d 天</item>
+    </plurals>
 </resources>

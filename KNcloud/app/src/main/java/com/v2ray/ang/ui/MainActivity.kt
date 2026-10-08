@@ -841,7 +841,7 @@ class MainActivity : BaseActivity() {
 
             binding.tvSubReset.isVisible = false
 
-            val cleanExpireDate = info.getCleanExpireDate()
+            val cleanExpireDate = localizeExpire(info.getCleanExpireDate())
             binding.tvSubExpire.text = getString(R.string.sub_expire_format_with_status, cleanExpireDate, getString(R.string.sub_status_expired))
             binding.tvSubExpire.setTextColor(ContextCompat.getColor(this, R.color.colorPingRed))
             binding.tvSubExpire.isVisible = true
@@ -850,8 +850,8 @@ class MainActivity : BaseActivity() {
             val title = if (info!!.subName.isNotBlank()) info.subName else getString(R.string.app_name)
             val formattedTraffic = info.getFormattedTraffic()
             val percent = info.calculateUsagePercent()
-            val cleanResetDay = info.getCleanResetDay()
-            val cleanExpireDate = info.getCleanExpireDate()
+            val cleanResetDay = localizeResetDay(info.getCleanResetDay())
+            val cleanExpireDate = localizeExpire(info.getCleanExpireDate())
 
             binding.tvSubTitle.text = title
             if (formattedTraffic.isNotBlank()) {
@@ -911,7 +911,7 @@ class MainActivity : BaseActivity() {
         } else if (isExpired) {
             // Case B: Expired subscription
             val title = if (info!!.subName.isNotBlank()) info.subName else getString(R.string.app_name)
-            val cleanExpireDate = info.getCleanExpireDate()
+            val cleanExpireDate = localizeExpire(info.getCleanExpireDate())
             val formattedTraffic = info.getFormattedTraffic()
 
             binding.tvSubTitleClassic.text = title
@@ -935,8 +935,8 @@ class MainActivity : BaseActivity() {
             val title = if (info!!.subName.isNotBlank()) info.subName else getString(R.string.app_name)
             val formattedTraffic = info.getFormattedTraffic()
             val percent = info.calculateUsagePercent()
-            val cleanResetDay = info.getCleanResetDay()
-            val cleanExpireDate = info.getCleanExpireDate()
+            val cleanResetDay = localizeResetDay(info.getCleanResetDay())
+            val cleanExpireDate = localizeExpire(info.getCleanExpireDate())
 
             binding.tvSubTitleClassic.text = title
             if (formattedTraffic.isNotBlank()) {
@@ -1329,4 +1329,19 @@ class MainActivity : BaseActivity() {
             }
         }
     }
+
+    /** Subscription values are stored in Chinese; translate the fixed phrases for the current UI language. */
+    private fun localizeExpire(value: String): String {
+        val v = value.trim()
+        return if (v == "长期有效" || v == "永久" || v == "永久有效") getString(R.string.sub_expire_lifetime) else v
+    }
+
+    private fun localizeResetDay(value: String): String {
+        val v = value.trim()
+        if (v == "今天") return getString(R.string.sub_reset_today)
+        val m = Regex("^(\\d+)\\s*天$").find(v) ?: return v
+        val days = m.groupValues[1].toInt()
+        return resources.getQuantityString(R.plurals.sub_reset_days, days, days)
+    }
+
 }

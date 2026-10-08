@@ -459,4 +459,10 @@
     <string name="import_config_confirm_title">导入配置</string>
     <string name="import_config_confirm_message">有链接请求向 KNcloud 导入节点配置。仅在你信任来源时继续。</string>
     <string name="update_skip_version">跳过此版本</string>
+    <string name="sub_expire_lifetime">长期有效</string>
+    <string name="sub_reset_today">今天</string>
+    <plurals name="sub_reset_days">
+        <item quantity="one">%d 天</item>
+        <item quantity="other">%d 天</item>
+    </plurals>
 </resources>
