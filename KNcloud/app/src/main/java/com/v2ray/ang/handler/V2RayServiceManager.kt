@@ -22,7 +22,10 @@ import com.v2ray.ang.util.Utils
 import go.Seq
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import libv2ray.CoreCallbackHandler
 import libv2ray.CoreController
 import libv2ray.Libv2ray
@@ -33,6 +36,14 @@ object V2RayServiceManager {
     private val coreController: CoreController = Libv2ray.newCoreController(CoreCallback())
     private val mMsgReceive = ReceiveMessageHandler()
     private var currentConfig: ProfileItem? = null
+
+    // The core is stopped asynchronously; a start that arrives while the previous
+    // core is still shutting down must wait for it, otherwise startCoreLoop() sees
+    // isRunning == true and silently does nothing (node switch "doesn't take").
+    @Volatile
+    private var stopJob: Job? = null
+
+    private const val CORE_STOP_WAIT_MS = 3000L
 
     var serviceControl: SoftReference<ServiceControl>? = null
         set(value) {
@@ -177,6 +188,36 @@ object V2RayServiceManager {
     }
 
     /**
+     * Starts the core once any previous core has finished stopping.
+     * Called from a service's onStartCommand. If the core cannot be started,
+     * the UI is told (instead of being left in "connecting") and the service stops.
+     * @param onStarted Invoked on the main thread after the core started.
+     */
+    fun startCoreLoopWhenReady(onStarted: () -> Unit = {}) {
+        CoroutineScope(Dispatchers.Main).launch {
+            withTimeoutOrNull(CORE_STOP_WAIT_MS) {
+                stopJob?.join()
+                while (coreController.isRunning) delay(50)
+            }
+            if (coreController.isRunning) {
+                // Still running: either a duplicate start for a live core, or the old
+                // core hung while stopping. Either way leave it as it is.
+                Log.w(AppConfig.TAG, "Core still running, start request ignored")
+                // A start via startForegroundService() must still reach startForeground().
+                currentConfig?.let { NotificationManager.showNotification(it) }
+                return@launch
+            }
+            if (startCoreLoop()) {
+                onStarted()
+            } else if (!coreController.isRunning) {
+                val service = getService() ?: return@launch
+                MessageUtil.sendMsg2UI(service, AppConfig.MSG_STATE_START_FAILURE, "")
+                serviceControl?.get()?.stopService()
+            }
+        }
+    }
+
+    /**
      * Stops the V2Ray core service.
      * Unregisters broadcast receivers, stops notifications, and shuts down plugins.
      * @return True if the core was stopped successfully, false otherwise.
@@ -185,7 +226,7 @@ object V2RayServiceManager {
         val service = getService() ?: return false
 
         if (coreController.isRunning) {
-            CoroutineScope(Dispatchers.IO).launch {
+            stopJob = CoroutineScope(Dispatchers.IO).launch {
                 try {
                     coreController.stopLoop()
                 } catch (e: Exception) {

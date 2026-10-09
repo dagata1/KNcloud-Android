@@ -28,7 +28,7 @@ class V2RayProxyOnlyService : Service(), ServiceControl {
      * @return The start mode.
      */
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        V2RayServiceManager.startCoreLoop()
+        V2RayServiceManager.startCoreLoopWhenReady()
         return START_STICKY
     }
 

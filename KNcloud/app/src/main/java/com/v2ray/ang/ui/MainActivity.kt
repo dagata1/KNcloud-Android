@@ -86,6 +86,9 @@ class MainActivity : BaseActivity() {
     private var connectingAlphaAnimator: ObjectAnimator? = null
     private var connectingTimeoutJob: Job? = null
     private var isSwitchingServer: Boolean = false
+    // Set while a node switch waits for the old core to report it stopped.
+    private var pendingStartAfterStop: Boolean = false
+    private var restartFallbackJob: Job? = null
 
     // register activity result for requesting permission
     private val requestPermissionLauncher =
@@ -252,6 +255,8 @@ class MainActivity : BaseActivity() {
 
     private fun toggleV2RayConnection() {
         isSwitchingServer = false
+        pendingStartAfterStop = false
+        restartFallbackJob?.cancel()
         if (connectionState == ConnectionState.CONNECTING || connectionState == ConnectionState.CONNECTED || mainViewModel.isRunning.value == true) {
             setConnectionState(ConnectionState.DISCONNECTED)
             V2RayServiceManager.stopVService(this)
@@ -358,7 +363,11 @@ class MainActivity : BaseActivity() {
                     setConnectionState(ConnectionState.CONNECTED)
                 }
             } else {
-                if (!isSwitchingServer) {
+                if (pendingStartAfterStop) {
+                    pendingStartAfterStop = false
+                    restartFallbackJob?.cancel()
+                    startV2Ray()
+                } else if (!isSwitchingServer) {
                     setConnectionState(ConnectionState.DISCONNECTED)
                 }
             }
@@ -722,11 +731,23 @@ class MainActivity : BaseActivity() {
         isSwitchingServer = true
         setConnectionState(ConnectionState.CONNECTING)
         startConnectingTimeout()
+        restartFallbackJob?.cancel()
         if (mainViewModel.isRunning.value == true) {
+            // Start the new node as soon as the old core reports it stopped
+            // (see the isRunning observer), not after a fixed guess.
+            pendingStartAfterStop = true
             V2RayServiceManager.stopVService(this)
-        }
-        lifecycleScope.launch {
-            delay(500)
+            restartFallbackJob = lifecycleScope.launch {
+                delay(1500)
+                if (pendingStartAfterStop) {
+                    pendingStartAfterStop = false
+                    startV2Ray()
+                }
+            }
+        } else {
+            // Not connected or a previous switch is mid-flight: the service side
+            // waits for any core still stopping before it starts the new one.
+            pendingStartAfterStop = false
             startV2Ray()
         }
     }
