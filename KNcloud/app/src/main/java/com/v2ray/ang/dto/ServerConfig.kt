@@ -40,7 +40,8 @@ data class ServerConfig(
                 EConfigType.SOCKS,
                 EConfigType.HTTP,
                 EConfigType.TROJAN,
-                EConfigType.HYSTERIA2 ->
+                EConfigType.HYSTERIA2,
+                EConfigType.ANYTLS ->
                     return ServerConfig(
                         configType = configType,
                         outboundBean = V2rayConfig.OutboundBean(

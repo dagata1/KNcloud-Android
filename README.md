@@ -12,7 +12,7 @@ KNcloud is a modern and powerful proxy client for Android, supporting [Xray core
 
 - **Modern Dual-Mode UI**: Seamlessly switch between Simple (Dashboard) Mode and Classic (List) Mode.
 - **Account & Subscription Management**: Direct integration with KNcloud web accounts, subscription sync, traffic usage tracking, and one-click authorization.
-- **Core Support**: Built on high-performance Xray/v2ray cores with full protocol support (VLESS, VMess, Trojan, Shadowsocks, Hysteria2, WireGuard, TUIC, etc.).
+- **Core Support**: Built on high-performance Xray/v2ray cores with full protocol support (VLESS, VMess, Trojan, Shadowsocks, AnyTLS, Hysteria2, WireGuard, etc.).
 - **Smart Routing & Bypass**: Custom routing rules, GeoIP/GeoSite rule sets, per-app proxying, and fragment packet fragmentation.
 - **Speed & Latency Testing**: One-click real ping delay test and speed testing.
 

@@ -175,6 +175,7 @@ object AppConfig {
     const val TUIC = "tuic://"
     const val HYSTERIA2 = "hysteria2://"
     const val HY2 = "hy2://"
+    const val ANYTLS = "anytls://"
 
     /** Give a good name to this, IDK*/
     const val VPN = "VPN"

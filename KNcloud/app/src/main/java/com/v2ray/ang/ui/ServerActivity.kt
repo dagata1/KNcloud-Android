@@ -147,6 +147,11 @@ class ServerActivity : BaseActivity() {
             EConfigType.TROJAN -> setContentView(R.layout.activity_server_trojan)
             EConfigType.WIREGUARD -> setContentView(R.layout.activity_server_wireguard)
             EConfigType.HYSTERIA2 -> setContentView(R.layout.activity_server_hysteria2)
+            EConfigType.ANYTLS -> setContentView(R.layout.activity_server_anytls)
+        }
+        if ((config?.configType ?: createConfigType) == EConfigType.ANYTLS) {
+            // AnyTLS 固定 TLS：只开放 SNI / 指纹 / 跳过证书验证
+            findViewById<View>(R.id.lay_stream_security)?.visibility = View.GONE
         }
         sp_network?.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(
@@ -468,6 +473,7 @@ class ServerActivity : BaseActivity() {
             if (config.configType == EConfigType.TROJAN
                 || config.configType == EConfigType.SHADOWSOCKS
                 || config.configType == EConfigType.HYSTERIA2
+                || config.configType == EConfigType.ANYTLS
             ) {
                 toast(R.string.server_lab_id3)
             } else {
@@ -491,6 +497,10 @@ class ServerActivity : BaseActivity() {
         saveCommon(config)
         saveStreamSettings(config)
         saveTls(config)
+        if (config.configType == EConfigType.ANYTLS) {
+            config.security = TLS
+            config.network = NetworkType.TCP.type
+        }
 
         if (config.subscriptionId.isEmpty() && !subscriptionId.isNullOrEmpty()) {
             config.subscriptionId = subscriptionId.orEmpty()

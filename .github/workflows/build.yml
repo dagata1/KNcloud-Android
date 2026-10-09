@@ -69,6 +69,16 @@ jobs:
         mkdir -p ${{ github.workspace }}/KNcloud/app/libs
         cp -r ${{ github.workspace }}/libs/. ${{ github.workspace }}/KNcloud/app/libs/
 
+    - name: Setup Go (AnyTLS plugin)
+      uses: actions/setup-go@v5
+      with:
+        go-version-file: anytls-plugin/go.mod
+        cache-dependency-path: anytls-plugin/go.sum
+
+    - name: Build libanytls (AnyTLS plugin)
+      run: |
+        bash compile-anytls.sh "${{ github.workspace }}/KNcloud/app/libs"
+
     - name: Fetch AndroidLibXrayLite tag
       run: |
         pushd AndroidLibXrayLite

@@ -12,6 +12,7 @@ import com.v2ray.ang.dto.ProfileItem
 import com.v2ray.ang.dto.SubscriptionInfo
 import com.v2ray.ang.dto.SubscriptionItem
 import com.v2ray.ang.fmt.CustomFmt
+import com.v2ray.ang.fmt.AnytlsFmt
 import com.v2ray.ang.fmt.Hysteria2Fmt
 import com.v2ray.ang.fmt.ShadowsocksFmt
 import com.v2ray.ang.fmt.SocksFmt
@@ -149,6 +150,7 @@ object AngConfigManager {
                 EConfigType.TROJAN -> TrojanFmt.toUri(config)
                 EConfigType.WIREGUARD -> WireguardFmt.toUri(config)
                 EConfigType.HYSTERIA2 -> Hysteria2Fmt.toUri(config)
+                EConfigType.ANYTLS -> AnytlsFmt.toUri(config)
             }
         } catch (e: Exception) {
             Log.e(AppConfig.TAG, "Failed to share config for GUID: $guid", e)
@@ -385,6 +387,8 @@ object AngConfigManager {
                 WireguardFmt.parse(str)
             } else if (str.startsWith(EConfigType.HYSTERIA2.protocolScheme) || str.startsWith(HY2)) {
                 Hysteria2Fmt.parse(str)
+            } else if (str.startsWith(EConfigType.ANYTLS.protocolScheme)) {
+                AnytlsFmt.parse(str)
             } else {
                 null
             }

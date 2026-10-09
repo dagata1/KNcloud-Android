@@ -77,8 +77,8 @@ class V2RayTestService : Service() {
         val retFailure = -1L
 
         val config = MmkvManager.decodeServerConfig(guid) ?: return retFailure
-        if (config.configType == EConfigType.HYSTERIA2) {
-            val delay = PluginServiceManager.realPingHy2(this, config)
+        if (config.configType.needsPlugin) {
+            val delay = PluginServiceManager.realPingPlugin(this, config)
             return delay
         } else {
             val configResult = V2rayConfigManager.getV2rayConfig4Speedtest(this, guid)

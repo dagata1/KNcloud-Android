@@ -14,7 +14,12 @@ enum class EConfigType(val value: Int, val protocolScheme: String) {
 
     //    TUIC(8, AppConfig.TUIC),
     HYSTERIA2(9, AppConfig.HYSTERIA2),
-    HTTP(10, AppConfig.HTTP);
+    HTTP(10, AppConfig.HTTP),
+    ANYTLS(11, AppConfig.ANYTLS);
+
+    /** Xray 无法直连、需要本地插件进程（socks 转发）的协议。 */
+    val needsPlugin: Boolean
+        get() = this == HYSTERIA2 || this == ANYTLS
 
     companion object {
         fun fromInt(value: Int) = entries.firstOrNull { it.value == value }

@@ -73,3 +73,6 @@ Thumbs.db
 *.keystore
 *.p12
 android_keystore.jks
+
+# Built native libs (CI)
+KNcloud/app/libs/

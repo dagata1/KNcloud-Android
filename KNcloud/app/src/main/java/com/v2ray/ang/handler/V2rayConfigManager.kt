@@ -133,7 +133,7 @@ object V2rayConfigManager {
 
         getInbounds(v2rayConfig)
 
-        if (config.configType == EConfigType.HYSTERIA2) {
+        if (config.configType.needsPlugin) {
             result.socksPort = getPlusOutbounds(v2rayConfig, config) ?: return result
         } else {
             getOutbounds(v2rayConfig, config) ?: return result
@@ -169,7 +169,7 @@ object V2rayConfigManager {
         val validConfigs = configList.asSequence().filter { it.server.isNotNullEmpty() }
             .filter { !Utils.isPureIpAddress(it.server!!) || Utils.isValidUrl(it.server!!) }
             .filter { it.configType != EConfigType.CUSTOM }
-            .filter { it.configType != EConfigType.HYSTERIA2 }
+            .filter { !it.configType.needsPlugin }
             .filter { config ->
                 if (config.subscriptionId.isEmpty()) {
                     return@filter true
@@ -260,7 +260,7 @@ object V2rayConfigManager {
 
         val v2rayConfig = initV2rayConfig(context) ?: return result
 
-        if (config.configType == EConfigType.HYSTERIA2) {
+        if (config.configType.needsPlugin) {
             result.socksPort = getPlusOutbounds(v2rayConfig, config) ?: return result
         } else {
             getOutbounds(v2rayConfig, config) ?: return result
@@ -785,6 +785,7 @@ object V2rayConfigManager {
                 || protocol.equals(EConfigType.TROJAN.name, true)
                 || protocol.equals(EConfigType.WIREGUARD.name, true)
                 || protocol.equals(EConfigType.HYSTERIA2.name, true)
+                || protocol.equals(EConfigType.ANYTLS.name, true)
             ) {
                 muxEnabled = false
             } else if (outbound.streamSettings?.network == NetworkType.XHTTP.type) {
@@ -1054,6 +1055,7 @@ object V2rayConfigManager {
             EConfigType.TROJAN -> TrojanFmt.toOutbound(profileItem)
             EConfigType.WIREGUARD -> WireguardFmt.toOutbound(profileItem)
             EConfigType.HYSTERIA2 -> null
+            EConfigType.ANYTLS -> null
             EConfigType.HTTP -> HttpFmt.toOutbound(profileItem)
         }
     }
@@ -1086,7 +1088,8 @@ object V2rayConfigManager {
             EConfigType.SOCKS,
             EConfigType.HTTP,
             EConfigType.TROJAN,
-            EConfigType.HYSTERIA2 ->
+            EConfigType.HYSTERIA2,
+            EConfigType.ANYTLS ->
                 return OutboundBean(
                     protocol = configType.name.lowercase(),
                     settings = OutSettingsBean(
