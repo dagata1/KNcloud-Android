@@ -423,8 +423,8 @@
     <string name="empty_subscribe_keyword">Subscribe</string>
     <string name="empty_subscribe_btn">Go to Website</string>
     <string name="btn_go_website">Website</string>
-    <string name="btn_speed_test">Speed Test</string>
-    <string name="btn_refresh_sub">Refresh Sub</string>
+    <string name="btn_speed_test">Ping Test</string>
+    <string name="btn_refresh_sub">Update Sub</string>
     <string name="node_selector_title">Switch Node</string>
     <string name="node_selector_current_hint">Selected Node</string>
     <string name="node_selector_sheet_title">Select Node</string>
