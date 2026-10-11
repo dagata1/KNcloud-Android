@@ -9,11 +9,80 @@ import com.v2ray.ang.dto.SubscriptionInfo
 import com.v2ray.ang.dto.SubscriptionItem
 import com.v2ray.ang.util.JsonUtil
 import com.v2ray.ang.util.Utils
+import java.io.IOException
 import java.io.InputStream
 import java.net.HttpURLConnection
+import java.net.InetSocketAddress
+import java.net.Proxy
 import java.net.URL
 
 object KNcloudAuthService {
+
+    /** Status code and body text of a panel API response (HTTP errors included). */
+    private data class PanelResponse(val code: Int, val text: String)
+
+    /**
+     * Performs one panel API request. The app's own package is excluded from its VPN, so a plain
+     * HttpURLConnection always goes direct; on networks where the panel domain is slow/blocked
+     * directly that times out. When the core is running we therefore go through the local HTTP
+     * proxy first and fall back to a direct connection once; when it is not running we go direct
+     * with one retry. Only connection-level failures (IOException: timeout, refused, reset...)
+     * trigger the next attempt; any HTTP response, including 401/403/5xx, is returned as is.
+     * Throws the last IOException if every attempt fails.
+     */
+    private fun panelRequest(
+        urlStr: String,
+        method: String,
+        timeout: Int,
+        headers: Map<String, String>,
+        body: ByteArray? = null
+    ): PanelResponse {
+        val proxies: List<Proxy?> = if (V2RayServiceManager.isRunning()) {
+            listOf(Proxy(Proxy.Type.HTTP, InetSocketAddress(AppConfig.LOOPBACK, SettingsManager.getHttpPort())), null)
+        } else {
+            listOf(null, null)
+        }
+        var lastError: IOException? = null
+        for (proxy in proxies) {
+            var conn: HttpURLConnection? = null
+            try {
+                val url = URL(urlStr)
+                val c = (if (proxy != null) url.openConnection(proxy) else url.openConnection()) as HttpURLConnection
+                conn = c
+                c.requestMethod = method
+                c.connectTimeout = timeout
+                c.readTimeout = timeout
+                c.doInput = true
+                for ((k, v) in headers) c.setRequestProperty(k, v)
+                if (body != null) {
+                    c.doOutput = true
+                    c.outputStream.use { os ->
+                        os.write(body)
+                        os.flush()
+                    }
+                }
+                val responseCode = c.responseCode
+                val responseStream: InputStream? = if (responseCode in 200..299) c.inputStream else c.errorStream
+                val responseText = responseStream?.use { it.bufferedReader().readText() }.orEmpty()
+                return PanelResponse(responseCode, responseText)
+            } catch (e: IOException) {
+                lastError = e
+                Log.w(AppConfig.TAG, "Panel request ${if (proxy != null) "via proxy" else "direct"} failed: $urlStr: ${e.message}")
+            } finally {
+                conn?.disconnect()
+            }
+        }
+        throw lastError ?: IOException("Panel request failed: $urlStr")
+    }
+
+    private fun panelHeaders(token: String? = null, json: Boolean = false): Map<String, String> {
+        val h = LinkedHashMap<String, String>()
+        if (json) h["Content-Type"] = "application/json; charset=UTF-8"
+        if (token != null) h["Authorization"] = token
+        h["Accept"] = "application/json"
+        h["User-Agent"] = "KNcloud/${BuildConfig.VERSION_NAME}"
+        return h
+    }
 
     data class LoginResult(
         val success: Boolean,
@@ -80,19 +149,9 @@ object KNcloudAuthService {
      */
     fun fetchDynamicDomain(): String {
         try {
-            val url = URL(AppConfig.API_DOMAIN_QUERY_URL)
-            val conn = (url.openConnection() as HttpURLConnection).apply {
-                requestMethod = "GET"
-                connectTimeout = 8000
-                readTimeout = 8000
-                setRequestProperty("User-Agent", "KNcloud/${BuildConfig.VERSION_NAME}")
-                setRequestProperty("Accept", "application/json")
-            }
-
-            val responseCode = conn.responseCode
-            val responseStream: InputStream? = if (responseCode in 200..299) conn.inputStream else conn.errorStream
-            val responseText = responseStream?.use { it.bufferedReader().readText() }.orEmpty()
-            conn.disconnect()
+            val (responseCode, responseText) = panelRequest(
+                AppConfig.API_DOMAIN_QUERY_URL, "GET", 8000, panelHeaders()
+            )
 
             if (responseCode in 200..299 && responseText.isNotEmpty()) {
                 val json = JsonUtil.parseString(responseText)
@@ -126,32 +185,15 @@ object KNcloudAuthService {
         val loginEndpoint = "$domain/api/v1/passport/auth/login"
 
         try {
-            val url = URL(loginEndpoint)
-            val conn = (url.openConnection() as HttpURLConnection).apply {
-                requestMethod = "POST"
-                connectTimeout = 15000
-                readTimeout = 15000
-                doInput = true
-                doOutput = true
-                setRequestProperty("Content-Type", "application/json; charset=UTF-8")
-                setRequestProperty("Accept", "application/json")
-                setRequestProperty("User-Agent", "KNcloud/${BuildConfig.VERSION_NAME}")
-            }
-
             val requestJson = JsonObject().apply {
                 addProperty("email", email)
                 addProperty("password", password)
             }
 
-            conn.outputStream.use { os ->
-                os.write(requestJson.toString().toByteArray(Charsets.UTF_8))
-                os.flush()
-            }
-
-            val responseCode = conn.responseCode
-            val responseStream: InputStream? = if (responseCode in 200..299) conn.inputStream else conn.errorStream
-            val responseText = responseStream?.use { it.bufferedReader().readText() }.orEmpty()
-            conn.disconnect()
+            val (responseCode, responseText) = panelRequest(
+                loginEndpoint, "POST", 15000, panelHeaders(json = true),
+                requestJson.toString().toByteArray(Charsets.UTF_8)
+            )
 
             val json = JsonUtil.parseString(responseText)
 
@@ -191,20 +233,9 @@ object KNcloudAuthService {
         val subscribeEndpoint = "$domain/api/v1/user/getSubscribe"
 
         try {
-            val url = URL(subscribeEndpoint)
-            val conn = (url.openConnection() as HttpURLConnection).apply {
-                requestMethod = "GET"
-                connectTimeout = 15000
-                readTimeout = 15000
-                setRequestProperty("Authorization", token)
-                setRequestProperty("Accept", "application/json")
-                setRequestProperty("User-Agent", "KNcloud/${BuildConfig.VERSION_NAME}")
-            }
-
-            val responseCode = conn.responseCode
-            val responseStream: InputStream? = if (responseCode in 200..299) conn.inputStream else conn.errorStream
-            val responseText = responseStream?.use { it.bufferedReader().readText() }.orEmpty()
-            conn.disconnect()
+            val (responseCode, responseText) = panelRequest(
+                subscribeEndpoint, "GET", 15000, panelHeaders(token = token)
+            )
 
             val json = JsonUtil.parseString(responseText)
 
@@ -325,20 +356,9 @@ object KNcloudAuthService {
     fun fetchUserInfo(domain: String, token: String): Boolean {
         val endpoint = "$domain/api/v1/user/info"
         try {
-            val url = URL(endpoint)
-            val conn = (url.openConnection() as HttpURLConnection).apply {
-                requestMethod = "GET"
-                connectTimeout = 10000
-                readTimeout = 10000
-                setRequestProperty("Authorization", token)
-                setRequestProperty("Accept", "application/json")
-                setRequestProperty("User-Agent", "KNcloud/${BuildConfig.VERSION_NAME}")
-            }
-
-            val responseCode = conn.responseCode
-            val responseStream: InputStream? = if (responseCode in 200..299) conn.inputStream else conn.errorStream
-            val responseText = responseStream?.use { it.bufferedReader().readText() }.orEmpty()
-            conn.disconnect()
+            val (responseCode, responseText) = panelRequest(
+                endpoint, "GET", 10000, panelHeaders(token = token)
+            )
 
             val json = JsonUtil.parseString(responseText)
             if (responseCode in 200..299 && json != null && json.has("data")) {
