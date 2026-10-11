@@ -256,7 +256,9 @@ data class V2rayConfig(
             )
 
             data class TlsSettingsBean(
-                var allowInsecure: Boolean = false,
+                // Removed in Xray 26.x (a config with it set fails to load); kept only to read old configs.
+                var allowInsecure: Boolean? = null,
+                var pinnedPeerCertSha256: String? = null,
                 var serverName: String? = null,
                 val alpn: List<String>? = null,
                 val minVersion: String? = null,
