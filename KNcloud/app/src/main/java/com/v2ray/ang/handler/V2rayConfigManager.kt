@@ -1258,8 +1258,14 @@ object V2rayConfigManager {
 
         streamSettings.security = if (streamSecurity.isEmpty()) null else streamSecurity
         if (streamSettings.security == null) return
+        // Xray 26.x rejects "allowInsecure"; pin the server's current certificate instead.
+        val pinnedSha256 = if (allowInsecure && streamSettings.security == AppConfig.TLS) {
+            CertPinManager.getLeafSha256(profileItem.server, profileItem.serverPort?.toIntOrNull(), sni)
+        } else {
+            null
+        }
         val tlsSetting = StreamSettingsBean.TlsSettingsBean(
-            allowInsecure = allowInsecure,
+            pinnedPeerCertSha256 = pinnedSha256,
             serverName = if (sni.isNullOrEmpty()) null else sni,
             fingerprint = if (fingerprint.isNullOrEmpty()) null else fingerprint,
             alpn = if (alpns.isNullOrEmpty()) null else alpns.split(",").map { it.trim() }.filter { it.isNotEmpty() },
