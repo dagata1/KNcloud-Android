@@ -291,6 +291,13 @@
                                 android:layout_height="120dp"
                                 android:background="@drawable/bg_connect_outer_circle">
 
+                                <!-- 呼吸光晕：连接中主题色 / 已连接绿色 -->
+                                <com.v2ray.ang.ui.ConnectHaloView
+                                    android:id="@+id/v_connect_halo"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:visibility="invisible" />
+
                                 <!-- Spinning Circular Indicator for Connecting State -->
                                 <com.google.android.material.progressindicator.CircularProgressIndicator
                                     android:id="@+id/cp_connecting"
@@ -324,6 +331,14 @@
                                         android:layout_gravity="center"
                                         android:src="@drawable/ic_power_24dp"
                                         app:tint="@color/connect_btn_idle_icon" />
+
+                                    <!-- 云形描线图标：连接中流光描线，已连接完整点亮 -->
+                                    <com.v2ray.ang.ui.CloudStrokeView
+                                        android:id="@+id/v_connect_cloud"
+                                        android:layout_width="56dp"
+                                        android:layout_height="56dp"
+                                        android:layout_gravity="center"
+                                        android:visibility="gone" />
                                 </FrameLayout>
                             </FrameLayout>
 

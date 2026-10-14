@@ -25,6 +25,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.ColorUtils
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
@@ -498,9 +499,11 @@ class MainActivity : BaseActivity() {
         when (state) {
             ConnectionState.CONNECTING -> {
                 binding.tvConnectionStatus.text = getString(R.string.connect_state_connecting)
+                val accent = ContextCompat.getColor(this, R.color.color_fab_active)
+                val idleBg = ContextCompat.getColor(this, R.color.connect_btn_idle_bg)
                 binding.flConnectOuter.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_idle_ring))
-                binding.btnConnectToggle.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_active_bg))
-                binding.ivConnectIcon.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_active_icon))
+                binding.btnConnectToggle.backgroundTintList = ColorStateList.valueOf(ColorUtils.blendARGB(idleBg, accent, 0.12f))
+                showCloudIcon(CloudStrokeView.Mode.CONNECTING, accent)
 
                 binding.fab.setImageResource(R.drawable.ic_play_24dp)
                 binding.fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_fab_active))
@@ -512,9 +515,9 @@ class MainActivity : BaseActivity() {
                 stopConnectingAnimation()
                 connectingTimeoutJob?.cancel()
                 binding.tvConnectionStatus.text = getString(R.string.connect_state_connected)
-                binding.flConnectOuter.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_active_ring))
-                binding.btnConnectToggle.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_active_bg))
-                binding.ivConnectIcon.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_active_icon))
+                binding.flConnectOuter.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_idle_ring))
+                binding.btnConnectToggle.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_ok_bg))
+                showCloudIcon(CloudStrokeView.Mode.CONNECTED, ContextCompat.getColor(this, R.color.connect_btn_ok))
 
                 binding.fab.setImageResource(R.drawable.ic_stop_24dp)
                 binding.fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_fab_active))
@@ -532,6 +535,7 @@ class MainActivity : BaseActivity() {
                 binding.flConnectOuter.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_idle_ring))
                 binding.btnConnectToggle.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_idle_bg))
                 binding.ivConnectIcon.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_idle_icon))
+                hideCloudIcon()
 
                 binding.fab.setImageResource(R.drawable.ic_play_24dp)
                 binding.fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_fab_inactive))
@@ -541,36 +545,29 @@ class MainActivity : BaseActivity() {
         }
     }
 
+    /** 连接中/已连接：电源图标换成云形描线图标，并显示呼吸光晕（与 Windows 版同一方案） */
+    private fun showCloudIcon(mode: CloudStrokeView.Mode, color: Int) {
+        binding.ivConnectIcon.isVisible = false
+        binding.vConnectCloud.color = color
+        binding.vConnectCloud.isVisible = true
+        binding.vConnectCloud.setMode(mode)
+        binding.vConnectHalo.buttonDiameterPx = binding.btnConnectToggle.width.toFloat()
+        binding.vConnectHalo.show(
+            ColorUtils.setAlphaComponent(color, 0x66),
+            if (mode == CloudStrokeView.Mode.CONNECTING) 2000L else 2400L
+        )
+    }
+
+    private fun hideCloudIcon() {
+        binding.vConnectCloud.setMode(CloudStrokeView.Mode.CONNECTED)
+        binding.vConnectCloud.isVisible = false
+        binding.vConnectHalo.hide()
+        binding.ivConnectIcon.isVisible = true
+    }
+
     private fun startConnectingAnimation() {
+        // 旧的转圈指示与图标呼吸已由云形描线 + 光晕取代
         stopConnectingAnimation()
-
-        // 1. Show and spin the circular progress indicator around the button
-        binding.cpConnecting.isVisible = true
-
-        // 2. Inner Button subtle breathing pulse
-        val innerScaleX = PropertyValuesHolder.ofFloat(View.SCALE_X, 1.0f, 0.95f)
-        val innerScaleY = PropertyValuesHolder.ofFloat(View.SCALE_Y, 1.0f, 0.95f)
-
-        connectingInnerAnimator = ObjectAnimator.ofPropertyValuesHolder(binding.btnConnectToggle, innerScaleX, innerScaleY).apply {
-            duration = 900
-            repeatCount = ValueAnimator.INFINITE
-            repeatMode = ValueAnimator.REVERSE
-            interpolator = AccelerateDecelerateInterpolator()
-            start()
-        }
-
-        // 3. Center Icon breathing transparency and subtle scale
-        val iconAlpha = PropertyValuesHolder.ofFloat(View.ALPHA, 1.0f, 0.6f)
-        val iconScaleX = PropertyValuesHolder.ofFloat(View.SCALE_X, 1.0f, 0.92f)
-        val iconScaleY = PropertyValuesHolder.ofFloat(View.SCALE_Y, 1.0f, 0.92f)
-
-        connectingAlphaAnimator = ObjectAnimator.ofPropertyValuesHolder(binding.ivConnectIcon, iconAlpha, iconScaleX, iconScaleY).apply {
-            duration = 900
-            repeatCount = ValueAnimator.INFINITE
-            repeatMode = ValueAnimator.REVERSE
-            interpolator = AccelerateDecelerateInterpolator()
-            start()
-        }
     }
 
     private fun stopConnectingAnimation() {
