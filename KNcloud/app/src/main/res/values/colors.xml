@@ -81,6 +81,8 @@
     <color name="connect_btn_idle_ring">#EAE9F0</color>
     <color name="connect_btn_active_bg">#f97910</color>
     <color name="connect_btn_active_icon">#FFFFFF</color>
+    <color name="connect_btn_ok">#107C41</color>
+    <color name="connect_btn_ok_bg">#E3F2E9</color>
     <color name="connect_btn_active_ring">#FFE2CC</color>
     <color name="node_selector_bg">#F7F6FA</color>
     <color name="node_selector_stroke">#E5E4E8</color>
