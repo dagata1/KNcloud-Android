@@ -22,12 +22,13 @@ import androidx.core.graphics.PathParser
  * 简易模式连接按钮中的云形图标（与 Windows 版同一方案）：
  * - CONNECTING：一段光束沿云朵轮廓流动描线（周期 1.6s）
  * - CONNECTED ：云朵轮廓完整点亮
+ * - IDLE      ：断开状态，静态灰色云朵轮廓，无光晕
  */
 class CloudStrokeView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyle: Int = 0
 ) : View(context, attrs, defStyle) {
 
-    enum class Mode { CONNECTING, CONNECTED }
+    enum class Mode { CONNECTING, CONNECTED, IDLE }
 
     private val srcPath: Path = PathParser.createPathFromPathData(CLOUD_PATH)
     private val drawPath = Path()
@@ -48,6 +49,10 @@ class CloudStrokeView @JvmOverloads constructor(
         style = Paint.Style.STROKE; strokeCap = Paint.Cap.ROUND; strokeJoin = Paint.Join.ROUND
     }
 
+    private val idlePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE; strokeCap = Paint.Cap.ROUND; strokeJoin = Paint.Join.ROUND
+    }
+
     var color: Int = Color.WHITE
         set(value) { field = value; applyColor(); invalidate() }
 
@@ -60,6 +65,7 @@ class CloudStrokeView @JvmOverloads constructor(
     private fun applyColor() {
         basePaint.color = ColorUtils.setAlphaComponent(color, 46)
         linePaint.color = color
+        idlePaint.color = color
         glowPaint.color = ColorUtils.setAlphaComponent(color, 150)
     }
 
@@ -108,12 +114,17 @@ class CloudStrokeView @JvmOverloads constructor(
         measure.setPath(drawPath, true); length = measure.length
         basePaint.strokeWidth = 1.6f * s
         linePaint.strokeWidth = 2f * s
+        idlePaint.strokeWidth = 1.8f * s
         glowPaint.strokeWidth = 3.2f * s
         glowPaint.maskFilter = BlurMaskFilter(3f * s, BlurMaskFilter.Blur.NORMAL)
     }
 
     override fun onDraw(canvas: Canvas) {
         if (length <= 0f) return
+        if (mode == Mode.IDLE) {
+            canvas.drawPath(drawPath, idlePaint)
+            return
+        }
         if (mode == Mode.CONNECTED) {
             canvas.drawPath(drawPath, glowPaint)
             canvas.drawPath(drawPath, linePaint)

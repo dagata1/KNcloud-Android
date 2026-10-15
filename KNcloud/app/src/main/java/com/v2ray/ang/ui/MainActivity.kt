@@ -534,8 +534,7 @@ class MainActivity : BaseActivity() {
                 binding.tvConnectionStatus.text = getString(R.string.connect_state_idle)
                 binding.flConnectOuter.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_idle_ring))
                 binding.btnConnectToggle.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_idle_bg))
-                binding.ivConnectIcon.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.connect_btn_idle_icon))
-                hideCloudIcon()
+                showIdleCloudIcon(ContextCompat.getColor(this, R.color.connect_btn_idle_icon))
 
                 binding.fab.setImageResource(R.drawable.ic_play_24dp)
                 binding.fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_fab_inactive))
@@ -556,6 +555,15 @@ class MainActivity : BaseActivity() {
             ColorUtils.setAlphaComponent(color, 0x66),
             if (mode == CloudStrokeView.Mode.CONNECTING) 2000L else 2400L
         )
+    }
+
+    /** 断开：静态灰色云形轮廓，无光晕（与 Windows / macOS 版一致） */
+    private fun showIdleCloudIcon(color: Int) {
+        binding.ivConnectIcon.isVisible = false
+        binding.vConnectHalo.hide()
+        binding.vConnectCloud.color = color
+        binding.vConnectCloud.setMode(CloudStrokeView.Mode.IDLE)
+        binding.vConnectCloud.isVisible = true
     }
 
     private fun hideCloudIcon() {
