@@ -408,7 +408,8 @@ class SettingsActivity : BaseActivity() {
             listOf(
                 AppConfig.PREF_SNIFFING_ENABLED,
                 AppConfig.PREF_USE_HEV_TUNNEL,
-                AppConfig.PREF_SIMPLE_MODE
+                AppConfig.PREF_SIMPLE_MODE,
+                AppConfig.PREF_PREFER_IPV6
             ).forEach { key ->
                 findPreference<CheckBoxPreference>(key)?.isChecked =
                     MmkvManager.decodeSettingsBool(key, true)
@@ -422,7 +423,6 @@ class SettingsActivity : BaseActivity() {
                 AppConfig.PREF_CONFIRM_REMOVE,
                 AppConfig.PREF_START_SCAN_IMMEDIATE,
                 AppConfig.PREF_DOUBLE_COLUMN_DISPLAY,
-                AppConfig.PREF_PREFER_IPV6,
                 AppConfig.PREF_PROXY_SHARING,
                 AppConfig.PREF_ALLOW_INSECURE
             ).forEach { key ->

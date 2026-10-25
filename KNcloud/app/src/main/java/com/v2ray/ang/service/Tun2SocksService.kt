@@ -47,7 +47,7 @@ class Tun2SocksService(
             "--loglevel", "notice"
         )
 
-        if (MmkvManager.decodeSettingsBool(AppConfig.PREF_PREFER_IPV6)) {
+        if (MmkvManager.decodeSettingsBool(AppConfig.PREF_PREFER_IPV6, true)) {
             cmd.add("--netif-ip6addr")
             cmd.add(vpnConfig.ipv6Router)
         }
