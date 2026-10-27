@@ -477,4 +477,8 @@
         <item quantity="other">in %d days</item>
     </plurals>
     <string name="toast_vpn_permission_required">VPN permission required. Open KNcloud to grant it.</string>
+    <string name="vpn_permission_denied_title">VPN permission not granted</string>
+    <string name="vpn_permission_denied_message">KNcloud needs VPN permission to connect. Tap connect again and choose OK in the system dialog.</string>
+    <string name="vpn_permission_blocked_message">The system blocked the VPN permission dialog. Check that no other app is set as Always-on VPN and that VPN is not restricted, then try again.</string>
+    <string name="vpn_permission_open_settings">Open VPN settings</string>
 </resources>
