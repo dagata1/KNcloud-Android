@@ -71,6 +71,7 @@ class LoginActivity : BaseActivity() {
         binding.btnWebAuth.setOnClickListener {
             val domain = MmkvManager.getApiDomain()
             val authUrl = "$domain/#/login?from=app_auth"
+            MmkvManager.markWebAuthStarted()
             Utils.openUri(this, authUrl)
         }
 

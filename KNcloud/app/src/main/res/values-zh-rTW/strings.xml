@@ -462,4 +462,8 @@
         <item quantity="other">%d 天</item>
     </plurals>
     <string name="toast_vpn_permission_required">需要 VPN 權限，請開啟 KNcloud 授權</string>
+    <string name="vpn_permission_denied_title">未取得 VPN 權限</string>
+    <string name="vpn_permission_denied_message">KNcloud 需要 VPN 權限才能連線，請再次點擊連線並在系統彈窗中選擇「確定」。</string>
+    <string name="vpn_permission_blocked_message">系統沒有彈出 VPN 授權框。請在系統 VPN 設定中確認沒有其他應用開啟「永久連線 VPN」，然後重試。</string>
+    <string name="vpn_permission_open_settings">開啟 VPN 設定</string>
 </resources>

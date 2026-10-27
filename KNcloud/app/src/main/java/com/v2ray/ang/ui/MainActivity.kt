@@ -64,18 +64,57 @@ class MainActivity : BaseActivity() {
         ActivityMainBinding.inflate(layoutInflater)
     }
 
+    // 主页卡片在平板横屏下限宽居中
+    override val maxContentWidthDp: Int = 640
+
     private val adapter by lazy { MainRecyclerAdapter(this) }
     private var mItemTouchHelper: ItemTouchHelper? = null
 
     // 授权成功后是否立即连接：点连接按钮 / 快捷开关进入时为 true，首次进入主页预先授权时为 false
     private var connectAfterVpnGrant = true
 
+    private var vpnPermissionLaunchedAt = 0L
+
     private val requestVpnPermission = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
         val shouldConnect = connectAfterVpnGrant
         connectAfterVpnGrant = true
-        if (it.resultCode == RESULT_OK && shouldConnect) {
-            startV2RayWithConnectingState()
+        val granted = it.resultCode == RESULT_OK || VpnService.prepare(this) == null
+        Log.i(AppConfig.TAG, "VPN permission result=${it.resultCode} granted=$granted")
+        if (granted) {
+            if (shouldConnect) startV2RayWithConnectingState()
+        } else if (shouldConnect) {
+            setConnectionState(ConnectionState.DISCONNECTED)
+            // 系统授权框被拦截（瞬间返回）或用户拒绝：给出提示，并可跳转系统 VPN 设置
+            val instant = System.currentTimeMillis() - vpnPermissionLaunchedAt < 800L
+            showVpnPermissionDeniedDialog(instant)
         }
+    }
+
+    private fun launchVpnPermission(prepareIntent: Intent, connect: Boolean) {
+        connectAfterVpnGrant = connect
+        vpnPermissionLaunchedAt = System.currentTimeMillis()
+        try {
+            requestVpnPermission.launch(prepareIntent)
+        } catch (e: Exception) {
+            connectAfterVpnGrant = true
+            Log.e(AppConfig.TAG, "Failed to launch VPN permission dialog", e)
+            if (connect) showVpnPermissionDeniedDialog(true)
+        }
+    }
+
+    private fun showVpnPermissionDeniedDialog(blockedBySystem: Boolean) {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.vpn_permission_denied_title)
+            .setMessage(if (blockedBySystem) R.string.vpn_permission_blocked_message else R.string.vpn_permission_denied_message)
+            .setPositiveButton(R.string.vpn_permission_open_settings) { _, _ ->
+                try {
+                    startActivity(Intent(android.provider.Settings.ACTION_VPN_SETTINGS))
+                } catch (e: Exception) {
+                    startActivity(Intent(android.provider.Settings.ACTION_WIRELESS_SETTINGS))
+                }
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
     }
 
     val mainViewModel: MainViewModel by viewModels()
@@ -276,15 +315,14 @@ class MainActivity : BaseActivity() {
         if (connectionState == ConnectionState.CONNECTING || connectionState == ConnectionState.CONNECTED || mainViewModel.isRunning.value == true) {
             setConnectionState(ConnectionState.DISCONNECTED)
             V2RayServiceManager.stopVService(this)
-        } else if (mainViewModel.serversCache.isEmpty() || MmkvManager.getSelectServer().isNullOrEmpty()) {
+        } else if (!ensureServerSelected()) {
             toast(R.string.title_file_chooser)
         } else if ((MmkvManager.decodeSettingsString(AppConfig.PREF_MODE) ?: VPN) == VPN) {
             val intent = VpnService.prepare(this)
             if (intent == null) {
                 startV2RayWithConnectingState()
             } else {
-                connectAfterVpnGrant = true
-                requestVpnPermission.launch(intent)
+                launchVpnPermission(intent, connect = true)
             }
         } else {
             startV2RayWithConnectingState()
@@ -311,8 +349,7 @@ class MainActivity : BaseActivity() {
         if (prepareIntent == null) {
             startV2RayWithConnectingState()
         } else {
-            connectAfterVpnGrant = true
-            requestVpnPermission.launch(prepareIntent)
+            launchVpnPermission(prepareIntent, connect = true)
         }
         return true
     }
@@ -325,13 +362,23 @@ class MainActivity : BaseActivity() {
         if ((MmkvManager.decodeSettingsString(AppConfig.PREF_MODE) ?: VPN) != VPN) return
         MmkvManager.encodeSettings(AppConfig.PREF_VPN_PERMISSION_PROMPTED, true)
         val prepareIntent = VpnService.prepare(this) ?: return
-        connectAfterVpnGrant = false
-        try {
-            requestVpnPermission.launch(prepareIntent)
-        } catch (e: Exception) {
-            connectAfterVpnGrant = true
-            Log.e(AppConfig.TAG, "Failed to request VPN permission", e)
+        launchVpnPermission(prepareIntent, connect = false)
+    }
+
+    /**
+     * 登录后订阅刚导入时列表缓存可能还没刷新、或没有选中节点：重新加载并默认选第一个。
+     */
+    private fun ensureServerSelected(): Boolean {
+        if (mainViewModel.serversCache.isEmpty()) {
+            mainViewModel.reloadServerList()
         }
+        if (mainViewModel.serversCache.isEmpty()) return false
+        val selected = MmkvManager.getSelectServer()
+        if (selected.isNullOrEmpty() || mainViewModel.serversCache.none { it.guid == selected }) {
+            MmkvManager.setSelectServer(mainViewModel.serversCache.first().guid)
+            updateSelectedNodeUI()
+        }
+        return true
     }
 
     private fun startConnectingTimeout() {

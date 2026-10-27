@@ -565,6 +565,25 @@ object MmkvManager {
      * @param key The settings key.
      * @return The settings value.
      */
+    private const val KEY_WEB_AUTH_STARTED_AT = "web_auth_started_at"
+    private const val WEB_AUTH_VALID_MS = 15 * 60 * 1000L
+
+    /** 记录用户在 App 内点击了“官网授权登录”。 */
+    fun markWebAuthStarted() {
+        settingsStorage.encode(KEY_WEB_AUTH_STARTED_AT, System.currentTimeMillis())
+    }
+
+    /**
+     * 是否为 App 自己发起的官网授权回调（15 分钟内有效，一次性）。
+     * 是则跳过确认弹窗直接登录；外部网页直接拉起的链接仍需确认。
+     */
+    fun consumeWebAuthStarted(): Boolean {
+        val startedAt = settingsStorage.decodeLong(KEY_WEB_AUTH_STARTED_AT, 0L)
+        settingsStorage.removeValueForKey(KEY_WEB_AUTH_STARTED_AT)
+        val elapsed = System.currentTimeMillis() - startedAt
+        return startedAt > 0L && elapsed in 0..WEB_AUTH_VALID_MS
+    }
+
     fun decodeSettingsBool(key: String): Boolean {
         return settingsStorage.decodeBool(key, false)
     }

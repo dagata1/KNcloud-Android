@@ -118,6 +118,12 @@ class UrlSchemeActivity : BaseActivity() {
         // A fallback subscription URL is only used when it lives on a trusted host
         val directSubUrl = directSubUrlParam?.takeIf { TrustedDomain.isTrustedUrl(it, extraHosts) }
 
+        // 从 App 内点“官网授权登录”跳转回来的，直接登录，不再弹确认框
+        if (MmkvManager.consumeWebAuthStarted()) {
+            performOneClickLogin(token, email, domain, directSubUrl)
+            return
+        }
+
         val host = TrustedDomain.hostOf(domain).orEmpty()
         val account = email.ifBlank { getString(R.string.login_confirm_unknown_account) }
         AlertDialog.Builder(this)
