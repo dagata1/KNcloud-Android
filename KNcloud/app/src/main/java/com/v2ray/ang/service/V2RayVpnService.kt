@@ -126,6 +126,9 @@ class V2RayVpnService : VpnService(), ServiceControl {
     private fun setupService() {
         val prepare = prepare(this)
         if (prepare != null) {
+            // VPN 权限缺失：停止已启动的内核，避免显示"已连接"但没有 TUN
+            Log.w(AppConfig.TAG, "VPN permission missing, stopping service")
+            stopV2Ray()
             return
         }
 
