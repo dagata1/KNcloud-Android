@@ -465,12 +465,5 @@
         <item quantity="one">%d 天</item>
         <item quantity="other">%d 天</item>
     </plurals>
-    <string name="login_brand_title">畅连全球\n稳定 · 快速 · 安全</string>
     <string name="login_brand_desc">一个账号，多端同步你的订阅与节点</string>
-    <string name="login_feat_nodes">全球优质节点</string>
-    <string name="login_feat_nodes_desc">多地区低延迟线路，随时切换</string>
-    <string name="login_feat_split">智能分流</string>
-    <string name="login_feat_split_desc">国内网站直连，海外流量走代理</string>
-    <string name="login_feat_secure">加密传输</string>
-    <string name="login_feat_secure_desc">全程采用现代加密协议</string>
 </resources>

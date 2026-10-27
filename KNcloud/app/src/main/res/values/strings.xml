@@ -476,12 +476,5 @@
         <item quantity="one">in %d day</item>
         <item quantity="other">in %d days</item>
     </plurals>
-    <string name="login_brand_title">Fast, stable and secure,\nconnected everywhere</string>
     <string name="login_brand_desc">One account, subscription and nodes synced on every device</string>
-    <string name="login_feat_nodes">Premium global nodes</string>
-    <string name="login_feat_nodes_desc">Low-latency routes across many regions</string>
-    <string name="login_feat_split">Smart routing</string>
-    <string name="login_feat_split_desc">Domestic sites go direct, the rest through the proxy</string>
-    <string name="login_feat_secure">Encrypted transport</string>
-    <string name="login_feat_secure_desc">Modern encrypted protocols on every connection</string>
 </resources>

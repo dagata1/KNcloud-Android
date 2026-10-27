@@ -461,12 +461,5 @@
         <item quantity="one">%d 天</item>
         <item quantity="other">%d 天</item>
     </plurals>
-    <string name="login_brand_title">暢連全球\n穩定 · 快速 · 安全</string>
     <string name="login_brand_desc">一個帳號，多端同步你的訂閱與節點</string>
-    <string name="login_feat_nodes">全球優質節點</string>
-    <string name="login_feat_nodes_desc">多地區低延遲線路，隨時切換</string>
-    <string name="login_feat_split">智慧分流</string>
-    <string name="login_feat_split_desc">國內網站直連，海外流量走代理</string>
-    <string name="login_feat_secure">加密傳輸</string>
-    <string name="login_feat_secure_desc">全程採用現代加密協定</string>
 </resources>
