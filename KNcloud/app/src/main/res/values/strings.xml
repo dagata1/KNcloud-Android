@@ -476,4 +476,5 @@
         <item quantity="one">in %d day</item>
         <item quantity="other">in %d days</item>
     </plurals>
+    <string name="toast_vpn_permission_required">VPN permission required. Open KNcloud to grant it.</string>
 </resources>

@@ -7,15 +7,28 @@
     android:fillViewport="true"
     android:fitsSystemWindows="true">
 
-    <LinearLayout
+    <!-- 平板/横屏：内容列限宽 440dp 并居中，不再横向拉伸铺满 -->
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="28dp"
+        android:paddingTop="48dp"
+        android:paddingEnd="28dp"
+        android:paddingBottom="48dp">
+
+    <LinearLayout
+        android:id="@+id/login_column"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:gravity="center"
         android:orientation="vertical"
-        android:paddingStart="32dp"
-        android:paddingTop="80dp"
-        android:paddingEnd="32dp"
-        android:paddingBottom="48dp">
+        app:layout_constrainedWidth="true"
+        app:layout_constraintWidth_max="440dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintVertical_bias="0.42">
 
         <!-- Logo & Branding -->
         <ImageView
@@ -184,5 +197,7 @@
         </LinearLayout>
 
     </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </ScrollView>

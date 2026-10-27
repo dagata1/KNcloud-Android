@@ -1,5 +1,7 @@
 package com.v2ray.ang.service
 
+import android.annotation.SuppressLint
+import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -78,12 +80,38 @@ class QSTileService : TileService() {
         super.onClick()
         when (qsTile.state) {
             Tile.STATE_INACTIVE -> {
-                V2RayServiceManager.startVServiceFromToggle(this)
+                if (V2RayServiceManager.needsVpnPermission(this)) {
+                    openAppForVpnPermission()
+                } else {
+                    V2RayServiceManager.startVServiceFromToggle(this)
+                }
             }
 
             Tile.STATE_ACTIVE -> {
                 V2RayServiceManager.stopVService(this)
             }
+        }
+    }
+
+    /**
+     * 未授予 VPN 权限时收起通知栏并打开 App 请求授权，授权后自动连接。
+     */
+    @SuppressLint("StartActivityAndCollapseDeprecated")
+    private fun openAppForVpnPermission() {
+        val intent = V2RayServiceManager.vpnPermissionIntent(this)
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                val pendingIntent = PendingIntent.getActivity(
+                    this, 0, intent,
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                )
+                startActivityAndCollapse(pendingIntent)
+            } else {
+                @Suppress("DEPRECATION")
+                startActivityAndCollapse(intent)
+            }
+        } catch (e: Exception) {
+            Log.e(AppConfig.TAG, "Failed to open app for VPN permission", e)
         }
     }
 

@@ -61,6 +61,8 @@ object AppConfig {
     const val PREF_OUTBOUND_DOMAIN_RESOLVE_METHOD = "pref_outbound_domain_resolve_method"
     const val PREF_INTELLIGENT_SELECTION_METHOD = "pref_intelligent_selection_method"
     const val PREF_MODE = "pref_mode"
+    const val PREF_VPN_PERMISSION_PROMPTED = "pref_vpn_permission_prompted"
+    const val EXTRA_CONNECT_AFTER_VPN_GRANT = "extra_connect_after_vpn_grant"
     const val PREF_IS_BOOTED = "pref_is_booted"
     const val PREF_CHECK_UPDATE_PRE_RELEASE = "pref_check_update_pre_release"
     const val PREF_LAST_AUTO_UPDATE_CHECK = "pref_last_auto_update_check"

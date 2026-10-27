@@ -67,8 +67,13 @@ class MainActivity : BaseActivity() {
     private val adapter by lazy { MainRecyclerAdapter(this) }
     private var mItemTouchHelper: ItemTouchHelper? = null
 
+    // 授权成功后是否立即连接：点连接按钮 / 快捷开关进入时为 true，首次进入主页预先授权时为 false
+    private var connectAfterVpnGrant = true
+
     private val requestVpnPermission = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-        if (it.resultCode == RESULT_OK) {
+        val shouldConnect = connectAfterVpnGrant
+        connectAfterVpnGrant = true
+        if (it.resultCode == RESULT_OK && shouldConnect) {
             startV2RayWithConnectingState()
         }
     }
@@ -110,10 +115,15 @@ class MainActivity : BaseActivity() {
                     Action.POST_NOTIFICATIONS -> {}
                     else -> {}
                 }
-            } else {
+            } else if (pendingAction != Action.POST_NOTIFICATIONS) {
                 toast(R.string.toast_permission_denied)
             }
+            val wasNotificationRequest = pendingAction == Action.POST_NOTIFICATIONS
             pendingAction = Action.NONE
+            if (wasNotificationRequest) {
+                // 通知权限弹窗结束后再请求 VPN 权限，避免两个系统弹窗叠在一起
+                requestVpnPermissionOnFirstLaunch()
+            }
         }
 
     private var pendingAction: Action = Action.NONE
@@ -240,11 +250,16 @@ class MainActivity : BaseActivity() {
         migrateLegacy()
         autoTestAllRealPing()
 
+        var waitingNotificationPermission = false
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
                 pendingAction = Action.POST_NOTIFICATIONS
                 requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                waitingNotificationPermission = true
             }
+        }
+        if (!handleVpnPermissionIntent(intent) && !waitingNotificationPermission) {
+            requestVpnPermissionOnFirstLaunch()
         }
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
@@ -268,10 +283,54 @@ class MainActivity : BaseActivity() {
             if (intent == null) {
                 startV2RayWithConnectingState()
             } else {
+                connectAfterVpnGrant = true
                 requestVpnPermission.launch(intent)
             }
         } else {
             startV2RayWithConnectingState()
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleVpnPermissionIntent(intent)
+    }
+
+    /**
+     * 快捷开关 / 桌面小组件在没有 VPN 权限时会打开主页并带上此标记：请求授权，授权后自动连接。
+     * @return 是否处理了该请求
+     */
+    private fun handleVpnPermissionIntent(intent: Intent?): Boolean {
+        if (intent?.getBooleanExtra(AppConfig.EXTRA_CONNECT_AFTER_VPN_GRANT, false) != true) return false
+        intent.removeExtra(AppConfig.EXTRA_CONNECT_AFTER_VPN_GRANT)
+        if (connectionState != ConnectionState.DISCONNECTED || mainViewModel.isRunning.value == true) return true
+        if (MmkvManager.getSelectServer().isNullOrEmpty()) return true
+        MmkvManager.encodeSettings(AppConfig.PREF_VPN_PERMISSION_PROMPTED, true)
+        val prepareIntent = VpnService.prepare(this)
+        if (prepareIntent == null) {
+            startV2RayWithConnectingState()
+        } else {
+            connectAfterVpnGrant = true
+            requestVpnPermission.launch(prepareIntent)
+        }
+        return true
+    }
+
+    /**
+     * 登录后首次进入主页时主动请求一次 VPN 权限（仅授权，不自动连接）。
+     */
+    private fun requestVpnPermissionOnFirstLaunch() {
+        if (MmkvManager.decodeSettingsBool(AppConfig.PREF_VPN_PERMISSION_PROMPTED, false)) return
+        if ((MmkvManager.decodeSettingsString(AppConfig.PREF_MODE) ?: VPN) != VPN) return
+        MmkvManager.encodeSettings(AppConfig.PREF_VPN_PERMISSION_PROMPTED, true)
+        val prepareIntent = VpnService.prepare(this) ?: return
+        connectAfterVpnGrant = false
+        try {
+            requestVpnPermission.launch(prepareIntent)
+        } catch (e: Exception) {
+            connectAfterVpnGrant = true
+            Log.e(AppConfig.TAG, "Failed to request VPN permission", e)
         }
     }
 

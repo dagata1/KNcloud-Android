@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.net.VpnService
 import android.os.Build
 import android.util.Log
 import androidx.core.content.ContextCompat
@@ -16,6 +17,7 @@ import com.v2ray.ang.extension.toast
 import com.v2ray.ang.service.ServiceControl
 import com.v2ray.ang.service.V2RayProxyOnlyService
 import com.v2ray.ang.service.V2RayVpnService
+import com.v2ray.ang.ui.MainActivity
 import com.v2ray.ang.util.MessageUtil
 import com.v2ray.ang.handler.PluginServiceManager
 import com.v2ray.ang.util.Utils
@@ -62,6 +64,16 @@ object V2RayServiceManager {
             context.toast(R.string.app_tile_first_use)
             return false
         }
+        if (needsVpnPermission(context)) {
+            // 尚未授予 VPN 权限：打开 App 弹出系统授权，授权后自动连接
+            try {
+                context.startActivity(vpnPermissionIntent(context))
+            } catch (e: Exception) {
+                Log.w(AppConfig.TAG, "Cannot open app for VPN permission", e)
+                context.toast(R.string.toast_vpn_permission_required)
+            }
+            return false
+        }
         startContextService(context)
         return true
     }
@@ -71,6 +83,22 @@ object V2RayServiceManager {
      * @param context The context from which the service is started.
      * @param guid The GUID of the server configuration to use (optional).
      */
+    /**
+     * VPN 模式下系统尚未授予（或已被其他 VPN 应用收回）VPN 权限。
+     */
+    fun needsVpnPermission(context: Context): Boolean {
+        val isVpnMode = (MmkvManager.decodeSettingsString(AppConfig.PREF_MODE) ?: AppConfig.VPN) == AppConfig.VPN
+        return isVpnMode && VpnService.prepare(context) != null
+    }
+
+    /**
+     * 打开主界面请求 VPN 权限，授权成功后自动连接。
+     */
+    fun vpnPermissionIntent(context: Context): Intent =
+        Intent(context.applicationContext, MainActivity::class.java)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            .putExtra(AppConfig.EXTRA_CONNECT_AFTER_VPN_GRANT, true)
+
     fun startVService(context: Context, guid: String? = null) {
         if (guid != null) {
             MmkvManager.setSelectServer(guid)
@@ -115,6 +143,12 @@ object V2RayServiceManager {
         ) return
 //        val result = V2rayConfigUtil.getV2rayConfig(context, guid)
 //        if (!result.status) return
+
+        if (needsVpnPermission(context)) {
+            // 没有 VPN 权限时不启动服务（开机自启 / Tasker 等后台入口无法弹授权）
+            Log.w(AppConfig.TAG, "VPN permission not granted, skip starting service")
+            return
+        }
 
         if (MmkvManager.decodeSettingsBool(AppConfig.PREF_PROXY_SHARING) == true) {
             context.toast(R.string.toast_warning_pref_proxysharing_short)
