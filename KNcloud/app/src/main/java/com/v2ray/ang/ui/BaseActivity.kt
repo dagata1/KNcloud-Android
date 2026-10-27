@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import android.view.MenuItem
+import android.view.View
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -32,6 +33,31 @@ abstract class BaseActivity : AppCompatActivity() {
             WindowCompat.getInsetsController(window, window.decorView).apply {
                 isAppearanceLightStatusBars = true
             }
+        }
+    }
+
+    /**
+     * 平板 / 横屏等宽屏下内容区的最大宽度（dp），超出部分两侧留白居中，避免界面被横向拉伸。
+     * 返回 0 表示不限制。
+     */
+    protected open val maxContentWidthDp: Int = 840
+
+    override fun onPostCreate(savedInstanceState: Bundle?) {
+        super.onPostCreate(savedInstanceState)
+        val content = findViewById<View>(android.R.id.content) ?: return
+        if (maxContentWidthDp <= 0) return
+        content.addOnLayoutChangeListener { v, left, _, right, _, _, _, _, _ ->
+            applyCenteredContentPadding(v, right - left)
+        }
+        applyCenteredContentPadding(content, content.width)
+    }
+
+    private fun applyCenteredContentPadding(content: View, width: Int) {
+        if (width <= 0) return
+        val maxPx = (maxContentWidthDp * resources.displayMetrics.density).toInt()
+        val side = ((width - maxPx) / 2).coerceAtLeast(0)
+        if (content.paddingLeft != side || content.paddingRight != side) {
+            content.post { content.setPadding(side, content.paddingTop, side, content.paddingBottom) }
         }
     }
 

@@ -64,6 +64,9 @@ class MainActivity : BaseActivity() {
         ActivityMainBinding.inflate(layoutInflater)
     }
 
+    // 主页卡片在平板横屏下限宽居中
+    override val maxContentWidthDp: Int = 640
+
     private val adapter by lazy { MainRecyclerAdapter(this) }
     private var mItemTouchHelper: ItemTouchHelper? = null
 
