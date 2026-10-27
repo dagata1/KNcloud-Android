@@ -461,5 +461,4 @@
         <item quantity="one">%d 天</item>
         <item quantity="other">%d 天</item>
     </plurals>
-    <string name="login_brand_desc">一個帳號，多端同步你的訂閱與節點</string>
 </resources>

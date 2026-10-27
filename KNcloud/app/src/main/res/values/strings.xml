@@ -476,5 +476,4 @@
         <item quantity="one">in %d day</item>
         <item quantity="other">in %d days</item>
     </plurals>
-    <string name="login_brand_desc">One account, subscription and nodes synced on every device</string>
 </resources>
