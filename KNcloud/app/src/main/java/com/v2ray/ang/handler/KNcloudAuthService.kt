@@ -7,6 +7,8 @@ import com.v2ray.ang.AppConfig
 import com.v2ray.ang.BuildConfig
 import com.v2ray.ang.dto.SubscriptionInfo
 import com.v2ray.ang.dto.SubscriptionItem
+import com.v2ray.ang.handler.boot.BootNodeConfig
+import com.v2ray.ang.handler.boot.BootProxy
 import com.v2ray.ang.util.JsonUtil
 import com.v2ray.ang.util.Utils
 import java.io.IOException
@@ -18,6 +20,16 @@ import java.net.URL
 
 object KNcloudAuthService {
 
+    private const val DIRECT = "direct"
+    private const val LOCAL_PROXY = "via local proxy"
+    private const val BOOT = "via login bootstrap"
+
+    /**
+     * Runs one login / subscription flow; the login bootstrap proxy, if a panel call in it had to
+     * start it, is stopped when the flow ends.
+     */
+    fun <T> bootSession(block: () -> T): T = BootProxy.session(block)
+
     /** Status code and body text of a panel API response (HTTP errors included). */
     private data class PanelResponse(val code: Int, val text: String)
 
@@ -26,7 +38,9 @@ object KNcloudAuthService {
      * HttpURLConnection always goes direct; on networks where the panel domain is slow/blocked
      * directly that times out. When the core is running we therefore go through the local HTTP
      * proxy first and fall back to a direct connection once; when it is not running we go direct
-     * with one retry. Only connection-level failures (IOException: timeout, refused, reset...)
+     * once and then retry through the login bootstrap proxy (127.0.0.1, no VPN involved), or
+     * direct again when no bootstrap node is configured. Once the bootstrap proxy is running
+     * (direct already failed in this flow) it is tried first. Only connection-level failures (IOException: timeout, refused, reset...)
      * trigger the next attempt; any HTTP response, including 401/403/5xx, is returned as is.
      * Throws the last IOException if every attempt fails.
      */
@@ -37,13 +51,29 @@ object KNcloudAuthService {
         headers: Map<String, String>,
         body: ByteArray? = null
     ): PanelResponse {
-        val proxies: List<Proxy?> = if (V2RayServiceManager.isRunning()) {
-            listOf(Proxy(Proxy.Type.HTTP, InetSocketAddress(AppConfig.LOOPBACK, SettingsManager.getHttpPort())), null)
-        } else {
-            listOf(null, null)
+        val vpnRunning = V2RayServiceManager.isRunning()
+        // Attempts: null = direct, LOCAL_PROXY = the running core's HTTP inbound, BOOT = login
+        // bootstrap proxy (only when the VPN is off; started lazily, see handler/boot/BootProxy).
+        val attempts: List<String> = when {
+            vpnRunning -> listOf(LOCAL_PROXY, DIRECT)
+            BootProxy.runningPort() > 0 -> listOf(BOOT, DIRECT)
+            BootNodeConfig.enabled -> listOf(DIRECT, BOOT)
+            else -> listOf(DIRECT, DIRECT)
         }
         var lastError: IOException? = null
-        for (proxy in proxies) {
+        for (attempt in attempts) {
+            val proxy: Proxy? = when (attempt) {
+                LOCAL_PROXY -> Proxy(Proxy.Type.HTTP, InetSocketAddress(AppConfig.LOOPBACK, SettingsManager.getHttpPort()))
+                BOOT -> {
+                    val port = BootProxy.ensureStarted()
+                    if (port <= 0) {
+                        if (lastError == null) lastError = IOException("login bootstrap unavailable")
+                        continue
+                    }
+                    Proxy(Proxy.Type.HTTP, InetSocketAddress(AppConfig.LOOPBACK, port))
+                }
+                else -> null
+            }
             var conn: HttpURLConnection? = null
             try {
                 val url = URL(urlStr)
@@ -64,10 +94,11 @@ object KNcloudAuthService {
                 val responseCode = c.responseCode
                 val responseStream: InputStream? = if (responseCode in 200..299) c.inputStream else c.errorStream
                 val responseText = responseStream?.use { it.bufferedReader().readText() }.orEmpty()
+                if (attempt == BOOT) Log.i(AppConfig.TAG, "Panel request via login bootstrap node: $urlStr")
                 return PanelResponse(responseCode, responseText)
             } catch (e: IOException) {
                 lastError = e
-                Log.w(AppConfig.TAG, "Panel request ${if (proxy != null) "via proxy" else "direct"} failed: $urlStr: ${e.message}")
+                Log.w(AppConfig.TAG, "Panel request $attempt failed: $urlStr: ${e.message}")
             } finally {
                 conn?.disconnect()
             }
@@ -469,6 +500,10 @@ object KNcloudAuthService {
     fun refreshDynamicSubscription(): Int {
         if (!MmkvManager.isUserLoggedIn()) return 0
         val token = MmkvManager.getUserToken() ?: return 0
+        return bootSession { refreshDynamicSubscriptionInner(token) }
+    }
+
+    private fun refreshDynamicSubscriptionInner(token: String): Int {
         return try {
             val dynamicDomain = fetchDynamicDomain()
             val subResult = getSubscribeUrl(dynamicDomain, token)

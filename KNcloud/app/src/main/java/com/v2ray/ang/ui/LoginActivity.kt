@@ -110,8 +110,26 @@ class LoginActivity : BaseActivity() {
         setLoading(true)
 
         lifecycleScope.launch(Dispatchers.IO) {
-            // 1. Perform Login
-            val loginResult = KNcloudAuthService.login(email, password)
+            // Login bootstrap (if a call has to use it) stays up for the whole flow and is stopped
+            // at its end: login -> getSubscribe -> user info -> subscription download.
+            val loginResult = KNcloudAuthService.bootSession {
+                // 1. Perform Login
+                val loginResult = KNcloudAuthService.login(email, password)
+                if (loginResult.success && !loginResult.token.isNullOrBlank()) {
+                    lifecycleScope.launch(Dispatchers.Main) { toast(R.string.login_fetching_sub) }
+
+                    // 2. Fetch Subscription URL & Metadata
+                    val subResult = KNcloudAuthService.getSubscribeUrl(loginResult.domain, loginResult.token)
+                    if (subResult.planName.isNullOrBlank()) {
+                        KNcloudAuthService.fetchUserInfo(loginResult.domain, loginResult.token)
+                    }
+                    if (subResult.success && !subResult.subscribeUrl.isNullOrBlank()) {
+                        // 3. Import & sync subscription nodes
+                        KNcloudAuthService.importAndSyncSubscription(subResult.subscribeUrl)
+                    }
+                }
+                loginResult
+            }
 
             if (!loginResult.success || loginResult.token.isNullOrBlank()) {
                 withContext(Dispatchers.Main) {
@@ -119,20 +137,6 @@ class LoginActivity : BaseActivity() {
                     toastError(loginResult.message ?: getString(R.string.login_failed))
                 }
                 return@launch
-            }
-
-            withContext(Dispatchers.Main) {
-                toast(R.string.login_fetching_sub)
-            }
-
-            // 2. Fetch Subscription URL & Metadata
-            val subResult = KNcloudAuthService.getSubscribeUrl(loginResult.domain, loginResult.token)
-            if (subResult.planName.isNullOrBlank()) {
-                KNcloudAuthService.fetchUserInfo(loginResult.domain, loginResult.token)
-            }
-            if (subResult.success && !subResult.subscribeUrl.isNullOrBlank()) {
-                // 3. Import & sync subscription nodes
-                KNcloudAuthService.importAndSyncSubscription(subResult.subscribeUrl)
             }
 
             withContext(Dispatchers.Main) {

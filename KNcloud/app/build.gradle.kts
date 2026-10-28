@@ -12,8 +12,8 @@ android {
         applicationId = "top.kncloud.com"
         minSdk = 24
         targetSdk = 35
-        versionCode = 724
-        versionName = "1.10.72"
+        versionCode = 725
+        versionName = "1.10.73"
         multiDexEnabled = true
 
         val abiFilterList = (properties["ABI_FILTERS"] as? String)?.split(';')
@@ -36,6 +36,16 @@ android {
         }
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Login bootstrap node (handler/boot/BootProxy.kt): used only for the app's own panel API
+        // calls when the official site is unreachable directly and the VPN is off. The account is
+        // in its own panel group and the node only allows *.kncloud.top:443 (route 「仅允许」).
+        // Empty password disables the feature.
+        buildConfigField("String", "BOOT_NODE_HOST", "\"sea1.kncloud.top\"")
+        buildConfigField("String", "BOOT_NODE_IPV6", "\"2603:c022:8017:5aee:f8da:150d:efc:6f96\"")
+        buildConfigField("int", "BOOT_NODE_PORT", "3456")
+        buildConfigField("String", "BOOT_NODE_METHOD", "\"chacha20-ietf-poly1305\"")
+        buildConfigField("String", "BOOT_NODE_PASSWORD", "\"ecd6b75b-b7ff-45f7-941e-b585bdb5b8e4\"")
     }
 
     // Release signing is done in CI with apksigner (key rotation lineage in /signing).
@@ -88,6 +98,11 @@ android {
     buildFeatures {
         viewBinding = true
         buildConfig = true
+    }
+
+    testOptions {
+        // android.util.Log etc. return defaults in JVM unit tests (handler/boot tests log)
+        unitTests.isReturnDefaultValues = true
     }
 
     packaging {
