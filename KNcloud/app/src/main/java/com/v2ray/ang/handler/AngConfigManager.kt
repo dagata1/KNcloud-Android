@@ -12,6 +12,7 @@ import com.v2ray.ang.dto.ProfileItem
 import com.v2ray.ang.dto.SubscriptionInfo
 import com.v2ray.ang.dto.SubscriptionItem
 import com.v2ray.ang.fmt.CustomFmt
+import com.v2ray.ang.handler.boot.BootProxy
 import com.v2ray.ang.fmt.AnytlsFmt
 import com.v2ray.ang.fmt.Hysteria2Fmt
 import com.v2ray.ang.fmt.ShadowsocksFmt
@@ -581,6 +582,19 @@ object AngConfigManager {
                 } catch (e: Exception) {
                     Log.e(AppConfig.TAG, "Update subscription: Failed to get URL content with user agent", e)
                     null
+                }
+            }
+            if ((response == null || response.content.isEmpty()) && !V2RayServiceManager.isRunning()) {
+                // Login bootstrap: only while a login / refresh flow already had to start it
+                // (panel unreachable directly). The node only serves *.kncloud.top.
+                val bootPort = BootProxy.runningPort()
+                if (bootPort > 0 && BootProxy.defaultAllow(java.net.URL(url).host)) {
+                    response = try {
+                        HttpUtil.getUrlResponseWithUserAgent(url, userAgent, 15000, bootPort)
+                    } catch (e: Exception) {
+                        Log.e(AppConfig.TAG, "Update subscription via login bootstrap failed", e)
+                        null
+                    }
                 }
             }
             if (response == null || response.content.isEmpty()) {

@@ -276,9 +276,12 @@ class RegisterWebActivity : BaseActivity() {
                 toast(R.string.login_fetching_sub)
             }
 
-            val subResult = KNcloudAuthService.getSubscribeUrl(domain, token)
-            if (subResult.success && !subResult.subscribeUrl.isNullOrBlank()) {
-                KNcloudAuthService.importAndSyncSubscription(subResult.subscribeUrl)
+            KNcloudAuthService.bootSession {
+                val subResult = KNcloudAuthService.getSubscribeUrl(domain, token)
+                if (subResult.success && !subResult.subscribeUrl.isNullOrBlank()) {
+                    KNcloudAuthService.importAndSyncSubscription(subResult.subscribeUrl)
+                }
+                Unit
             }
 
             withContext(Dispatchers.Main) {

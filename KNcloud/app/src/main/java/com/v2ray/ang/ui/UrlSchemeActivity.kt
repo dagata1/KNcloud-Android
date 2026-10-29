@@ -140,23 +140,26 @@ class UrlSchemeActivity : BaseActivity() {
             // Save initial user login state
             MmkvManager.saveUserLogin(email, token, domain)
 
-            // Fetch subscription & user info
-            val subResult = KNcloudAuthService.getSubscribeUrl(domain, token)
-            if (subResult.success) {
-                if (!subResult.email.isNullOrBlank() && (email.isBlank() || MmkvManager.getUserEmail().isNullOrBlank())) {
-                    MmkvManager.encodeSettings(AppConfig.PREF_USER_EMAIL, subResult.email)
-                }
-                if (subResult.planName.isNullOrBlank()) {
-                    KNcloudAuthService.fetchUserInfo(domain, token)
-                }
-                if (!subResult.subscribeUrl.isNullOrBlank()) {
-                    KNcloudAuthService.importAndSyncSubscription(subResult.subscribeUrl)
+            KNcloudAuthService.bootSession {
+                // Fetch subscription & user info
+                val subResult = KNcloudAuthService.getSubscribeUrl(domain, token)
+                if (subResult.success) {
+                    if (!subResult.email.isNullOrBlank() && (email.isBlank() || MmkvManager.getUserEmail().isNullOrBlank())) {
+                        MmkvManager.encodeSettings(AppConfig.PREF_USER_EMAIL, subResult.email)
+                    }
+                    if (subResult.planName.isNullOrBlank()) {
+                        KNcloudAuthService.fetchUserInfo(domain, token)
+                    }
+                    if (!subResult.subscribeUrl.isNullOrBlank()) {
+                        KNcloudAuthService.importAndSyncSubscription(subResult.subscribeUrl)
+                    } else if (!directSubUrl.isNullOrBlank()) {
+                        KNcloudAuthService.importAndSyncSubscription(directSubUrl)
+                    }
                 } else if (!directSubUrl.isNullOrBlank()) {
+                    KNcloudAuthService.fetchUserInfo(domain, token)
                     KNcloudAuthService.importAndSyncSubscription(directSubUrl)
                 }
-            } else if (!directSubUrl.isNullOrBlank()) {
-                KNcloudAuthService.fetchUserInfo(domain, token)
-                KNcloudAuthService.importAndSyncSubscription(directSubUrl)
+                Unit
             }
 
             withContext(Dispatchers.Main) {
