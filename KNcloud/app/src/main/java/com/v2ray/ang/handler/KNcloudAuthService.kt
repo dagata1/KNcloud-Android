@@ -43,10 +43,10 @@ object KNcloudAuthService {
             c.instanceFollowRedirects = false
             c.setRequestProperty("User-Agent", "KNcloud/${BuildConfig.VERSION_NAME}")
             val code = c.responseCode
-            Log.i(AppConfig.TAG, "Direct probe of $url: HTTP $code")
+            Log.w(AppConfig.TAG, "Direct probe of $url: HTTP $code")
             code > 0
         } catch (e: Exception) {
-            Log.i(AppConfig.TAG, "Direct probe of $url failed: ${e.message}")
+            Log.w(AppConfig.TAG, "Direct probe of $url failed: ${e.message}")
             false
         } finally {
             conn?.disconnect()

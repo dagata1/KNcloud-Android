@@ -82,7 +82,7 @@ class LoginActivity : BaseActivity() {
     }
 
     private fun startDirectProbe() {
-        if (BootVpnConfig.node() == null || V2RayServiceManager.isRunning()) return
+        if (BootVpnConfig.node() == null || V2RayServiceManager.isBootVpnUp(this)) return
         directProbe = lifecycleScope.async(Dispatchers.IO) { KNcloudAuthService.probeDirect() }
     }
 
@@ -91,7 +91,7 @@ class LoginActivity : BaseActivity() {
      * VPN (asking for the VPN permission first if needed). Falls back to running [action] as is.
      */
     private fun withBootVpn(action: () -> Unit) {
-        if (BootVpnConfig.node() == null || bootVpnDeclined || V2RayServiceManager.isRunning()) {
+        if (BootVpnConfig.node() == null || bootVpnDeclined || V2RayServiceManager.isBootVpnUp(this)) {
             action()
             return
         }
@@ -128,11 +128,13 @@ class LoginActivity : BaseActivity() {
         setLoading(true)
         lifecycleScope.launch {
             if (V2RayServiceManager.startBootVService(applicationContext)) {
-                withTimeoutOrNull(6000L) {
-                    while (!V2RayServiceManager.isRunning()) delay(100)
-                }
-                // let the TUN interface come up after the core
-                delay(600)
+                // the core runs in the :vpnCore process: wait for its VPN network to come up
+                val up = withTimeoutOrNull(8000L) {
+                    while (!V2RayServiceManager.isVpnNetworkActive(applicationContext)) delay(100)
+                    true
+                } ?: false
+                Log.w(AppConfig.TAG, "Login bootstrap VPN up=$up")
+                delay(300)
             }
             setLoading(false)
             action?.invoke()

@@ -90,6 +90,7 @@ class V2RayVpnService : VpnService(), ServiceControl {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        V2RayServiceManager.onVpnServiceStartCommand(intent)
         V2RayServiceManager.startCoreLoopWhenReady { startService() }
         return START_STICKY
         //return super.onStartCommand(intent, flags, startId)

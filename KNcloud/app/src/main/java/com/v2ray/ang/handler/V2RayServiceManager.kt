@@ -5,6 +5,8 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.net.VpnService
 import android.os.Build
 import android.util.Log
@@ -50,17 +52,26 @@ object V2RayServiceManager {
     private const val CORE_STOP_WAIT_MS = 3000L
 
     /**
-     * True while the core runs (or is about to run) the temporary login bootstrap config
-     * ([BootVpnConfig]): only kncloud.top through the built-in boot node, everything else direct.
-     * It is never a stored profile, so the server list and the selected server are untouched.
+     * :vpnCore process: true while the core runs (or is about to run) the temporary login
+     * bootstrap config ([BootVpnConfig]): only kncloud.top through the built-in boot node,
+     * everything else direct. It is never a stored profile, so the server list and the selected
+     * server are untouched. Set from the service start intent ([AppConfig.EXTRA_BOOT_VPN]).
      */
     @Volatile
     private var bootMode = false
     private var bootTtlJob: Job? = null
 
+    /**
+     * UI process: a bootstrap VPN was requested from here and not stopped yet. (The core runs in
+     * the :vpnCore process, so [isRunning] / [bootMode] are not meaningful in the UI process.)
+     */
+    @Volatile
+    private var bootRequested = false
+
     /** Upper bound for an abandoned login (e.g. the user never comes back from the browser). */
     private const val BOOT_VPN_MAX_LIFETIME_MS = 20 * 60 * 1000L
 
+    /** Only meaningful in the :vpnCore process (V2RayVpnService). */
     fun isBootMode(): Boolean = bootMode
 
     var serviceControl: SoftReference<ServiceControl>? = null
@@ -123,72 +134,78 @@ object V2RayServiceManager {
     }
 
     /**
-     * Starts the temporary login bootstrap VPN (always VpnService mode). The caller must have the
-     * VPN permission already (VpnService.prepare == null). No-op if a core is already running.
-     * @return false if not started (no boot node configured, no permission, core already running).
+     * UI process. Starts the temporary login bootstrap VPN (always VpnService mode). The caller
+     * must have the VPN permission already (VpnService.prepare == null).
+     * @return false if not started (no boot node configured, no permission).
      */
     fun startBootVService(context: Context): Boolean {
-        if (coreController.isRunning) return bootMode
         if (BootVpnConfig.node() == null) return false
         if (VpnService.prepare(context) != null) {
             Log.w(AppConfig.TAG, "Boot VPN: VPN permission not granted")
             return false
         }
-        bootMode = true
-        Log.i(AppConfig.TAG, "Starting login bootstrap VPN")
+        Log.w(AppConfig.TAG, "Starting login bootstrap VPN")
         val intent = Intent(context.applicationContext, V2RayVpnService::class.java)
-        try {
+            .putExtra(AppConfig.EXTRA_BOOT_VPN, true)
+        return try {
             if (Build.VERSION.SDK_INT > Build.VERSION_CODES.N_MR1) {
                 context.startForegroundService(intent)
             } else {
                 context.startService(intent)
             }
+            bootRequested = true
+            true
         } catch (e: Exception) {
             Log.e(AppConfig.TAG, "Failed to start login bootstrap VPN", e)
-            bootMode = false
-            return false
+            false
         }
-        val appContext = context.applicationContext
-        bootTtlJob?.cancel()
-        bootTtlJob = CoroutineScope(Dispatchers.Main).launch {
-            delay(BOOT_VPN_MAX_LIFETIME_MS)
-            if (bootMode) {
-                Log.i(AppConfig.TAG, "Login bootstrap VPN lifetime reached, stopping")
-                stopBootVService(appContext)
-            }
-        }
-        return true
     }
 
+    /** UI process: whether a VPN network is what this app's traffic currently uses. */
+    fun isVpnNetworkActive(context: Context): Boolean = try {
+        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        cm.getNetworkCapabilities(cm.activeNetwork)?.hasTransport(NetworkCapabilities.TRANSPORT_VPN) == true
+    } catch (e: Exception) {
+        false
+    }
+
+    /** UI process: the bootstrap VPN requested from this process is up. */
+    fun isBootVpnUp(context: Context): Boolean = bootRequested && isVpnNetworkActive(context)
+
     /**
-     * Stops the login bootstrap VPN if (and only if) it is what is running; a normal connection is
-     * never touched. Safe to call from any thread.
+     * Any process. Stops the login bootstrap VPN if (and only if) it is what the core runs; a
+     * normal connection is never touched (the :vpnCore side checks its own mode).
      */
     fun stopBootVService(context: Context) {
-        if (!bootMode) return
-        bootTtlJob?.cancel()
-        bootTtlJob = null
-        if (coreController.isRunning) {
-            Log.i(AppConfig.TAG, "Stopping login bootstrap VPN")
-            stopVService(context)
-        } else {
-            bootMode = false
+        bootRequested = false
+        MessageUtil.sendMsg2Service(context, AppConfig.MSG_STATE_STOP_BOOT, "")
+    }
+
+    /**
+     * UI process, background thread: stops the bootstrap VPN and waits (bounded) until its VPN
+     * network is gone, so the next screen does not start while it is still up.
+     */
+    fun stopBootVServiceAndWait(context: Context, timeoutMs: Long = 4000L) {
+        val wasRequested = bootRequested
+        stopBootVService(context)
+        val deadline = System.currentTimeMillis() + if (wasRequested) timeoutMs else 1500L
+        Thread.sleep(200)
+        while (isVpnNetworkActive(context) && System.currentTimeMillis() < deadline) {
+            Thread.sleep(100)
         }
     }
 
     /**
-     * Blocking variant for background threads: stops the bootstrap VPN and waits (bounded) until
-     * the core is down, so the next screen does not see it as "connected".
+     * :vpnCore process, from V2RayVpnService.onStartCommand: picks the mode of the core about to
+     * be started. A start for an already running core does not change the mode.
      */
-    fun stopBootVServiceAndWait(context: Context, timeoutMs: Long = 4000L) {
-        if (!bootMode) return
-        stopBootVService(context)
-        val deadline = System.currentTimeMillis() + timeoutMs
-        while ((coreController.isRunning || stopJob?.isActive == true) && System.currentTimeMillis() < deadline) {
-            Thread.sleep(50)
-        }
-        bootMode = false
+    fun onVpnServiceStartCommand(intent: Intent?) {
+        pendingBootMode = intent?.getBooleanExtra(AppConfig.EXTRA_BOOT_VPN, false) == true
     }
+
+    /** :vpnCore process: mode requested by the latest VpnService start, consumed by [startCoreLoop]. */
+    @Volatile
+    private var pendingBootMode = false
 
     /**
      * Stops the V2Ray service.
@@ -219,7 +236,6 @@ object V2RayServiceManager {
         if (coreController.isRunning) {
             return
         }
-        bootMode = false
         val guid = MmkvManager.getSelectServer() ?: return
         val config = MmkvManager.decodeServerConfig(guid) ?: return
         if (config.configType != EConfigType.CUSTOM
@@ -261,6 +277,8 @@ object V2RayServiceManager {
         }
 
         val service = getService() ?: return false
+        bootMode = pendingBootMode
+        pendingBootMode = false
         val boot = bootMode
         val config: ProfileItem
         val result: ConfigResult
@@ -315,6 +333,17 @@ object V2RayServiceManager {
             NotificationManager.startSpeedNotification(currentConfig)
 
             if (!boot) PluginServiceManager.runPlugin(service, config, result.socksPort)
+            if (boot) {
+                Log.w(AppConfig.TAG, "Login bootstrap VPN started")
+                bootTtlJob?.cancel()
+                bootTtlJob = CoroutineScope(Dispatchers.Main).launch {
+                    delay(BOOT_VPN_MAX_LIFETIME_MS)
+                    if (bootMode && coreController.isRunning) {
+                        Log.w(AppConfig.TAG, "Login bootstrap VPN lifetime reached, stopping")
+                        serviceControl?.get()?.stopService()
+                    }
+                }
+            }
         } catch (e: Exception) {
             Log.e(AppConfig.TAG, "Failed to startup service", e)
             return false
@@ -539,6 +568,13 @@ object V2RayServiceManager {
                 AppConfig.MSG_STATE_STOP -> {
                     Log.i(AppConfig.TAG, "Stop Service")
                     serviceControl.stopService()
+                }
+
+                AppConfig.MSG_STATE_STOP_BOOT -> {
+                    if (bootMode) {
+                        Log.w(AppConfig.TAG, "Stop login bootstrap VPN")
+                        serviceControl.stopService()
+                    }
                 }
 
                 AppConfig.MSG_STATE_RESTART -> {
