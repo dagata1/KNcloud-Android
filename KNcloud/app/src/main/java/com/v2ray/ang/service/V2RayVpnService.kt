@@ -264,10 +264,12 @@ class V2RayVpnService : VpnService(), ServiceControl {
     private fun configurePerAppProxy(builder: Builder) {
         val selfPackageName = BuildConfig.APPLICATION_ID
 
-        // Login bootstrap VPN: the app's own traffic (panel API, in-app register WebView) must go
-        // through it too, and per-app settings must not exclude the browser used for web login.
-        // Safe because the core's sockets are protect()ed and no plugin process runs in this mode.
+        // Login bootstrap VPN: per-app settings must not exclude the browser used for web login,
+        // so they are ignored; only the app itself stays outside (the core's own sockets are not
+        // protect()ed, so the app UID must never be routed into the TUN). The app's own panel
+        // calls / register WebView use the core's local inbound instead.
         if (V2RayServiceManager.isBootMode()) {
+            builder.addDisallowedApplication(selfPackageName)
             return
         }
 

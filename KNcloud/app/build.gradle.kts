@@ -135,6 +135,8 @@ dependencies {
     // Data and Storage Libraries
     implementation(libs.mmkv.static)
     implementation(libs.gson)
+    // proxy override for the in-app register WebView while the login bootstrap VPN runs
+    implementation("androidx.webkit:webkit:1.12.1")
 
     // Reactive and Utility Libraries
     implementation(libs.kotlinx.coroutines.android)

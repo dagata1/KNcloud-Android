@@ -161,13 +161,20 @@ object V2RayServiceManager {
         }
     }
 
-    /** UI process: whether a VPN network is what this app's traffic currently uses. */
+    /**
+     * UI process: whether any VPN network is up. (The app's own UID is excluded from its VPN, so
+     * its active network is never the VPN; look at all networks.)
+     */
+    @Suppress("DEPRECATION")
     fun isVpnNetworkActive(context: Context): Boolean = try {
         val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        cm.getNetworkCapabilities(cm.activeNetwork)?.hasTransport(NetworkCapabilities.TRANSPORT_VPN) == true
+        cm.allNetworks.any { cm.getNetworkCapabilities(it)?.hasTransport(NetworkCapabilities.TRANSPORT_VPN) == true }
     } catch (e: Exception) {
         false
     }
+
+    /** UI process: a bootstrap VPN was started from this process and not stopped since. */
+    fun isBootRequested(): Boolean = bootRequested
 
     /** UI process: the bootstrap VPN requested from this process is up. */
     fun isBootVpnUp(context: Context): Boolean = bootRequested && isVpnNetworkActive(context)
