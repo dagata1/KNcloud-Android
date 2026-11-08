@@ -1,9 +1,12 @@
 package com.v2ray.ang.ui
 
 import android.content.Intent
+import android.net.VpnService
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.view.inputmethod.EditorInfo
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.lifecycleScope
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
@@ -13,14 +16,45 @@ import com.v2ray.ang.extension.toastError
 import com.v2ray.ang.extension.toastSuccess
 import com.v2ray.ang.handler.KNcloudAuthService
 import com.v2ray.ang.handler.MmkvManager
+import com.v2ray.ang.handler.V2RayServiceManager
+import com.v2ray.ang.handler.boot.BootVpnConfig
 import com.v2ray.ang.util.Utils
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 
 class LoginActivity : BaseActivity() {
 
     private val binding by lazy { ActivityLoginBinding.inflate(layoutInflater) }
+
+    /**
+     * Login bootstrap VPN: when the official site is not reachable directly, the login actions
+     * (web auth in the browser, in-app register page, panel login) first bring up a temporary VPN
+     * that sends only kncloud.top through the built-in boot node (everything else direct). It is
+     * stopped once the login completed (or this screen is left). If the user declines the VPN
+     * permission, the actions go ahead as before (panel calls then use the in-app BootProxy).
+     */
+    private var directProbe: Deferred<Boolean>? = null
+    private var bootVpnDeclined = false
+    private var pendingAfterBootVpn: (() -> Unit)? = null
+
+    private val requestBootVpnPermission = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        val action = pendingAfterBootVpn
+        pendingAfterBootVpn = null
+        val granted = it.resultCode == RESULT_OK || VpnService.prepare(this) == null
+        Log.i(AppConfig.TAG, "Boot VPN permission result=${it.resultCode} granted=$granted")
+        if (granted) {
+            startBootVpnThen(action)
+        } else {
+            bootVpnDeclined = true
+            setLoading(false)
+            action?.invoke()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,7 +68,75 @@ class LoginActivity : BaseActivity() {
         setContentView(binding.root)
 
         initViews()
+        startDirectProbe()
         fetchDomainAsync()
+    }
+
+    override fun onDestroy() {
+        // Leaving the login screen for good (logged in, or the user backed out): the temporary
+        // bootstrap VPN has no further use. A normal connection is never touched.
+        if (isFinishing) {
+            V2RayServiceManager.stopBootVService(applicationContext)
+        }
+        super.onDestroy()
+    }
+
+    private fun startDirectProbe() {
+        if (BootVpnConfig.node() == null || V2RayServiceManager.isRunning()) return
+        directProbe = lifecycleScope.async(Dispatchers.IO) { KNcloudAuthService.probeDirect() }
+    }
+
+    /**
+     * Runs [action] once the official site is reachable: directly, or through the login bootstrap
+     * VPN (asking for the VPN permission first if needed). Falls back to running [action] as is.
+     */
+    private fun withBootVpn(action: () -> Unit) {
+        if (BootVpnConfig.node() == null || bootVpnDeclined || V2RayServiceManager.isRunning()) {
+            action()
+            return
+        }
+        setLoading(true)
+        lifecycleScope.launch {
+            val probe = directProbe ?: lifecycleScope.async(Dispatchers.IO) { KNcloudAuthService.probeDirect() }.also { directProbe = it }
+            val reachable = withTimeoutOrNull(6000L) { probe.await() } ?: false
+            if (reachable) {
+                setLoading(false)
+                action()
+                return@launch
+            }
+            // Probe failed once: probe again next time instead of reusing the stale result
+            directProbe = null
+            val prepare = try { VpnService.prepare(this@LoginActivity) } catch (e: Exception) { null }
+            if (prepare == null) {
+                startBootVpnThen(action)
+            } else {
+                pendingAfterBootVpn = action
+                try {
+                    requestBootVpnPermission.launch(prepare)
+                } catch (e: Exception) {
+                    Log.e(AppConfig.TAG, "Cannot request VPN permission for boot VPN", e)
+                    pendingAfterBootVpn = null
+                    bootVpnDeclined = true
+                    setLoading(false)
+                    action()
+                }
+            }
+        }
+    }
+
+    private fun startBootVpnThen(action: (() -> Unit)?) {
+        setLoading(true)
+        lifecycleScope.launch {
+            if (V2RayServiceManager.startBootVService(applicationContext)) {
+                withTimeoutOrNull(6000L) {
+                    while (!V2RayServiceManager.isRunning()) delay(100)
+                }
+                // let the TUN interface come up after the core
+                delay(600)
+            }
+            setLoading(false)
+            action?.invoke()
+        }
     }
 
     override fun onResume() {
@@ -69,15 +171,19 @@ class LoginActivity : BaseActivity() {
 
         // Official website authorization login button: opens default external browser
         binding.btnWebAuth.setOnClickListener {
-            val domain = MmkvManager.getApiDomain()
-            val authUrl = "$domain/#/login?from=app_auth"
-            MmkvManager.markWebAuthStarted()
-            Utils.openUri(this, authUrl)
+            withBootVpn {
+                val domain = MmkvManager.getApiDomain()
+                val authUrl = "$domain/#/login?from=app_auth"
+                MmkvManager.markWebAuthStarted()
+                Utils.openUri(this, authUrl)
+            }
         }
 
         // Register button: opens in-app web registration
         binding.btnRegister.setOnClickListener {
-            startActivity(Intent(this, RegisterWebActivity::class.java))
+            withBootVpn {
+                startActivity(Intent(this, RegisterWebActivity::class.java))
+            }
         }
     }
 
@@ -107,6 +213,10 @@ class LoginActivity : BaseActivity() {
             return
         }
 
+        withBootVpn { performLoginRequest(email, password) }
+    }
+
+    private fun performLoginRequest(email: String, password: String) {
         setLoading(true)
 
         lifecycleScope.launch(Dispatchers.IO) {
@@ -138,6 +248,9 @@ class LoginActivity : BaseActivity() {
                 }
                 return@launch
             }
+
+            // Logged in and subscription imported: the bootstrap VPN is no longer needed
+            V2RayServiceManager.stopBootVServiceAndWait(applicationContext)
 
             withContext(Dispatchers.Main) {
                 setLoading(false)

@@ -12,7 +12,9 @@ import androidx.core.content.ContextCompat
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.dto.EConfigType
+import com.v2ray.ang.dto.ConfigResult
 import com.v2ray.ang.dto.ProfileItem
+import com.v2ray.ang.handler.boot.BootVpnConfig
 import com.v2ray.ang.extension.toast
 import com.v2ray.ang.service.ServiceControl
 import com.v2ray.ang.service.V2RayProxyOnlyService
@@ -46,6 +48,20 @@ object V2RayServiceManager {
     private var stopJob: Job? = null
 
     private const val CORE_STOP_WAIT_MS = 3000L
+
+    /**
+     * True while the core runs (or is about to run) the temporary login bootstrap config
+     * ([BootVpnConfig]): only kncloud.top through the built-in boot node, everything else direct.
+     * It is never a stored profile, so the server list and the selected server are untouched.
+     */
+    @Volatile
+    private var bootMode = false
+    private var bootTtlJob: Job? = null
+
+    /** Upper bound for an abandoned login (e.g. the user never comes back from the browser). */
+    private const val BOOT_VPN_MAX_LIFETIME_MS = 20 * 60 * 1000L
+
+    fun isBootMode(): Boolean = bootMode
 
     var serviceControl: SoftReference<ServiceControl>? = null
         set(value) {
@@ -107,6 +123,74 @@ object V2RayServiceManager {
     }
 
     /**
+     * Starts the temporary login bootstrap VPN (always VpnService mode). The caller must have the
+     * VPN permission already (VpnService.prepare == null). No-op if a core is already running.
+     * @return false if not started (no boot node configured, no permission, core already running).
+     */
+    fun startBootVService(context: Context): Boolean {
+        if (coreController.isRunning) return bootMode
+        if (BootVpnConfig.node() == null) return false
+        if (VpnService.prepare(context) != null) {
+            Log.w(AppConfig.TAG, "Boot VPN: VPN permission not granted")
+            return false
+        }
+        bootMode = true
+        Log.i(AppConfig.TAG, "Starting login bootstrap VPN")
+        val intent = Intent(context.applicationContext, V2RayVpnService::class.java)
+        try {
+            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.N_MR1) {
+                context.startForegroundService(intent)
+            } else {
+                context.startService(intent)
+            }
+        } catch (e: Exception) {
+            Log.e(AppConfig.TAG, "Failed to start login bootstrap VPN", e)
+            bootMode = false
+            return false
+        }
+        val appContext = context.applicationContext
+        bootTtlJob?.cancel()
+        bootTtlJob = CoroutineScope(Dispatchers.Main).launch {
+            delay(BOOT_VPN_MAX_LIFETIME_MS)
+            if (bootMode) {
+                Log.i(AppConfig.TAG, "Login bootstrap VPN lifetime reached, stopping")
+                stopBootVService(appContext)
+            }
+        }
+        return true
+    }
+
+    /**
+     * Stops the login bootstrap VPN if (and only if) it is what is running; a normal connection is
+     * never touched. Safe to call from any thread.
+     */
+    fun stopBootVService(context: Context) {
+        if (!bootMode) return
+        bootTtlJob?.cancel()
+        bootTtlJob = null
+        if (coreController.isRunning) {
+            Log.i(AppConfig.TAG, "Stopping login bootstrap VPN")
+            stopVService(context)
+        } else {
+            bootMode = false
+        }
+    }
+
+    /**
+     * Blocking variant for background threads: stops the bootstrap VPN and waits (bounded) until
+     * the core is down, so the next screen does not see it as "connected".
+     */
+    fun stopBootVServiceAndWait(context: Context, timeoutMs: Long = 4000L) {
+        if (!bootMode) return
+        stopBootVService(context)
+        val deadline = System.currentTimeMillis() + timeoutMs
+        while ((coreController.isRunning || stopJob?.isActive == true) && System.currentTimeMillis() < deadline) {
+            Thread.sleep(50)
+        }
+        bootMode = false
+    }
+
+    /**
      * Stops the V2Ray service.
      * @param context The context from which the service is stopped.
      */
@@ -135,6 +219,7 @@ object V2RayServiceManager {
         if (coreController.isRunning) {
             return
         }
+        bootMode = false
         val guid = MmkvManager.getSelectServer() ?: return
         val config = MmkvManager.decodeServerConfig(guid) ?: return
         if (config.configType != EConfigType.CUSTOM
@@ -176,11 +261,27 @@ object V2RayServiceManager {
         }
 
         val service = getService() ?: return false
-        val guid = MmkvManager.getSelectServer() ?: return false
-        val config = MmkvManager.decodeServerConfig(guid) ?: return false
-        val result = V2rayConfigManager.getV2rayConfig(service, guid)
-        if (!result.status)
-            return false
+        val boot = bootMode
+        val config: ProfileItem
+        val result: ConfigResult
+        if (boot) {
+            val node = BootVpnConfig.node() ?: return false
+            config = ProfileItem.create(EConfigType.SHADOWSOCKS).apply {
+                remarks = service.getString(R.string.boot_vpn_name)
+                server = node.address
+                serverPort = node.port.toString()
+            }
+            result = ConfigResult(
+                true, null,
+                BootVpnConfig.build(node, SettingsManager.getSocksPort(), SettingsManager.getDomesticDnsServers())
+            )
+        } else {
+            val guid = MmkvManager.getSelectServer() ?: return false
+            config = MmkvManager.decodeServerConfig(guid) ?: return false
+            result = V2rayConfigManager.getV2rayConfig(service, guid)
+            if (!result.status)
+                return false
+        }
 
         try {
             val mFilter = IntentFilter(AppConfig.BROADCAST_ACTION_SERVICE)
@@ -213,7 +314,7 @@ object V2RayServiceManager {
             NotificationManager.showNotification(currentConfig)
             NotificationManager.startSpeedNotification(currentConfig)
 
-            PluginServiceManager.runPlugin(service, config, result.socksPort)
+            if (!boot) PluginServiceManager.runPlugin(service, config, result.socksPort)
         } catch (e: Exception) {
             Log.e(AppConfig.TAG, "Failed to startup service", e)
             return false
@@ -279,6 +380,11 @@ object V2RayServiceManager {
         }
         PluginServiceManager.stopPlugin()
 
+        if (bootMode) {
+            bootMode = false
+            bootTtlJob?.cancel()
+            bootTtlJob = null
+        }
         return true
     }
 

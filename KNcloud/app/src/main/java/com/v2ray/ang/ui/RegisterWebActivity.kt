@@ -24,6 +24,7 @@ import com.v2ray.ang.extension.toast
 import com.v2ray.ang.extension.toastSuccess
 import com.v2ray.ang.handler.KNcloudAuthService
 import com.v2ray.ang.handler.MmkvManager
+import com.v2ray.ang.handler.V2RayServiceManager
 import com.v2ray.ang.handler.TrustedDomain
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -283,6 +284,9 @@ class RegisterWebActivity : BaseActivity() {
                 }
                 Unit
             }
+
+            // Logged in: stop the temporary login bootstrap VPN if it is running (no-op otherwise)
+            V2RayServiceManager.stopBootVServiceAndWait(applicationContext)
 
             withContext(Dispatchers.Main) {
                 toastSuccess(R.string.login_success)

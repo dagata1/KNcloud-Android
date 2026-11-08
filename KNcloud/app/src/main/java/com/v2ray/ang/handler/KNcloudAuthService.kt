@@ -23,6 +23,32 @@ object KNcloudAuthService {
     private const val DIRECT = "direct"
     private const val LOCAL_PROXY = "via local proxy"
     private const val BOOT = "via login bootstrap"
+    private const val DIRECT_BEFORE_BOOT_TIMEOUT_MS = 5000
+    private const val DIRECT_PROBE_TIMEOUT_MS = 4000
+
+    /**
+     * Whether the official site answers directly (no proxy, short timeout). Used on the login
+     * screen to decide if the temporary login bootstrap VPN is needed. Any HTTP response counts.
+     */
+    fun probeDirect(): Boolean {
+        var conn: HttpURLConnection? = null
+        return try {
+            val c = URL(AppConfig.API_DOMAIN_QUERY_URL).openConnection(Proxy.NO_PROXY) as HttpURLConnection
+            conn = c
+            c.connectTimeout = DIRECT_PROBE_TIMEOUT_MS
+            c.readTimeout = DIRECT_PROBE_TIMEOUT_MS
+            c.instanceFollowRedirects = false
+            c.setRequestProperty("User-Agent", "KNcloud/${BuildConfig.VERSION_NAME}")
+            val code = c.responseCode
+            Log.i(AppConfig.TAG, "Direct probe of panel: HTTP $code")
+            code > 0
+        } catch (e: Exception) {
+            Log.i(AppConfig.TAG, "Direct probe of panel failed: ${e.message}")
+            false
+        } finally {
+            conn?.disconnect()
+        }
+    }
 
     /**
      * Runs one login / subscription flow; the login bootstrap proxy, if a panel call in it had to
@@ -61,7 +87,14 @@ object KNcloudAuthService {
             else -> listOf(DIRECT, DIRECT)
         }
         var lastError: IOException? = null
-        for (attempt in attempts) {
+        for ((index, attempt) in attempts.withIndex()) {
+            // A direct attempt that has the boot node behind it gives up early: where the site is
+            // blocked it would otherwise hang for the full timeout before the fallback is tried.
+            val attemptTimeout = if (attempt == DIRECT && attempts.getOrNull(index + 1) == BOOT) {
+                minOf(timeout, DIRECT_BEFORE_BOOT_TIMEOUT_MS)
+            } else {
+                timeout
+            }
             val proxy: Proxy? = when (attempt) {
                 LOCAL_PROXY -> Proxy(Proxy.Type.HTTP, InetSocketAddress(AppConfig.LOOPBACK, SettingsManager.getHttpPort()))
                 BOOT -> {
@@ -80,8 +113,8 @@ object KNcloudAuthService {
                 val c = (if (proxy != null) url.openConnection(proxy) else url.openConnection()) as HttpURLConnection
                 conn = c
                 c.requestMethod = method
-                c.connectTimeout = timeout
-                c.readTimeout = timeout
+                c.connectTimeout = attemptTimeout
+                c.readTimeout = attemptTimeout
                 c.doInput = true
                 for ((k, v) in headers) c.setRequestProperty(k, v)
                 if (body != null) {
