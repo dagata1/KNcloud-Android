@@ -90,7 +90,6 @@ class V2RayVpnService : VpnService(), ServiceControl {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        V2RayServiceManager.onVpnServiceStartCommand(intent)
         V2RayServiceManager.startCoreLoopWhenReady { startService() }
         return START_STICKY
         //return super.onStartCommand(intent, flags, startId)
@@ -189,12 +188,8 @@ class V2RayVpnService : VpnService(), ServiceControl {
         builder.setMtu(SettingsManager.getVpnMtu())
         builder.addAddress(vpnConfig.ipv4Client, 30)
 
-        // Login bootstrap VPN: capture everything (routing in the core sends only kncloud.top to the
-        // boot node), including the fake-IP pool used for kncloud.top.
-        val boot = V2RayServiceManager.isBootMode()
-
         // Configure routing rules
-        if (bypassLan && !boot) {
+        if (bypassLan) {
             AppConfig.ROUTED_IP_LIST.forEach {
                 val addr = it.split('/')
                 builder.addRoute(addr[0], addr[1].toInt())
@@ -206,7 +201,7 @@ class V2RayVpnService : VpnService(), ServiceControl {
         // Configure IPv6 if enabled
         if (MmkvManager.decodeSettingsBool(AppConfig.PREF_PREFER_IPV6, true) == true) {
             builder.addAddress(vpnConfig.ipv6Client, 126)
-            if (bypassLan && !boot) {
+            if (bypassLan) {
                 builder.addRoute("2000::", 3) // Currently only 1/8 of total IPv6 is in use
                 builder.addRoute("fc00::", 18) // Xray-core default FakeIPv6 Pool
             } else {
@@ -264,15 +259,6 @@ class V2RayVpnService : VpnService(), ServiceControl {
     private fun configurePerAppProxy(builder: Builder) {
         val selfPackageName = BuildConfig.APPLICATION_ID
 
-        // Login bootstrap VPN: per-app settings must not exclude the browser used for web login,
-        // so they are ignored; only the app itself stays outside (the core's own sockets are not
-        // protect()ed, so the app UID must never be routed into the TUN). The app's own panel
-        // calls / register WebView use the core's local inbound instead.
-        if (V2RayServiceManager.isBootMode()) {
-            builder.addDisallowedApplication(selfPackageName)
-            return
-        }
-
         // If per-app proxy is not enabled, disallow the VPN service's own package and return
         if (MmkvManager.decodeSettingsBool(AppConfig.PREF_PER_APP_PROXY) == false) {
             builder.addDisallowedApplication(selfPackageName)
@@ -310,7 +296,7 @@ class V2RayVpnService : VpnService(), ServiceControl {
      * Starts the tun2socks process with the appropriate parameters.
      */
     private fun runTun2socks() {
-        if (V2RayServiceManager.isBootMode() || MmkvManager.decodeSettingsBool(AppConfig.PREF_USE_HEV_TUNNEL, true) == true) {
+        if (MmkvManager.decodeSettingsBool(AppConfig.PREF_USE_HEV_TUNNEL, true) == true) {
             tun2SocksService = TProxyService(
                 context = applicationContext,
                 vpnInterface = mInterface,

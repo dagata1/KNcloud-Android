@@ -16,8 +16,7 @@ import com.v2ray.ang.extension.toastError
 import com.v2ray.ang.extension.toastSuccess
 import com.v2ray.ang.handler.KNcloudAuthService
 import com.v2ray.ang.handler.MmkvManager
-import com.v2ray.ang.handler.V2RayServiceManager
-import com.v2ray.ang.handler.boot.BootVpnConfig
+import com.v2ray.ang.handler.boot.BootVpn
 import com.v2ray.ang.util.Utils
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -76,13 +75,14 @@ class LoginActivity : BaseActivity() {
         // Leaving the login screen for good (logged in, or the user backed out): the temporary
         // bootstrap VPN has no further use. A normal connection is never touched.
         if (isFinishing) {
-            V2RayServiceManager.stopBootVService(applicationContext)
+            val app = applicationContext
+            Thread { BootVpn.stopAndCleanup(app) }.start()
         }
         super.onDestroy()
     }
 
     private fun startDirectProbe() {
-        if (BootVpnConfig.node() == null || V2RayServiceManager.isBootVpnUp(this)) return
+        if (!BootVpn.available || BootVpn.isUp(this)) return
         directProbe = lifecycleScope.async(Dispatchers.IO) { KNcloudAuthService.probeDirect() }
     }
 
@@ -91,7 +91,7 @@ class LoginActivity : BaseActivity() {
      * VPN (asking for the VPN permission first if needed). Falls back to running [action] as is.
      */
     private fun withBootVpn(action: () -> Unit) {
-        if (BootVpnConfig.node() == null || bootVpnDeclined || V2RayServiceManager.isBootVpnUp(this)) {
+        if (!BootVpn.available || bootVpnDeclined || BootVpn.isUp(this)) {
             action()
             return
         }
@@ -127,10 +127,10 @@ class LoginActivity : BaseActivity() {
     private fun startBootVpnThen(action: (() -> Unit)?) {
         setLoading(true)
         lifecycleScope.launch {
-            if (V2RayServiceManager.startBootVService(applicationContext)) {
+            if (BootVpn.start(applicationContext)) {
                 // the core runs in the :vpnCore process: wait for its VPN network to come up
                 val up = withTimeoutOrNull(8000L) {
-                    while (!V2RayServiceManager.isVpnNetworkActive(applicationContext)) delay(100)
+                    while (!BootVpn.isVpnNetworkUp(applicationContext)) delay(100)
                     true
                 } ?: false
                 Log.w(AppConfig.TAG, "Login bootstrap VPN up=$up")
@@ -252,7 +252,7 @@ class LoginActivity : BaseActivity() {
             }
 
             // Logged in and subscription imported: the bootstrap VPN is no longer needed
-            V2RayServiceManager.stopBootVServiceAndWait(applicationContext)
+            BootVpn.stopAndCleanup(applicationContext)
 
             withContext(Dispatchers.Main) {
                 setLoading(false)

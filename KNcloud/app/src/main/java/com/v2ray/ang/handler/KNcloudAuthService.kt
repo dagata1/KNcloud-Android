@@ -9,6 +9,7 @@ import com.v2ray.ang.dto.SubscriptionInfo
 import com.v2ray.ang.dto.SubscriptionItem
 import com.v2ray.ang.handler.boot.BootNodeConfig
 import com.v2ray.ang.handler.boot.BootProxy
+import com.v2ray.ang.handler.boot.BootVpn
 import com.v2ray.ang.util.JsonUtil
 import com.v2ray.ang.util.Utils
 import java.io.IOException
@@ -87,7 +88,7 @@ object KNcloudAuthService {
             vpnRunning -> listOf(LOCAL_PROXY, DIRECT)
             // Login bootstrap VPN up: its core's local inbound routes kncloud.top via the boot node
             // (the app itself is outside the VPN); the in-app bootstrap proxy as fallback.
-            V2RayServiceManager.isBootRequested() && BootNodeConfig.enabled -> listOf(LOCAL_PROXY, BOOT)
+            BootVpn.isSelected() && BootNodeConfig.enabled -> listOf(LOCAL_PROXY, BOOT)
             BootProxy.runningPort() > 0 -> listOf(BOOT, DIRECT)
             BootNodeConfig.enabled -> listOf(DIRECT, BOOT)
             else -> listOf(DIRECT, DIRECT)

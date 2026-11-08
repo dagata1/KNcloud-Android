@@ -63,8 +63,6 @@ object AppConfig {
     const val PREF_MODE = "pref_mode"
     const val PREF_VPN_PERMISSION_PROMPTED = "pref_vpn_permission_prompted"
     const val EXTRA_CONNECT_AFTER_VPN_GRANT = "extra_connect_after_vpn_grant"
-    /** V2RayVpnService start extra: run the temporary login bootstrap config (handler/boot/BootVpnConfig). */
-    const val EXTRA_BOOT_VPN = "extra_boot_vpn"
     const val PREF_IS_BOOTED = "pref_is_booted"
     const val PREF_CHECK_UPDATE_PRE_RELEASE = "pref_check_update_pre_release"
     const val PREF_LAST_AUTO_UPDATE_CHECK = "pref_last_auto_update_check"
@@ -153,8 +151,6 @@ object AppConfig {
     const val MSG_STATE_START_SUCCESS = 31
     const val MSG_STATE_START_FAILURE = 32
     const val MSG_STATE_STOP = 4
-    /** Stop the core only if it runs the temporary login bootstrap config. */
-    const val MSG_STATE_STOP_BOOT = 42
     const val MSG_STATE_STOP_SUCCESS = 41
     const val MSG_STATE_RESTART = 5
     const val MSG_MEASURE_DELAY = 6
