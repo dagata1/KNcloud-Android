@@ -27,23 +27,26 @@ object KNcloudAuthService {
     private const val DIRECT_PROBE_TIMEOUT_MS = 4000
 
     /**
-     * Whether the official site answers directly (no proxy, short timeout). Used on the login
-     * screen to decide if the temporary login bootstrap VPN is needed. Any HTTP response counts.
+     * Whether the official site (the panel / web domain the browser and the API use, not the
+     * domain-discovery host, which can be reachable while the site is not) answers directly (no
+     * proxy, short timeout). Used on the login screen to decide if the temporary login bootstrap
+     * VPN is needed. Any HTTP response counts.
      */
     fun probeDirect(): Boolean {
         var conn: HttpURLConnection? = null
+        val url = MmkvManager.getApiDomain().trimEnd('/') + "/"
         return try {
-            val c = URL(AppConfig.API_DOMAIN_QUERY_URL).openConnection(Proxy.NO_PROXY) as HttpURLConnection
+            val c = URL(url).openConnection(Proxy.NO_PROXY) as HttpURLConnection
             conn = c
             c.connectTimeout = DIRECT_PROBE_TIMEOUT_MS
             c.readTimeout = DIRECT_PROBE_TIMEOUT_MS
             c.instanceFollowRedirects = false
             c.setRequestProperty("User-Agent", "KNcloud/${BuildConfig.VERSION_NAME}")
             val code = c.responseCode
-            Log.i(AppConfig.TAG, "Direct probe of panel: HTTP $code")
+            Log.i(AppConfig.TAG, "Direct probe of $url: HTTP $code")
             code > 0
         } catch (e: Exception) {
-            Log.i(AppConfig.TAG, "Direct probe of panel failed: ${e.message}")
+            Log.i(AppConfig.TAG, "Direct probe of $url failed: ${e.message}")
             false
         } finally {
             conn?.disconnect()
