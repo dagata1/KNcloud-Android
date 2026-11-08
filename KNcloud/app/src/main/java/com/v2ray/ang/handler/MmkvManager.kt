@@ -145,6 +145,26 @@ object MmkvManager {
      *
      * @param guid The server GUID.
      */
+    /**
+     * Stores a server profile WITHOUT adding it to the server list (so it never shows up in the
+     * UI) and without touching the selected server. Used for the built-in login bootstrap node.
+     */
+    fun encodeHiddenServerConfig(guid: String, config: ProfileItem, raw: String? = null) {
+        profileFullStorage.encode(guid, JsonUtil.toJson(config))
+        if (raw != null) serverRawStorage.encode(guid, raw)
+    }
+
+    /** Removes a profile stored with [encodeHiddenServerConfig] (clears the selection if it is it). */
+    fun removeHiddenServer(guid: String) {
+        if (guid.isBlank()) return
+        if (getSelectServer() == guid) {
+            mainStorage.remove(KEY_SELECTED_SERVER)
+        }
+        profileFullStorage.remove(guid)
+        serverRawStorage.remove(guid)
+        serverAffStorage.remove(guid)
+    }
+
     fun removeServer(guid: String) {
         if (guid.isBlank()) {
             return

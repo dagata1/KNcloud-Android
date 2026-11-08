@@ -17,6 +17,10 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.OnBackPressedCallback
 import androidx.lifecycle.lifecycleScope
+import androidx.webkit.ProxyConfig
+import androidx.webkit.ProxyController
+import androidx.webkit.WebViewFeature
+import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.databinding.ActivityRegisterWebBinding
@@ -24,6 +28,7 @@ import com.v2ray.ang.extension.toast
 import com.v2ray.ang.extension.toastSuccess
 import com.v2ray.ang.handler.KNcloudAuthService
 import com.v2ray.ang.handler.MmkvManager
+import com.v2ray.ang.handler.boot.BootVpn
 import com.v2ray.ang.handler.TrustedDomain
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -76,7 +81,7 @@ class RegisterWebActivity : BaseActivity() {
                 } catch (_: Exception) {}
             }
 
-            binding.webView.loadUrl(targetUrl)
+            loadThroughBootVpnIfUp(targetUrl)
         } catch (e: Exception) {
             Log.e(AppConfig.TAG, "WebView initialization error", e)
             com.v2ray.ang.util.Utils.openUri(this, targetUrl)
@@ -284,6 +289,9 @@ class RegisterWebActivity : BaseActivity() {
                 Unit
             }
 
+            // Logged in: stop the temporary login bootstrap VPN if it is running (no-op otherwise)
+            BootVpn.stopAndCleanup(applicationContext)
+
             withContext(Dispatchers.Main) {
                 toastSuccess(R.string.login_success)
                 val intent = Intent(this@RegisterWebActivity, MainActivity::class.java).apply {
@@ -315,7 +323,36 @@ class RegisterWebActivity : BaseActivity() {
         return super.onOptionsItemSelected(item)
     }
 
+    private var proxyOverridden = false
+
+    /**
+     * The app's own UID is outside its VPN, so while the login bootstrap VPN runs, this WebView is
+     * pointed at the core's local inbound (kncloud.top -> boot node, the rest direct).
+     */
+    private fun loadThroughBootVpnIfUp(url: String) {
+        if (BootVpn.isSelected() && WebViewFeature.isFeatureSupported(WebViewFeature.PROXY_OVERRIDE)) {
+            try {
+                val config = ProxyConfig.Builder()
+                    .addProxyRule("${AppConfig.LOOPBACK}:${SettingsManager.getHttpPort()}")
+                    .build()
+                ProxyController.getInstance().setProxyOverride(config, { it.run() }) {
+                    runOnUiThread { if (!isDestroyed) binding.webView.loadUrl(url) }
+                }
+                proxyOverridden = true
+                return
+            } catch (e: Exception) {
+                Log.e(AppConfig.TAG, "WebView proxy override failed", e)
+            }
+        }
+        binding.webView.loadUrl(url)
+    }
+
     override fun onDestroy() {
+        if (proxyOverridden) {
+            try {
+                ProxyController.getInstance().clearProxyOverride({ it.run() }) {}
+            } catch (_: Exception) {}
+        }
         try {
             binding.webView.stopLoading()
             binding.webView.destroy()

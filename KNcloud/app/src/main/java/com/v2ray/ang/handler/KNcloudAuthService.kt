@@ -9,6 +9,7 @@ import com.v2ray.ang.dto.SubscriptionInfo
 import com.v2ray.ang.dto.SubscriptionItem
 import com.v2ray.ang.handler.boot.BootNodeConfig
 import com.v2ray.ang.handler.boot.BootProxy
+import com.v2ray.ang.handler.boot.BootVpn
 import com.v2ray.ang.util.JsonUtil
 import com.v2ray.ang.util.Utils
 import java.io.IOException
@@ -23,6 +24,35 @@ object KNcloudAuthService {
     private const val DIRECT = "direct"
     private const val LOCAL_PROXY = "via local proxy"
     private const val BOOT = "via login bootstrap"
+    private const val DIRECT_BEFORE_BOOT_TIMEOUT_MS = 5000
+    private const val DIRECT_PROBE_TIMEOUT_MS = 4000
+
+    /**
+     * Whether the official site (the panel / web domain the browser and the API use, not the
+     * domain-discovery host, which can be reachable while the site is not) answers directly (no
+     * proxy, short timeout). Used on the login screen to decide if the temporary login bootstrap
+     * VPN is needed. Any HTTP response counts.
+     */
+    fun probeDirect(): Boolean {
+        var conn: HttpURLConnection? = null
+        val url = MmkvManager.getApiDomain().trimEnd('/') + "/"
+        return try {
+            val c = URL(url).openConnection(Proxy.NO_PROXY) as HttpURLConnection
+            conn = c
+            c.connectTimeout = DIRECT_PROBE_TIMEOUT_MS
+            c.readTimeout = DIRECT_PROBE_TIMEOUT_MS
+            c.instanceFollowRedirects = false
+            c.setRequestProperty("User-Agent", "KNcloud/${BuildConfig.VERSION_NAME}")
+            val code = c.responseCode
+            Log.w(AppConfig.TAG, "Direct probe of $url: HTTP $code")
+            code > 0
+        } catch (e: Exception) {
+            Log.w(AppConfig.TAG, "Direct probe of $url failed: ${e.message}")
+            false
+        } finally {
+            conn?.disconnect()
+        }
+    }
 
     /**
      * Runs one login / subscription flow; the login bootstrap proxy, if a panel call in it had to
@@ -56,12 +86,22 @@ object KNcloudAuthService {
         // bootstrap proxy (only when the VPN is off; started lazily, see handler/boot/BootProxy).
         val attempts: List<String> = when {
             vpnRunning -> listOf(LOCAL_PROXY, DIRECT)
+            // Login bootstrap VPN up: its core's local inbound routes kncloud.top via the boot node
+            // (the app itself is outside the VPN); the in-app bootstrap proxy as fallback.
+            BootVpn.isSelected() && BootNodeConfig.enabled -> listOf(LOCAL_PROXY, BOOT)
             BootProxy.runningPort() > 0 -> listOf(BOOT, DIRECT)
             BootNodeConfig.enabled -> listOf(DIRECT, BOOT)
             else -> listOf(DIRECT, DIRECT)
         }
         var lastError: IOException? = null
-        for (attempt in attempts) {
+        for ((index, attempt) in attempts.withIndex()) {
+            // A direct attempt that has the boot node behind it gives up early: where the site is
+            // blocked it would otherwise hang for the full timeout before the fallback is tried.
+            val attemptTimeout = if (attempt == DIRECT && attempts.getOrNull(index + 1) == BOOT) {
+                minOf(timeout, DIRECT_BEFORE_BOOT_TIMEOUT_MS)
+            } else {
+                timeout
+            }
             val proxy: Proxy? = when (attempt) {
                 LOCAL_PROXY -> Proxy(Proxy.Type.HTTP, InetSocketAddress(AppConfig.LOOPBACK, SettingsManager.getHttpPort()))
                 BOOT -> {
@@ -80,8 +120,8 @@ object KNcloudAuthService {
                 val c = (if (proxy != null) url.openConnection(proxy) else url.openConnection()) as HttpURLConnection
                 conn = c
                 c.requestMethod = method
-                c.connectTimeout = timeout
-                c.readTimeout = timeout
+                c.connectTimeout = attemptTimeout
+                c.readTimeout = attemptTimeout
                 c.doInput = true
                 for ((k, v) in headers) c.setRequestProperty(k, v)
                 if (body != null) {

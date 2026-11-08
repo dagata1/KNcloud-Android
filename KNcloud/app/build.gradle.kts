@@ -12,8 +12,8 @@ android {
         applicationId = "top.kncloud.com"
         minSdk = 24
         targetSdk = 35
-        versionCode = 725
-        versionName = "1.10.73"
+        versionCode = 726
+        versionName = "1.10.74"
         multiDexEnabled = true
 
         val abiFilterList = (properties["ABI_FILTERS"] as? String)?.split(';')
@@ -135,6 +135,8 @@ dependencies {
     // Data and Storage Libraries
     implementation(libs.mmkv.static)
     implementation(libs.gson)
+    // proxy override for the in-app register WebView while the login bootstrap VPN runs
+    implementation("androidx.webkit:webkit:1.12.1")
 
     // Reactive and Utility Libraries
     implementation(libs.kotlinx.coroutines.android)
