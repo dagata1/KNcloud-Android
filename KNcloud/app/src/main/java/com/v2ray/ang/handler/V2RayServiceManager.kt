@@ -228,6 +228,17 @@ object V2RayServiceManager {
      * @param onStarted Invoked on the main thread after the core started.
      */
     fun startCoreLoopWhenReady(onStarted: () -> Unit = {}) {
+        // Enter the foreground right away. Waiting for the old core to stop, building the
+        // config and starting the core can take longer than the system allows on slow
+        // devices; if startForeground() is late (or the service is stopped before it), the
+        // system kills the whole :vpnCore process and the VPN drops.
+        try {
+            val pending = currentConfig
+                ?: MmkvManager.getSelectServer()?.let { MmkvManager.decodeServerConfig(it) }
+            NotificationManager.showNotification(pending)
+        } catch (e: Exception) {
+            Log.e(AppConfig.TAG, "Failed to enter foreground early", e)
+        }
         CoroutineScope(Dispatchers.Main).launch {
             withTimeoutOrNull(CORE_STOP_WAIT_MS) {
                 stopJob?.join()
@@ -237,7 +248,6 @@ object V2RayServiceManager {
                 // Still running: either a duplicate start for a live core, or the old
                 // core hung while stopping. Either way leave it as it is.
                 Log.w(AppConfig.TAG, "Core still running, start request ignored")
-                // A start via startForegroundService() must still reach startForeground().
                 currentConfig?.let { NotificationManager.showNotification(it) }
                 return@launch
             }
