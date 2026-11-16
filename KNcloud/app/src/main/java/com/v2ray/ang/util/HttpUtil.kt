@@ -151,10 +151,18 @@ object HttpUtil {
      * @throws IOException If an I/O error occurs.
      */
     @Throws(IOException::class)
-    fun getUrlResponseWithUserAgent(url: String?, userAgent: String?, timeout: Int = 15000, httpPort: Int = 0): HttpResponse {
+    fun getUrlResponseWithUserAgent(
+        url: String?,
+        userAgent: String?,
+        timeout: Int = 15000,
+        httpPort: Int = 0,
+        extraHeaders: Map<String, String> = emptyMap()
+    ): HttpResponse {
         var currentUrl = url
         var redirects = 0
         val maxRedirects = 3
+        // Extra headers (KNcloud device registration) only go to the original host, never to a redirect target elsewhere.
+        val headerHost = try { url?.let { URL(it).host } } catch (_: Exception) { null }
 
         while (redirects++ < maxRedirects) {
             if (currentUrl == null) continue
@@ -165,9 +173,16 @@ object HttpUtil {
                 userAgent
             }
             conn.setRequestProperty("User-agent", finalUserAgent)
+            if (extraHeaders.isNotEmpty() && headerHost != null && conn.url.host == headerHost) {
+                for ((k, v) in extraHeaders) conn.setRequestProperty(k, v)
+            }
             conn.connect()
 
             val responseCode = conn.responseCode
+            if (responseCode >= 400) {
+                conn.disconnect()
+                throw HttpStatusException(responseCode)
+            }
             when (responseCode) {
                 in 300..399 -> {
                     val location = resolveLocation(conn)
@@ -277,3 +292,5 @@ object HttpUtil {
     }
 }
 
+/** Non-success HTTP status from [HttpUtil.getUrlResponseWithUserAgent] (was a plain IOException before). */
+class HttpStatusException(val code: Int) : IOException("HTTP $code")

@@ -47,6 +47,7 @@ import com.v2ray.ang.extension.toast
 import com.v2ray.ang.extension.toastError
 import com.v2ray.ang.handler.AngConfigManager
 import com.v2ray.ang.handler.MigrateManager
+import com.v2ray.ang.handler.KNcloudAuthService
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.UpdateCheckerManager
 import com.v2ray.ang.handler.V2RayServiceManager
@@ -1264,10 +1265,23 @@ class MainActivity : BaseActivity() {
         binding.pbWaiting.show()
 
         lifecycleScope.launch(Dispatchers.IO) {
+            KNcloudAuthService.takePanelRejection() // drop a stale one
             val count = mainViewModel.updateConfigViaSubAll()
+            val rejection = KNcloudAuthService.takePanelRejection()
             delay(500L)
             launch(Dispatchers.Main) {
-                if (count > 0) {
+                if (!MmkvManager.isUserLoggedIn()) {
+                    // Device subscription invalid (device removed in the panel): back to login,
+                    // which shows the reason
+                    binding.pbWaiting.hide()
+                    startActivity(Intent(this@MainActivity, LoginActivity::class.java))
+                    finish()
+                    return@launch
+                }
+                if (count <= 0 && !rejection.isNullOrBlank()) {
+                    // Panel refused (e.g. device limit reached): show its own message
+                    toastError(rejection)
+                } else if (count > 0) {
                     toast(getString(R.string.title_update_config_count, count))
                     mainViewModel.reloadServerList()
                     updateSubscriptionInfo()

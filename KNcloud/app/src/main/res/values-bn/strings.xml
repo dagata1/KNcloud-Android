@@ -386,4 +386,5 @@
     <string name="empty_subscribe_keyword">সাবস্ক্রাইব</string>
     <string name="empty_subscribe_btn">ওয়েবসাইটে যান</string>
 
+    <string name="device_removed_relogin">এই ডিভাইসটি প্যানেল থেকে সরানো হয়েছে। অনুগ্রহ করে আবার লগ ইন করুন</string>
 </resources>

@@ -381,4 +381,5 @@
     <string name="empty_subscribe_keyword">الاشتراك</string>
     <string name="empty_subscribe_btn">الانتقال إلى الموقع</string>
 
+    <string name="device_removed_relogin">تمت إزالة هذا الجهاز من اللوحة. يرجى تسجيل الدخول مرة أخرى</string>
 </resources>
