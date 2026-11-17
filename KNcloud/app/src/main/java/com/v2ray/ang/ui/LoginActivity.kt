@@ -35,6 +35,12 @@ class LoginActivity : BaseActivity() {
 
         initViews()
         fetchDomainAsync()
+
+        // Back here because the device subscription became invalid (device removed in the panel)
+        if (KNcloudAuthService.deviceRemoved) {
+            KNcloudAuthService.deviceRemoved = false
+            toastError(R.string.device_removed_relogin)
+        }
     }
 
     override fun onResume() {
@@ -120,6 +126,11 @@ class LoginActivity : BaseActivity() {
 
                     // 2. Fetch Subscription URL & Metadata
                     val subResult = KNcloudAuthService.getSubscribeUrl(loginResult.domain, loginResult.token)
+                    if (subResult.rejected) {
+                        // Panel refused this device (e.g. device limit reached): not logged in, show its message
+                        MmkvManager.clearUserLogin()
+                        return@bootSession loginResult.copy(success = false, message = subResult.message)
+                    }
                     if (subResult.planName.isNullOrBlank()) {
                         KNcloudAuthService.fetchUserInfo(loginResult.domain, loginResult.token)
                     }

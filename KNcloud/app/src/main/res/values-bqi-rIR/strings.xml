@@ -396,4 +396,5 @@
     <string name="empty_subscribe_keyword">اشتراک</string>
     <string name="empty_subscribe_btn">ورود به وب‌سایت</string>
 
+    <string name="device_removed_relogin">این دستگاه در پنل حذف شده است. لطفاً دوباره وارد شوید</string>
 </resources>

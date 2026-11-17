@@ -387,6 +387,10 @@ object V2rayConfigManager {
                 MmkvManager.decodeSettingsString(AppConfig.PREF_ROUTING_DOMAIN_STRATEGY)
                     ?: "AsIs"
 
+            // KNcloud device report: the reserved host always goes to the node, first rule in
+            // every routing (the node answers it itself, see DevicePing)
+            v2rayConfig.routing.rules.add(DevicePing.routingRule())
+
             val rulesetItems = MmkvManager.decodeRoutingRulesets()
             rulesetItems?.forEach { key ->
                 getRoutingUserRule(key, v2rayConfig)

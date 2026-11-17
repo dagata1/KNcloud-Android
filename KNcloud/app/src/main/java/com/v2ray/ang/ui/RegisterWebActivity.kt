@@ -21,6 +21,7 @@ import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.databinding.ActivityRegisterWebBinding
 import com.v2ray.ang.extension.toast
+import com.v2ray.ang.extension.toastError
 import com.v2ray.ang.extension.toastSuccess
 import com.v2ray.ang.handler.KNcloudAuthService
 import com.v2ray.ang.handler.MmkvManager
@@ -276,12 +277,24 @@ class RegisterWebActivity : BaseActivity() {
                 toast(R.string.login_fetching_sub)
             }
 
-            KNcloudAuthService.bootSession {
+            val rejection = KNcloudAuthService.bootSession {
                 val subResult = KNcloudAuthService.getSubscribeUrl(domain, token)
+                if (subResult.rejected) {
+                    // Panel refused this device (e.g. device limit reached): not logged in
+                    MmkvManager.clearUserLogin()
+                    return@bootSession subResult.message
+                }
                 if (subResult.success && !subResult.subscribeUrl.isNullOrBlank()) {
                     KNcloudAuthService.importAndSyncSubscription(subResult.subscribeUrl)
                 }
-                Unit
+                null
+            }
+            if (rejection != null) {
+                withContext(Dispatchers.Main) {
+                    toastError(rejection)
+                    isHandlingAuth.set(false)
+                }
+                return@launch
             }
 
             withContext(Dispatchers.Main) {

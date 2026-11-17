@@ -218,6 +218,8 @@ object V2RayServiceManager {
             Log.e(AppConfig.TAG, "Failed to startup service", e)
             return false
         }
+        // 我的设备: report the IP the nodes see, directly (see DevicePing)
+        DevicePing.start()
         return true
     }
 
@@ -257,6 +259,7 @@ object V2RayServiceManager {
      * @return True if the core was stopped successfully, false otherwise.
      */
     fun stopCoreLoop(): Boolean {
+        DevicePing.stop()
         val service = getService() ?: return false
 
         if (coreController.isRunning) {

@@ -385,4 +385,5 @@
     <string name="empty_subscribe_keyword">Đăng ký</string>
     <string name="empty_subscribe_btn">Đến trang web</string>
 
+    <string name="device_removed_relogin">Thiết bị này đã bị xóa trong bảng điều khiển. Vui lòng đăng nhập lại</string>
 </resources>

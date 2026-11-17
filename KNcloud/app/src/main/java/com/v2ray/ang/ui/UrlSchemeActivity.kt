@@ -140,9 +140,14 @@ class UrlSchemeActivity : BaseActivity() {
             // Save initial user login state
             MmkvManager.saveUserLogin(email, token, domain)
 
-            KNcloudAuthService.bootSession {
+            val rejection = KNcloudAuthService.bootSession {
                 // Fetch subscription & user info
                 val subResult = KNcloudAuthService.getSubscribeUrl(domain, token)
+                if (subResult.rejected) {
+                    // Panel refused this device (e.g. device limit reached): not logged in
+                    MmkvManager.clearUserLogin()
+                    return@bootSession subResult.message
+                }
                 if (subResult.success) {
                     if (!subResult.email.isNullOrBlank() && (email.isBlank() || MmkvManager.getUserEmail().isNullOrBlank())) {
                         MmkvManager.encodeSettings(AppConfig.PREF_USER_EMAIL, subResult.email)
@@ -159,7 +164,14 @@ class UrlSchemeActivity : BaseActivity() {
                     KNcloudAuthService.fetchUserInfo(domain, token)
                     KNcloudAuthService.importAndSyncSubscription(directSubUrl)
                 }
-                Unit
+                null
+            }
+            if (rejection != null) {
+                withContext(Dispatchers.Main) {
+                    toastError(rejection)
+                    goHome()
+                }
+                return@launch
             }
 
             withContext(Dispatchers.Main) {

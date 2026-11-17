@@ -21,6 +21,7 @@ import com.v2ray.ang.fmt.TrojanFmt
 import com.v2ray.ang.fmt.VlessFmt
 import com.v2ray.ang.fmt.VmessFmt
 import com.v2ray.ang.fmt.WireguardFmt
+import com.v2ray.ang.util.HttpStatusException
 import com.v2ray.ang.util.HttpUtil
 import com.v2ray.ang.util.JsonUtil
 import com.v2ray.ang.util.QRCodeDecoder
@@ -568,18 +569,23 @@ object AngConfigManager {
             }
             Log.i(AppConfig.TAG, url)
             val userAgent = it.second.userAgent
+            // KNcloud account subscription: device registration headers (none for other subscriptions)
+            val extraHeaders = KNcloudAuthService.subscriptionHeaders(it.first)
+            var lastHttpCode = 0
 
             var response = try {
                 val httpPort = SettingsManager.getHttpPort()
-                HttpUtil.getUrlResponseWithUserAgent(url, userAgent, 15000, httpPort)
+                HttpUtil.getUrlResponseWithUserAgent(url, userAgent, 15000, httpPort, extraHeaders)
             } catch (e: Exception) {
+                if (e is HttpStatusException) lastHttpCode = e.code
                 Log.e(AppConfig.ANG_PACKAGE, "Update subscription: proxy not ready or other error", e)
                 null
             }
             if (response == null || response.content.isEmpty()) {
                 response = try {
-                    HttpUtil.getUrlResponseWithUserAgent(url, userAgent)
+                    HttpUtil.getUrlResponseWithUserAgent(url, userAgent, extraHeaders = extraHeaders)
                 } catch (e: Exception) {
+                    if (e is HttpStatusException) lastHttpCode = e.code
                     Log.e(AppConfig.TAG, "Update subscription: Failed to get URL content with user agent", e)
                     null
                 }
@@ -590,14 +596,19 @@ object AngConfigManager {
                 val bootPort = BootProxy.runningPort()
                 if (bootPort > 0 && BootProxy.defaultAllow(java.net.URL(url).host)) {
                     response = try {
-                        HttpUtil.getUrlResponseWithUserAgent(url, userAgent, 15000, bootPort)
+                        HttpUtil.getUrlResponseWithUserAgent(url, userAgent, 15000, bootPort, extraHeaders)
                     } catch (e: Exception) {
+                        if (e is HttpStatusException) lastHttpCode = e.code
                         Log.e(AppConfig.TAG, "Update subscription via login bootstrap failed", e)
                         null
                     }
                 }
             }
             if (response == null || response.content.isEmpty()) {
+                if (lastHttpCode > 0) {
+                    // Device subscription invalid (device removed in the panel): back to the login flow
+                    KNcloudAuthService.onSubscriptionHttpError(it.first, url, lastHttpCode)
+                }
                 return 0
             }
 

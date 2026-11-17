@@ -9,6 +9,7 @@ import com.v2ray.ang.dto.SubscriptionInfo
 import com.v2ray.ang.dto.SubscriptionItem
 import com.v2ray.ang.handler.boot.BootNodeConfig
 import com.v2ray.ang.handler.boot.BootProxy
+import com.v2ray.ang.util.HttpUtil
 import com.v2ray.ang.util.JsonUtil
 import com.v2ray.ang.util.Utils
 import java.io.IOException
@@ -106,13 +107,70 @@ object KNcloudAuthService {
         throw lastError ?: IOException("Panel request failed: $urlStr")
     }
 
-    private fun panelHeaders(token: String? = null, json: Boolean = false): Map<String, String> {
+    /**
+     * Headers of a panel API request. Account APIs (device = true) also carry the device
+     * registration headers (see [DeviceIdentity]); they are part of the map, so every attempt in
+     * [panelRequest] (local proxy, direct, login bootstrap) sends them.
+     */
+    private fun panelHeaders(token: String? = null, json: Boolean = false, device: Boolean = true): Map<String, String> {
         val h = LinkedHashMap<String, String>()
         if (json) h["Content-Type"] = "application/json; charset=UTF-8"
         if (token != null) h["Authorization"] = token
         h["Accept"] = "application/json"
         h["User-Agent"] = "KNcloud/${BuildConfig.VERSION_NAME}"
+        if (device) h.putAll(DeviceIdentity.headers())
         return h
+    }
+
+    /**
+     * Message of the last panel rejection (HTTP 4xx with a message other than an expired session,
+     * e.g. the device limit was reached) seen by [getSubscribeUrl]; consumed by the UI.
+     */
+    @Volatile
+    private var lastPanelRejection: String? = null
+
+    fun takePanelRejection(): String? {
+        val m = lastPanelRejection
+        lastPanelRejection = null
+        return m
+    }
+
+    /**
+     * Set when the device subscription was found invalid (this device was removed in the panel)
+     * and the login was cleared; consumed by the UI to show the reason on the login screen.
+     */
+    @Volatile
+    var deviceRemoved: Boolean = false
+
+    /** The panel's own "not logged in / session expired" messages (UserAuth middleware). */
+    private fun isSessionExpiredMessage(msg: String): Boolean {
+        val m = msg.lowercase()
+        return msg.contains("未登录") || msg.contains("过期") || m.contains("expired") ||
+            m.contains("unauthenticated") || m.contains("not logged")
+    }
+
+    /** Subscription id of the account subscription ([importAndSyncSubscription]). */
+    private val accountSubId: String get() = AppConfig.DEFAULT_SUB_REMARKS.lowercase()
+
+    /** Device headers for a subscription download: only the logged-in account subscription gets them. */
+    fun subscriptionHeaders(subId: String): Map<String, String> =
+        if (subId == accountSubId && MmkvManager.isUserLoggedIn()) DeviceIdentity.headers() else emptyMap()
+
+    /**
+     * Called when downloading subscription [subId] from [url] failed with HTTP [code]. If that was
+     * the panel-issued device subscription and the code means "invalid" (device removed), clears
+     * the stored device_subscribe_url and the login, like an expired session: the app goes back to
+     * the login screen. Returns true when that happened.
+     */
+    fun onSubscriptionHttpError(subId: String, url: String, code: Int): Boolean {
+        if (subId != accountSubId || !DeviceIdentity.isDeviceSubInvalidStatus(code)) return false
+        val deviceUrl = DeviceIdentity.deviceSubUrl() ?: return false
+        if (deviceUrl != url && HttpUtil.toIdnUrl(deviceUrl) != url) return false
+        Log.w(AppConfig.TAG, "Device subscription invalid (HTTP $code): device removed in the panel, logging out")
+        DeviceIdentity.setDeviceSubUrl(null)
+        MmkvManager.clearUserLogin()
+        deviceRemoved = true
+        return true
     }
 
     data class LoginResult(
@@ -132,7 +190,11 @@ object KNcloudAuthService {
         val d: Long = 0L,
         val transferEnable: Long = 0L,
         val expiredAt: Long? = null,
-        val resetDay: Int? = null
+        val resetDay: Int? = null,
+        /** subscribeUrl is the panel's per-device device_subscribe_url. */
+        val isDeviceSub: Boolean = false,
+        /** The panel refused with HTTP 4xx and [message] (e.g. device limit reached), not an expired session. */
+        val rejected: Boolean = false
     )
 
     /**
@@ -181,7 +243,7 @@ object KNcloudAuthService {
     fun fetchDynamicDomain(): String {
         try {
             val (responseCode, responseText) = panelRequest(
-                AppConfig.API_DOMAIN_QUERY_URL, "GET", 8000, panelHeaders()
+                AppConfig.API_DOMAIN_QUERY_URL, "GET", 8000, panelHeaders(device = false)
             )
 
             if (responseCode in 200..299 && responseText.isNotEmpty()) {
@@ -273,7 +335,14 @@ object KNcloudAuthService {
             if (responseCode in 200..299) {
                 if (json != null && json.has("data")) {
                     val dataObj = json.getAsJsonObject("data")
-                    val subUrl = if (dataObj.has("subscribe_url") && !dataObj.get("subscribe_url").isJsonNull) {
+                    // Device management: a per-device subscription URL takes precedence; an old
+                    // panel without device_subscribe_url behaves exactly as before.
+                    val deviceSubUrl = if (dataObj.has("device_subscribe_url") && !dataObj.get("device_subscribe_url").isJsonNull) {
+                        dataObj.get("device_subscribe_url").asString.trim().ifBlank { null }
+                    } else {
+                        null
+                    }
+                    val subUrl = deviceSubUrl ?: if (dataObj.has("subscribe_url") && !dataObj.get("subscribe_url").isJsonNull) {
                         dataObj.get("subscribe_url").asString
                     } else {
                         null
@@ -357,9 +426,11 @@ object KNcloudAuthService {
                     }
 
                     if (!subUrl.isNullOrBlank()) {
+                        DeviceIdentity.setDeviceSubUrl(deviceSubUrl)
                         return SubscribeResult(
                             success = true,
                             subscribeUrl = subUrl,
+                            isDeviceSub = deviceSubUrl != null,
                             planName = planName,
                             email = email,
                             u = u,
@@ -372,7 +443,20 @@ object KNcloudAuthService {
                 }
             }
 
-            val errorMsg = json?.get("message")?.asString ?: "获取订阅失败 (HTTP $responseCode)"
+            val panelMsg = try {
+                json?.get("message")?.takeIf { !it.isJsonNull }?.asString?.trim()
+            } catch (_: Exception) {
+                null
+            }
+            // 4xx with a message that is not the expired-session one (e.g. device limit reached):
+            // show the panel's own message instead of a generic failure.
+            if (responseCode in 400..499 && responseCode != 401 && !panelMsg.isNullOrBlank() &&
+                !(responseCode == 403 && isSessionExpiredMessage(panelMsg))
+            ) {
+                lastPanelRejection = panelMsg
+                return SubscribeResult(success = false, message = panelMsg, rejected = true)
+            }
+            val errorMsg = panelMsg ?: "获取订阅失败 (HTTP $responseCode)"
             return SubscribeResult(success = false, message = errorMsg)
 
         } catch (e: Exception) {
