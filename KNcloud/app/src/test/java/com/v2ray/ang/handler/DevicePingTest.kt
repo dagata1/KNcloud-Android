@@ -1,5 +1,6 @@
 package com.v2ray.ang.handler
 
+import com.v2ray.ang.AppConfig
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -8,19 +9,15 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.InetAddress
 import java.net.ServerSocket
-import java.net.Socket
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.concurrent.thread
 
 class DevicePingTest {
 
-    private val dev = mapOf(
-        DeviceIdentity.HDR_DEVICE_ID to "0f8fad5b-d9cb-469f-a165-70867728950e",
-        DeviceIdentity.HDR_PLATFORM to "android"
-    )
+    private val dev = "0f8fad5b-d9cb-469f-a165-70867728950e"
 
-    /** One-shot plain HTTP server on 127.0.0.1: returns the request head it got. */
-    private fun server(status: String, got: AtomicReference<List<String>>): ServerSocket {
+    /** One-shot stand-in for the core's local HTTP inbound: returns the request head it got. */
+    private fun proxy(status: String, got: AtomicReference<List<String>>): ServerSocket {
         val ss = ServerSocket(0, 1, InetAddress.getByName("127.0.0.1"))
         thread(isDaemon = true) {
             ss.accept().use { c ->
@@ -32,7 +29,7 @@ class DevicePingTest {
                     lines.add(l)
                 }
                 got.set(lines)
-                c.getOutputStream().write("HTTP/1.1 $status\r\nContent-Length: 2\r\nConnection: close\r\n\r\n{}".toByteArray())
+                c.getOutputStream().write("HTTP/1.1 $status\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".toByteArray())
                 c.getOutputStream().flush()
             }
         }
@@ -40,46 +37,50 @@ class DevicePingTest {
     }
 
     @Test
-    fun pingSendsAuthAndDeviceHeadersDirectly() {
+    fun reportGoesThroughLocalProxyToReservedHost() {
         val got = AtomicReference<List<String>>()
-        val protected = AtomicReference<Socket?>()
-        server("200 OK", got).use { ss ->
-            val code = DevicePing.pingOnce("http://127.0.0.1:${ss.localPort}/", "tok123", false, dev) { protected.set(it) }
-            assertEquals(200, code)
+        proxy("204 No Content", got).use { ss ->
+            assertEquals(204, DevicePing.report(ss.localPort, dev))
         }
         val head = got.get()
-        assertEquals("POST ${DevicePing.PATH} HTTP/1.1", head[0])
-        assertTrue(head.contains("Authorization: tok123"))
-        assertTrue(head.contains("X-KN-Device-Id: 0f8fad5b-d9cb-469f-a165-70867728950e"))
-        assertTrue(head.contains("X-KN-Platform: android"))
-        assertTrue("socket was not protected", protected.get() != null)
+        assertEquals("GET http://${DevicePing.HOST}${DevicePing.PATH}?id=$dev HTTP/1.1", head[0])
+        assertTrue(head.contains("Host: ${DevicePing.HOST}"))
+        assertTrue(head.contains("${DeviceIdentity.HDR_DEVICE_ID}: $dev"))
+        assertFalse("no panel session token in the report", head.any { it.startsWith("Authorization:") })
     }
 
     @Test
-    fun pingReportsStatusAndFailsSilently() {
+    fun reportFailsSilently() {
         val got = AtomicReference<List<String>>()
-        server("429 Too Many Requests", got).use { ss ->
-            assertEquals(429, DevicePing.pingOnce("http://127.0.0.1:${ss.localPort}", "t", false, dev) {})
+        proxy("503 Service Unavailable", got).use { ss ->
+            assertEquals(503, DevicePing.report(ss.localPort, dev))
         }
-        // no IPv6 address for 127.0.0.1: skipped, no fallback to IPv4
-        assertEquals(-1, DevicePing.pingOnce("http://127.0.0.1:1", "t", true, dev) {})
-        // nothing listening
+        // core not listening
         val port = ServerSocket(0).use { it.localPort }
-        assertEquals(-1, DevicePing.pingOnce("http://127.0.0.1:$port", "t", false, dev) {})
+        assertEquals(-1, DevicePing.report(port, dev))
+    }
+
+    @Test
+    fun routingRuleSendsReservedHostToProxy() {
+        val r = DevicePing.routingRule()
+        assertEquals(listOf("full:${DevicePing.HOST}"), r.domain)
+        assertEquals(AppConfig.TAG_PROXY, r.outboundTag)
+        assertEquals("field", r.type)
     }
 
     @Test
     fun schedule() {
         val st = DevicePing.State()
         val t0 = 1_700_000_000_000L
-        assertFalse("logged out", DevicePing.decide(st, t0, null, "n1"))
-        assertTrue("first", DevicePing.decide(st, t0, "acc", "n1"))
-        assertFalse("too soon", DevicePing.decide(st, t0 + 5 * 60_000, "acc", "n1"))
-        assertFalse("network change inside min gap", DevicePing.decide(st, t0 + 30_000, "acc", "n2"))
-        assertTrue("network change", DevicePing.decide(st, t0 + 6 * 60_000, "acc", "n2"))
-        assertTrue("periodic", DevicePing.decide(st, t0 + 17 * 60_000, "acc", "n2"))
-        assertFalse(DevicePing.decide(st, t0 + 18 * 60_000, null, "n2"))
-        assertTrue("re-login after min gap", DevicePing.decide(st, t0 + 19 * 60_000, "acc", "n2"))
+        assertFalse("logged out / no node", DevicePing.decide(st, t0, null))
+        assertTrue("first", DevicePing.decide(st, t0, "acc|sg|n1"))
+        assertFalse("too soon", DevicePing.decide(st, t0 + 5 * 60_000, "acc|sg|n1"))
+        assertFalse("node switch inside min gap", DevicePing.decide(st, t0 + 5_000, "acc|jp|n1"))
+        assertTrue("node switch", DevicePing.decide(st, t0 + 5 * 60_000 + 1_000, "acc|jp|n1"))
+        assertTrue("network change", DevicePing.decide(st, t0 + 5 * 60_000 + 12_000, "acc|jp|n2"))
+        assertTrue("periodic", DevicePing.decide(st, t0 + 16 * 60_000, "acc|jp|n2"))
+        assertFalse(DevicePing.decide(st, t0 + 17 * 60_000, null))
+        assertTrue("reconnect after min gap", DevicePing.decide(st, t0 + 17 * 60_000 + 11_000, "acc|jp|n2"))
     }
 
     @Test
