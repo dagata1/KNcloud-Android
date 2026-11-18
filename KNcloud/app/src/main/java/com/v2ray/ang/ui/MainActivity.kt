@@ -226,6 +226,11 @@ class MainActivity : BaseActivity() {
         }
 
         binding.layoutNodeSelector.setOnClickListener {
+            // 没有任何节点（新用户未购买套餐）时直接去官网购买页
+            if (mainViewModel.serversCache.isEmpty()) {
+                openSubscribeWebPage()
+                return@setOnClickListener
+            }
             NodeSelectorBottomSheet.show(supportFragmentManager)
         }
 
@@ -742,7 +747,7 @@ class MainActivity : BaseActivity() {
     fun updateSelectedNodeUI() {
         val servers = mainViewModel.serversCache
         if (servers.isEmpty()) {
-            binding.tvSelectedNodeName.text = getString(R.string.no_node_selected)
+            binding.tvSelectedNodeName.text = getString(R.string.no_node_buy_plan)
             binding.tvSelectedNodeType.isVisible = false
             binding.tvSelectedNodePing.isVisible = false
             return
@@ -916,7 +921,8 @@ class MainActivity : BaseActivity() {
     }
 
     private fun openSubscribeWebPage() {
-        val websiteUrl = MmkvManager.getApiDomain()
+        // 面板购买套餐页：<域名>/plan
+        val websiteUrl = MmkvManager.getApiDomain().trimEnd('/') + "/plan"
         Utils.openUri(this, websiteUrl)
     }
 
