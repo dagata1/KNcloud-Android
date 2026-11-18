@@ -12,8 +12,8 @@ android {
         applicationId = "top.kncloud.com"
         minSdk = 24
         targetSdk = 35
-        versionCode = 725
-        versionName = "1.10.73"
+        versionCode = 726
+        versionName = "1.10.74"
         multiDexEnabled = true
 
         val abiFilterList = (properties["ABI_FILTERS"] as? String)?.split(';')
@@ -41,8 +41,8 @@ android {
         // calls when the official site is unreachable directly and the VPN is off. The account is
         // in its own panel group and the node only allows *.kncloud.top:443 (route 「仅允许」).
         // Empty password disables the feature.
-        buildConfigField("String", "BOOT_NODE_HOST", "\"sea1.kncloud.top\"")
-        buildConfigField("String", "BOOT_NODE_IPV6", "\"2603:c022:8017:5aee:f8da:150d:efc:6f96\"")
+        buildConfigField("String", "BOOT_NODE_HOST", "\"lgi.kncloud.top\"")
+        buildConfigField("String", "BOOT_NODE_IPV6", "\"\"")
         buildConfigField("int", "BOOT_NODE_PORT", "3456")
         buildConfigField("String", "BOOT_NODE_METHOD", "\"chacha20-ietf-poly1305\"")
         buildConfigField("String", "BOOT_NODE_PASSWORD", "\"ecd6b75b-b7ff-45f7-941e-b585bdb5b8e4\"")
