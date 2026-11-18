@@ -404,9 +404,9 @@
     <string name="menu_logout">登出帳號</string>
     <string name="dialog_logout_title">登出帳號</string>
     <string name="dialog_logout_message">確定要登出嗎？登出後將清除當前帳號與節點資料。</string>
-    <string name="empty_no_nodes_full_text">沒有可用節點，如果您未訂閱或已過期請訂閱。</string>
-    <string name="empty_subscribe_keyword">訂閱</string>
-    <string name="empty_subscribe_btn">前往網站</string>
+    <string name="empty_no_nodes_full_text">暫無可用節點，請先購買套餐。</string>
+    <string name="empty_subscribe_keyword">購買套餐</string>
+    <string name="empty_subscribe_btn">去購買</string>
     <string name="btn_go_website">前往官網</string>
     <string name="btn_speed_test">節點測試</string>
     <string name="btn_refresh_sub">更新訂閱</string>
@@ -423,6 +423,7 @@
     <string name="connect_tap_to_test">點擊測試真連線能力</string>
     <string name="title_pref_simple_mode">簡潔模式</string>
     <string name="summary_pref_simple_mode">開啟卡片式儀表板與抽屜節點選擇，關閉使用經典列表</string>
+    <string name="no_node_buy_plan">暫無可用節點，點擊購買套餐</string>
     <string name="no_node_selected">未選擇節點</string>
     <string name="sub_title_empty">無訂閱</string>
     <string name="sub_traffic_empty">0 / 0</string>

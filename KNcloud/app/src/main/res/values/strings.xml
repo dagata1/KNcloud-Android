@@ -419,9 +419,9 @@
     <string name="menu_logout">Sign Out</string>
     <string name="dialog_logout_title">Sign Out</string>
     <string name="dialog_logout_message">Are you sure you want to sign out? This will clear your account session and servers.</string>
-    <string name="empty_no_nodes_full_text">No available nodes. If you haven\'t subscribed or your plan has expired, please Subscribe.</string>
-    <string name="empty_subscribe_keyword">Subscribe</string>
-    <string name="empty_subscribe_btn">Go to Website</string>
+    <string name="empty_no_nodes_full_text">No nodes available. Please buy a plan first.</string>
+    <string name="empty_subscribe_keyword">buy a plan</string>
+    <string name="empty_subscribe_btn">Buy a plan</string>
     <string name="btn_go_website">Website</string>
     <string name="btn_speed_test">Test Nodes</string>
     <string name="btn_refresh_sub">Update Sub</string>
@@ -438,6 +438,7 @@
     <string name="connect_tap_to_test">Tap to test connectivity</string>
     <string name="title_pref_simple_mode">Simple Mode</string>
     <string name="summary_pref_simple_mode">Enable card dashboard with drawer node selector, disable for classic list</string>
+    <string name="no_node_buy_plan">No nodes available. Tap to buy a plan</string>
     <string name="no_node_selected">No node selected</string>
     <string name="sub_title_empty">No Subscription</string>
     <string name="sub_traffic_empty">0 / 0</string>
